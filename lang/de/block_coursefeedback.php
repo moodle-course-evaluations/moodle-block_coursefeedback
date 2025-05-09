@@ -1,5 +1,8 @@
 <?php #GERMAN
 
+$string['confirmoverhaul']      = 'Major Overhaul akzeptieren und möglichen Datenverlust in Kauf nehmen';
+$string['confirmoverhaul_desc'] = 'Das Plugin wird von Grund auf neu entwickelt. Bitte sichern Sie die Ergebnisse vergangener Umfragen! Es ist möglich, dass die alten Ergebnisse in Zukunft nicht mehr sichtbar sind bzw. gelöscht werden.';
+
 /* Defaults */
 $string['pluginname'] = 'Kursfeedback';
 $string['caution'] = 'Warnhinweis';

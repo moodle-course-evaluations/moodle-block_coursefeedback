@@ -30,6 +30,15 @@ defined("MOODLE_INTERNAL") || die();
 require_once(__DIR__ . "/lib.php");
 require_once(__DIR__ . "/locallib.php");
 
+
+// Checkbox for major overhaul confirmation
+$settings->add(new admin_setting_configcheckbox(
+    'block_coursefeedback/confirmoverhaul',
+    get_string('confirmoverhaul', 'block_coursefeedback'),
+    get_string('confirmoverhaul_desc', 'block_coursefeedback'),
+    0
+));
+
 // Ensure that default_language can only be changed into a valid language!
 $afid = clean_param(get_config("block_coursefeedback", "active_feedback"), PARAM_INT);
 $langs = $afid > 0

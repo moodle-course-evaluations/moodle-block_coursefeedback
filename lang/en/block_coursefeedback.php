@@ -1,5 +1,8 @@
 <?php #ENGLISH
 
+$string['confirmoverhaul']      = 'Accept major overhaul and possible data loss';
+$string['confirmoverhaul_desc'] = 'The plugin is being rebuilt from the ground up. Please back up the results of past surveys! It is possible that old results may no longer be visible or may be deleted in the future.';
+
 /* Defaults */
 $string['pluginname'] = 'Course feedback';
 $string['caution'] = 'Warning';
