@@ -1308,5 +1308,32 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
         upgrade_block_savepoint(true, 2026061800, 'coursefeedback');
     }
 
+    if ($oldversion < 2026062200) {
+        // Define table block_coursefeedback_surveyitemtext to be created.
+        $table = new xmldb_table('block_coursefeedback_surveyitemtext');
+
+        // Adding fields to table block_coursefeedback_surveyitemtext.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('surveyitemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('initialrows', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '8');
+
+        // Adding keys to table block_coursefeedback_surveyitemtext.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fu_surveyitemid', XMLDB_KEY_FOREIGN_UNIQUE, ['surveyitemid'], 'block_coursefeedback_surveyitem', ['id']);
+
+        // Conditionally launch create table for block_coursefeedback_surveyitemtext.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Populate the new table with defaults for all text survey items.
+        $text_item_ids = $DB->get_fieldset('block_coursefeedback_surveyitem', 'id', ['surveyitemtype' => 'text']);
+        $new_records = array_map(fn($id) => ['surveyitemid' => $id, 'initialrows' => 8], $text_item_ids);
+        $DB->insert_records('block_coursefeedback_surveyitemtext', $new_records);
+
+        // Coursefeedback savepoint reached.
+        upgrade_block_savepoint(true, 2026062200, 'coursefeedback');
+    }
+
     return true;
 }

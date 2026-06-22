@@ -142,6 +142,8 @@ $string['general_settings_and_permissions'] = 'General settings and permissions'
 $string['has_no_answer'] = 'Should the item have an <abbr title="not applicable">n/a</abbr> option?';
 $string['inconsistent_editor_formats'] = 'Please use the same format for all translations of this field.';
 $string['infotext'] = 'Infotext';
+$string['initialrows'] = 'Initial rows';
+$string['initialrows_help'] = 'How many lines of text should the text area initially fit? Respondents can resize the text field arbitrarily.';
 $string['invalid_answer'] = 'The answer value \'{$a}\' is invalid and will be discarded.';
 $string['last_slot_deletion_disabled'] = 'An event must have at least one slot, so the last one can\'t be deleted.';
 $string['list_of_courses_without_evaluation'] = 'List of courses without evaluation';

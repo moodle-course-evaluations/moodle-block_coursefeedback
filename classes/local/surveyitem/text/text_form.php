@@ -36,4 +36,15 @@ use block_coursefeedback\local\surveyitem\surveyitem_form;
  */
 class text_form extends surveyitem_form {
 
+    #[\Override]
+    protected function definition(): void {
+        parent::definition();
+
+        $mform = $this->_form;
+        $mform->addElement('text', 'initialrows', get_string('initialrows', 'block_coursefeedback'));
+        $mform->setType('initialrows', PARAM_INT);
+        $mform->setDefault('initialrows', 8);
+        $mform->addRule('initialrows', null, 'required', null, 'client');
+        $mform->addHelpButton('initialrows', 'initialrows', 'block_coursefeedback');
+    }
 }

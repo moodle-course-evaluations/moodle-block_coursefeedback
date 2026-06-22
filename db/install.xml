@@ -390,5 +390,16 @@
         <KEY NAME="fk_surveyitemid" TYPE="foreign" FIELDS="surveyitemid" REFTABLE="block_coursefeedback_surveyitem" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+    <TABLE NAME="block_coursefeedback_surveyitemtext" COMMENT="Options specific to text area questions.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="surveyitemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="initialrows" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="8" SEQUENCE="false" COMMENT="Roughly how many rows of text should the area be initially sized to fit?"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fu_surveyitemid" TYPE="foreign-unique" FIELDS="surveyitemid" REFTABLE="block_coursefeedback_surveyitem" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>
