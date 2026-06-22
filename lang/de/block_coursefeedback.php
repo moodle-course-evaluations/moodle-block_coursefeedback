@@ -142,6 +142,8 @@ $string['general_settings_and_permissions'] = 'Allgemeine Einstellungen und Bere
 $string['has_no_answer'] = '<abbr title="nicht zutreffend">n.z.</abbr>-Option anzeigen?';
 $string['inconsistent_editor_formats'] = 'Bitte verwenden Sie das gleiche Text-Format für alle Übersetzungen dieses Feldes.';
 $string['infotext'] = 'Statischer Info-Text';
+$string['initialrows'] = 'Initiale Zeilen';
+$string['initialrows_help'] = 'Für wie viele Zeilen Text soll das Textfeld initial Platz haben? Befragte können das Textfeld beliebig vergrößern und verkleinern.';
 $string['invalid_answer'] = 'Der Antwort-Wert \'{$a}\' ist ungültig und wird verworfen.';
 $string['last_slot_deletion_disabled'] = 'Eine Lehrveranstaltung muss min. einen Untergruppe haben, also kann diese nicht gelöscht werden.';
 $string['list_of_courses_without_evaluation'] = 'Liste von Kursen ohne Evaluation';

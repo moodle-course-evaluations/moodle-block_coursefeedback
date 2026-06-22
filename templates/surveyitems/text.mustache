@@ -24,13 +24,14 @@
       "type_text": true,
       "type": "text",
       "surveyitemid": 5,
-      "questiontext": "<p>Was hat Ihnen an der Veranstaltung gefallen? Was sollte beibehalten werden?<\/p>"
+      "questiontext": "<p>Was hat Ihnen an der Veranstaltung gefallen? Was sollte beibehalten werden?<\/p>",
+      "initialrows": 42
     }
 
 }}
 
 {{< block_coursefeedback/surveyitems/base }}
     {{$answer_area_content}}
-        <textarea class="form-control" rows="8"></textarea>
+        <textarea class="form-control" rows="{{ initialrows }}"></textarea>
     {{/answer_area_content}}
 {{/ block_coursefeedback/surveyitems/base }}
