@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Show details for an organization.
+ * Show links to the organization and/or questionnaire lists, depending on what the user has access to.
  *
  * @package    block_coursefeedback
  * @copyright  2025 innoCampus, Technische Universität Berlin
@@ -24,16 +24,18 @@
  */
 
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\user_organization_cache_manager;
+use core\exception\moodle_exception;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
 
 require_login();
 if (!permission_manager::can_do_any_evaluation_administration()) {
-    throw new \core\exception\coding_exception('You are not permitted to do that.');
+    throw new moodle_exception('no_evaluation_permissions', 'block_coursefeedback');
 }
+
 $context = context_system::instance();
-require_capability('block/coursefeedback:manageorganizations', $context);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/overview.php'));
 $PAGE->set_context($context);
@@ -43,7 +45,10 @@ $PAGE->set_title($title);
 
 echo $OUTPUT->header();
 
-if (has_capability('block/coursefeedback:manageorganizations', $context)) {
+if (
+    has_capability('block/coursefeedback:manageorganizations', $context)
+    || user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_anywhere()
+) {
     echo \core\output\html_writer::link(
         new moodle_url('/blocks/coursefeedback/organizations.php'),
         get_string('organizations', 'block_coursefeedback'),
