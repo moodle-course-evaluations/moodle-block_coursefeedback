@@ -394,7 +394,9 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="surveyitemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="initialrows" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="8" SEQUENCE="false" COMMENT="Roughly how many rows of text should the area be initially sized to fit?"/>
+        <FIELD NAME="initialrows" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="3" SEQUENCE="false" COMMENT="Roughly how many rows of text should the area be initially sized to fit?"/>
+        <FIELD NAME="autoresize" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="maxlength" TYPE="int" LENGTH="8" NOTNULL="true" DEFAULT="500" SEQUENCE="false" COMMENT="The maximum number of characters a user can enter."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

@@ -39,12 +39,21 @@ class text_form extends surveyitem_form {
     #[\Override]
     protected function definition(): void {
         parent::definition();
-
         $mform = $this->_form;
-        $mform->addElement('text', 'initialrows', get_string('initialrows', 'block_coursefeedback'));
+
+        $mform->addElement('text', 'initialrows', get_string('text_initialrows', 'block_coursefeedback'));
         $mform->setType('initialrows', PARAM_INT);
-        $mform->setDefault('initialrows', 8);
+        $mform->setDefault('initialrows', 3);
         $mform->addRule('initialrows', null, 'required', null, 'client');
-        $mform->addHelpButton('initialrows', 'initialrows', 'block_coursefeedback');
+        $mform->addHelpButton('initialrows', 'text_initialrows', 'block_coursefeedback');
+
+        $mform->addElement('advcheckbox', 'autoresize', get_string('text_autoresize', 'block_coursefeedback'));
+        $mform->setType('autoresize', PARAM_BOOL);
+        $mform->setDefault('autoresize', true);
+
+        $mform->addElement('text', 'maxlength', get_string('text_maxlength', 'block_coursefeedback'));
+        $mform->setType('maxlength', PARAM_INT);
+        $mform->setDefault('maxlength', 500);
+        $mform->addRule('maxlength', null, 'required', null, 'client');
     }
 }
