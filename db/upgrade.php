@@ -1315,7 +1315,9 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
         // Adding fields to table block_coursefeedback_surveyitemtext.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('surveyitemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('initialrows', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '8');
+        $table->add_field('initialrows', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '3');
+        $table->add_field('autoresize', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('maxlength', XMLDB_TYPE_INTEGER, '8', null, XMLDB_NOTNULL, null, '500');
 
         // Adding keys to table block_coursefeedback_surveyitemtext.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
@@ -1328,7 +1330,12 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
 
         // Populate the new table with defaults for all text survey items.
         $text_item_ids = $DB->get_fieldset('block_coursefeedback_surveyitem', 'id', ['surveyitemtype' => 'text']);
-        $new_records = array_map(fn($id) => ['surveyitemid' => $id, 'initialrows' => 8], $text_item_ids);
+        $new_records = array_map(fn($id) => [
+            'surveyitemid' => $id,
+            'initialrows' => 3,
+            'autoresize' => 1,
+            'maxlength' => 500,
+        ], $text_item_ids);
         $DB->insert_records('block_coursefeedback_surveyitemtext', $new_records);
 
         // Coursefeedback savepoint reached.

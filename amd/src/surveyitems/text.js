@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-import {SurveyItem} from "block_coursefeedback/surveyitem";
+import { SurveyItem } from "block_coursefeedback/surveyitem";
 
 /**
  * Implement SurveyItem for Text
@@ -26,6 +26,31 @@ import {SurveyItem} from "block_coursefeedback/surveyitem";
 export class Text extends SurveyItem {
 
     textarea = this.surveyItemRootElement.querySelector('textarea');
+
+    initialize() {
+        if (this.surveyItemData.autoresize) {
+            const textArea = this.textarea;
+            // To interpret the 'rows' attribute as minimum height, we measure the initial size of the text area.
+            const initialHeight = this.textarea.clientHeight;
+
+            const autoResize = () => {
+                textArea.style.height = "auto"; // Set to auto so that the browser calculates scrollHeight properly.
+                textArea.style.height = Math.max(initialHeight, textArea.scrollHeight) + "px";
+            };
+
+            this.textarea.style.resize = "none"; // No manual resizing.
+            this.textarea.addEventListener("input", autoResize);
+            autoResize();
+        }
+    }
+
+    async beforeNext({prevent}) {
+        // The browser should prevent it, but if the user managed to enter more text than 'maxlength', prevent the page change.
+        if (!this.textarea.checkValidity()) {
+            this.textarea.reportValidity();
+            prevent();
+        }
+    }
 
     getValue() {
         return this.textarea.value || null;

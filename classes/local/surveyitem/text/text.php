@@ -30,7 +30,7 @@ use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitemtype_with_settings;
 use core\lang_string;
-use moodle_exception;
+use core\exception\moodle_exception;
 
 /**
  * Survey item type definition for a text question.
@@ -50,17 +50,19 @@ class text extends surveyitemtype_with_settings {
     #[\Override]
     public function save_settings_form_data(surveyitem $surveyitem, surveypart $surveypart, object $formdata): void {
         global $DB;
-        $record = $DB->get_record('block_coursefeedback_surveyitemtext', ['surveyitemid' => $surveyitem->get('id')]);
-        if ($record) {
-            if ($record->initialrows != $formdata->initialrows) {
-                $record->initialrows = $formdata->initialrows;
-                $DB->update_record('block_coursefeedback_surveyitemtext', $record);
-            }
-        } else {
-            $DB->insert_record('block_coursefeedback_surveyitemtext', [
-                'surveyitemid' => $surveyitem->get('id'),
-                'initialrows' => $formdata->initialrows,
-            ]);
+        $old_record = $record = $DB->get_record('block_coursefeedback_surveyitemtext', ['surveyitemid' => $surveyitem->get('id')]);
+        if (!$record) {
+            $record = (object) ['surveyitemid' => $surveyitem->get('id')];
+        }
+
+        foreach (['initialrows', 'autoresize', 'maxlength'] as $field) {
+            $record->{$field} = $formdata->{$field};
+        }
+
+        if (empty($record->id)) {
+            $DB->insert_record('block_coursefeedback_surveyitemtext', $record);
+        } else if ($record != $old_record) {
+            $DB->update_record('block_coursefeedback_surveyitemtext', $record);
         }
     }
 
@@ -70,7 +72,9 @@ class text extends surveyitemtype_with_settings {
         $formdata = parent::load_settings_form_data($surveyitem);
         $record = $DB->get_record('block_coursefeedback_surveyitemtext', ['surveyitemid' => $surveyitem->get('id')]);
         if ($record) {
-            $formdata->initialrows = $record->initialrows;
+            $formdata->initialrows = intval($record->initialrows);
+            $formdata->autoresize = boolval($record->autoresize);
+            $formdata->maxlength = intval($record->maxlength);
         } else {
             debugging("surveyitemtext record not found for survey item with id '{$surveyitem->get('id')}'");
         }
@@ -84,16 +88,22 @@ class text extends surveyitemtype_with_settings {
             'block_coursefeedback_surveyitemtext',
             'surveyitemid',
             array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems),
-            fields: 'surveyitemid, initialrows'
+            fields: 'surveyitemid, *'
         );
 
         $additionaldata = [];
         foreach ($surveyitems as $surveyitem) {
             if ($record = $records[$surveyitem->get('id')] ?? null) {
-                $additionaldata[$record->surveyitemid] = [ 'initialrows' => $record->initialrows ];
+                $additionaldata[$surveyitem->get('id')]['initialrows'] = intval($record->initialrows);
+                $additionaldata[$surveyitem->get('id')]['autoresize'] = boolval($record->autoresize);
+                $additionaldata[$surveyitem->get('id')]['maxlength'] = intval($record->maxlength);
             } else {
                 debugging("surveyitemtext record not found for survey item with id '{$surveyitem->get('id')}'");
-                $additionaldata[$record->surveyitemid] = [ 'initialrows' => 8 ];
+                $additionaldata[$surveyitem->get('id')] = [
+                    'initialrows' => 3,
+                    'autoresize' => true,
+                    'maxlength' => 500,
+                ];
             }
         }
 
@@ -105,7 +115,7 @@ class text extends surveyitemtype_with_settings {
         global $DB;
         $to_insert = [];
         foreach ($answers as $answer) {
-            if (!is_string($answer->value)) {
+            if (!is_string($answer->value) || strlen($answer->value) > $answer->additionaldata['maxlength']) {
                 throw new moodle_exception('invalid_answer', 'block_coursefeedback', a: json_encode($answer->value));
             }
             $to_insert[] = [
@@ -151,7 +161,7 @@ class text extends surveyitemtype_with_settings {
     public function export_for_template(array $surveyitems, array $additional_data): array {
         $template_data = parent::export_for_template($surveyitems, $additional_data);
         foreach ($surveyitems as $surveyitem) {
-            $template_data[$surveyitem->get('id')]['initialrows'] = $additional_data[$surveyitem->get('id')]['initialrows'];
+            $template_data[$surveyitem->get('id')] += $additional_data[$surveyitem->get('id')];
         }
             return $template_data;
     }
