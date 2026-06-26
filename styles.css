@@ -36,11 +36,7 @@
 }
 
 .block_coursefeedback-surveyitem {
-    padding-bottom: 1rem;
-
-    &:not(:first-child) {
-        padding-top: 1rem;
-    }
+    padding-bottom: .75rem;
 
     .form-check-input {
         /* Under Bootstrap 4, these are position: absolute for some reason. */
