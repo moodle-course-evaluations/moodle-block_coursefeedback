@@ -118,7 +118,7 @@ $PAGE->set_title(get_string('course_settings_of', 'block_coursefeedback', $cours
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('course_settings', 'block_coursefeedback'));
 
-$show_event_table = count($model->events_by_id) > 0 || permission_manager::can_edit_course_surveysettings($course, $organization);
+$show_event_table = permission_manager::can_edit_course_surveysettings($course, $organization);
 global $DB;
 $num_responses = $DB->count_records(
     'block_coursefeedback_surveyexecution_user',
