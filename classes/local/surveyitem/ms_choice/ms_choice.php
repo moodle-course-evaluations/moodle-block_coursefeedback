@@ -24,10 +24,12 @@
  */
 namespace block_coursefeedback\local\surveyitem\ms_choice;
 
+use block_coursefeedback\local\backup\backup_invalid_exception;
 use block_coursefeedback\local\multilang_string;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitemtype_with_settings;
+use core\exception\moodle_exception;
 use moodle_url;
 use moodleform;
 
@@ -144,5 +146,60 @@ abstract class ms_choice extends surveyitemtype_with_settings {
             ));
         }
         return $template_data;
+    }
+
+    #[\Override]
+    public function backup_items(array $surveyitems): array {
+        global $DB;
+        $backup_data = parent::backup_items($surveyitems);
+
+        $surveyitemids = array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems);
+        $records = $DB->get_records_list(
+            'block_coursefeedback_surveyitemansweroption',
+            "surveyitemid",
+            $surveyitemids,
+            sort: 'sortindex',
+            fields: 'id, surveyitemid, text'
+        );
+
+        foreach ($records as $record) {
+            $backup_data[$record->surveyitemid]['options'][] = [ 'text' => $record->text ];
+        }
+
+        return $backup_data;
+    }
+
+    #[\Override]
+    public function restore_from_backup(array $surveyitems, array $backup_data, array $scales): void {
+        parent::restore_from_backup($surveyitems, $backup_data, $scales);
+
+        $options_to_insert = [];
+        foreach ($backup_data as $surveyitemid => $data) {
+            if (!isset($data->options) || !is_array($data->options)) {
+                throw new backup_invalid_exception("'options' is missing or not an array");
+            }
+            if (empty($data->options)) {
+                // Question without answer options. Weird, but valid.
+                continue;
+            }
+
+            $i = 0;
+            foreach ($data->options as $option) {
+                if (!is_object($option) || !isset($option->text) || !multilang_string::is_valid($option->text)) {
+                    throw new backup_invalid_exception('invalid option in survey item');
+                }
+
+                $options_to_insert[] = [
+                    'surveyitemid' => $surveyitemid,
+                    'text' => $option->text,
+                    'sortindex' => $i++,
+                ];
+            }
+        }
+
+        global $DB;
+        $transaction = $DB->start_delegated_transaction();
+        $DB->insert_records('block_coursefeedback_surveyitemansweroption', $options_to_insert);
+        $transaction->allow_commit();
     }
 }

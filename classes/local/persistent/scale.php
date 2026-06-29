@@ -35,7 +35,7 @@ use core\persistent;
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class scale extends persistent {
+class scale extends persistent_with_bulk_actions {
 
     /** Table name for the persistent. */
     public const TABLE = 'block_coursefeedback_scale';
@@ -91,10 +91,17 @@ class scale extends persistent {
     /**
      * Serializes and sets 'text'.
      *
-     * @param multilang_string $text
+     * @param multilang_string|string $text
      */
-    protected function set_noansweroptiontext(multilang_string $text): void {
-        $this->raw_set('noansweroptiontext', $text->serialize());
+    protected function set_noansweroptiontext(multilang_string|string $text): void {
+        if (is_string($text)) {
+            // Validate it.
+            multilang_string::deserialize($text);
+        } else {
+            $text = $text->serialize();
+        }
+
+        $this->raw_set('noansweroptiontext', $text);
     }
 
     /**
@@ -109,10 +116,16 @@ class scale extends persistent {
     /**
      * Serializes and sets 'text'.
      *
-     * @param multilang_string $text
+     * @param multilang_string|string $text
      */
-    protected function set_minoptiontext(multilang_string $text): void {
-        $this->raw_set('minoptiontext', $text->serialize());
+    protected function set_minoptiontext(multilang_string|string $text): void {
+        if (is_string($text)) {
+            // Validate it.
+            multilang_string::deserialize($text);
+        } else {
+            $text = $text->serialize();
+        }
+        $this->raw_set('minoptiontext', $text);
     }
 
     /**
@@ -127,10 +140,17 @@ class scale extends persistent {
     /**
      * Serializes and sets 'text'.
      *
-     * @param multilang_string $text
+     * @param multilang_string|string $text
      */
-    protected function set_maxoptiontext(multilang_string $text): void {
-        $this->raw_set('maxoptiontext', $text->serialize());
+    protected function set_maxoptiontext(multilang_string|string $text): void {
+        if (is_string($text)) {
+            // Validate it.
+            multilang_string::deserialize($text);
+        } else {
+            $text = $text->serialize();
+        }
+
+        $this->raw_set('maxoptiontext', $text);
     }
 
     /**
@@ -146,9 +166,16 @@ class scale extends persistent {
     /**
      * Serializes and sets 'centeroptiontext'.
      *
-     * @param multilang_string|null $text
+     * @param multilang_string|string|null $text
      */
-    protected function set_centeroptiontext(?multilang_string $text): void {
-        $this->raw_set('centeroptiontext', $text?->serialize());
+    protected function set_centeroptiontext(multilang_string|string|null $text): void {
+        if (is_string($text)) {
+            // Validate it.
+            multilang_string::deserialize($text);
+        } else {
+            $text = $text?->serialize();
+        }
+
+        $this->raw_set('centeroptiontext', $text);
     }
 }

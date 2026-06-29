@@ -24,8 +24,9 @@
  */
 namespace block_coursefeedback\local\surveyitem;
 
+use block_coursefeedback\local\backup\backup_invalid_exception;
 use block_coursefeedback\local\persistent\response_slot;
-use block_coursefeedback\local\persistent\survey_part_execution;
+use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\surveyitemtype_answerdata;
 use core\lang_string;
@@ -187,5 +188,31 @@ abstract class surveyitemtype {
             'median' => $median,
             'median_rounded' => round($median, 2),
         ];
+    }
+
+    /**
+     * Called when restoring survey item(s) of this type from a backup, after the {@see surveyitem}s have been created.
+     *
+     * This method should restore the relevant child table records, if any.
+     *
+     * @param surveyitem[] $surveyitems
+     * @param array<int, array> $backup_data The data returned by {@see self::backup_items}.
+     * @param scale[] $scales The scales that were contained in the backup. These have already been restored, so they have IDs.
+     * @return void
+     * @throws backup_invalid_exception If the backup data is invalid.
+     */
+    public function restore_from_backup(array $surveyitems, array $backup_data, array $scales): void {
+        // Intentionally no-op by default.
+    }
+
+    /**
+     * Back up the item type specific data for the given survey items.
+     *
+     * @param surveyitem[] $surveyitems
+     * @return array<int, array>
+     */
+    public function backup_items(array $surveyitems): array {
+        // Return an empty array for all surveyitems.
+        return array_fill_keys(array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems), []);
     }
 }
