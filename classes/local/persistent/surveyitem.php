@@ -73,10 +73,17 @@ class surveyitem extends persistent_with_bulk_actions {
     /**
      * Serializes and sets 'text'.
      *
-     * @param multilang_string|null $text
+     * @param multilang_string|string|null $text
      */
-    protected function set_text(?multilang_string $text): void {
-        $this->raw_set('text', $text?->serialize());
+    protected function set_text(multilang_string|string|null $text): void {
+        if (is_string($text)) {
+            // Validate it.
+            multilang_string::deserialize($text);
+        } else {
+            $text = $text?->serialize();
+        }
+
+        $this->raw_set('text', $text);
     }
 
     /**
