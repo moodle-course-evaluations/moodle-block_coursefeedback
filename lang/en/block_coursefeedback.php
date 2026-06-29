@@ -40,6 +40,7 @@ $string['answer_i_in_lang'] = 'Answer #{$a->i} in {$a->lang}';
 $string['answers_section'] = 'Choices';
 $string['answers_section_help'] = 'Configure the possible answers to this question here. The languages are configured in the questionnaire settings. All answers should be translated to all languages before the questionnaire is activated.';
 $string['at_least_one_translation_required'] = 'At least one language is required.';
+$string['backup_from_restored_at'] = 'Backup from {$a->backup_time}, imported at {$a->restore_time}';
 $string['can_teacher_edit_surveyperiod'] = 'Teachers can edit the survey period';
 $string['can_teacher_edit_surveysettings'] = 'Teachers can edit the survey settings';
 $string['cannot_manually_add'] = 'Questionnaire elements of type \'{$a}\' cannot be manually added.';
@@ -143,6 +144,7 @@ $string['has_no_answer'] = 'Should the item have an <abbr title="not applicable"
 $string['inconsistent_editor_formats'] = 'Please use the same format for all translations of this field.';
 $string['infotext'] = 'Infotext';
 $string['invalid_answer'] = 'The answer value \'{$a}\' is invalid and will be discarded.';
+$string['invalid_surveypart_backup'] = 'The questionnaire backup file is invalid.';
 $string['last_slot_deletion_disabled'] = 'An event must have at least one slot, so the last one can\'t be deleted.';
 $string['list_of_courses_without_evaluation'] = 'List of courses without evaluation';
 $string['list_of_evaluations'] = 'List of evaluations';
