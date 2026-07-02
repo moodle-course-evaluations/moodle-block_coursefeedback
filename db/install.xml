@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/coursefeedback/db" VERSION="20260615" COMMENT="XMLDB file for Moodle blocks/coursefeedback"
+<XMLDB PATH="blocks/coursefeedback/db" VERSION="20260702" COMMENT="XMLDB file for Moodle blocks/coursefeedback"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -158,6 +158,7 @@
         <FIELD NAME="minoptiontext" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="A JSON object mapping language codes to the text in those languages"/>
         <FIELD NAME="maxoptiontext" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="A JSON object mapping language codes to the text in those languages"/>
         <FIELD NAME="noansweroptiontext" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="A JSON object mapping language codes to the text in those languages"/>
+        <FIELD NAME="centeroptiontext" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="An optional label for the center option of a scale, if there is an odd number of options. A JSON object mapping language codes to the text in those languages."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
