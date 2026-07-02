@@ -408,6 +408,7 @@ class surveyitem_manager {
         }
 
         // Make sure the items are a list in case of non-sequential 'sortindex'es.
+        ksort($json['items']);
         $json['items'] = array_values($json['items']);
 
         return json_encode(
@@ -424,7 +425,7 @@ class surveyitem_manager {
      */
     public static function restore_surveypart(string $backup_content): surveypart {
         try {
-            $json = json_decode($backup_content, depth: 10, flags: JSON_THROW_ON_ERROR);
+            $json = json_decode(trim($backup_content), depth: 10, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
             throw new backup_invalid_exception($e->getMessage());
         }
