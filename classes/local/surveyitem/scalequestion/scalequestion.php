@@ -247,7 +247,7 @@ class scalequestion extends surveyitemtype_with_settings {
                 throw new backup_invalid_exception("scale question references scale '$scale_name', of which there are multiple");
             }
 
-            $scale = $scales_with_name[0];
+            $scale = reset($scales_with_name);
 
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
