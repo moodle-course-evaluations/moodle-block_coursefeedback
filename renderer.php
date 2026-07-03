@@ -90,7 +90,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         $default_slots = [];
         foreach ($survey->slots_by_spe_id as $spe_id => $slots) {
             if (count($slots) === 1) {
-                $default_slots[$spe_id] = $slots[0]->get('id');
+                $default_slots[$spe_id] = $slots[array_key_first($slots)]->get('id');
             }
         }
 
