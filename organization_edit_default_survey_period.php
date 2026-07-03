@@ -23,6 +23,9 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\form\edit_default_survey_period_form;
+use block_coursefeedback\local\manager\breadcrumbs_manager;
+use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\organization;
 
 require_once(__DIR__ . '/../../config.php');
@@ -33,7 +36,8 @@ $context = context_system::instance();
 $id = required_param('id', PARAM_INT);
 $organization = organization::get_record(['id' => $id], MUST_EXIST);
 
-\block_coursefeedback\local\manager\breadcrumbs_manager::setup_organization_default_survey_period($organization);
+permission_manager::require_manage_organization($organization);
+breadcrumbs_manager::setup_organization_default_survey_period($organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_edit_default_survey_period.php', ['id' => $id]));
 $title = get_string('edit_default_survey_period', 'block_coursefeedback');
@@ -44,7 +48,7 @@ $PAGE->set_title($title);
 
 $returnurl = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]);
 
-$mform = new \block_coursefeedback\local\form\edit_default_survey_period_form($PAGE->url);
+$mform = new edit_default_survey_period_form($PAGE->url);
 $mform->set_data($organization->to_record());
 
 if ($mform->is_cancelled()) {
