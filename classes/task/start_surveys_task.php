@@ -136,7 +136,7 @@ class start_surveys_task extends scheduled_task {
                 $survey_execution_data->spes_by_event_id =
                     [$teaching_event->get('id') => $spe] + $survey_execution_data->spes_by_event_id;
                 $survey_execution_data->slots_by_spe_id =
-                    [$spe->get('id') => [$slot->get('id') => $slot]] + $survey_execution_data->slots_by_spe_id;
+                    [$spe->get('id') => [$slot]] + $survey_execution_data->slots_by_spe_id;
                 $survey_execution_data->slots_by_id =
                     [$slot->get('id') => $slot] + $survey_execution_data->slots_by_id;
                 $additional_survey_part_ids[$spe->get('id')] = $org_default_surveypartid;
