@@ -199,8 +199,8 @@
         </tr>
         </thead>
         {{#events}}
-            <tbody x-data='event({{id}}, {{#quote}} {{name}} {{/quote}})'>
-            <tr x-data='slot({{survey_part_execution.first_slot.id}}, {{#quote}} {{survey_part_execution.first_slot.name}} {{/quote}})'>
+            <tbody x-data='event({{id}})' data-eventname="{{name}}">
+            <tr x-data='slot({{survey_part_execution.first_slot.id}})' data-slotname="{{survey_part_execution.first_slot.name}}">
                 <td rowspan="{{survey_part_execution.rowspan}}">
                     <div :class='editingEvent && "hidden-preserving-width"'>{{name}}</div>
                     <form class="editing-in-cell" x-show="editingEvent" x-cloak
@@ -269,7 +269,7 @@
                 {{/survey_part_execution.first_slot}}
             </tr>
             {{#survey_part_execution.more_slots}}
-                <tr x-data='slot({{id}}, {{#quote}} {{name}} {{/quote}})'>
+                <tr x-data='slot({{id}})' data-slotname="{{name}}">
                     {{> block_coursefeedback/course_event_slot_table/slot_cells }}
                 </tr>
             {{/survey_part_execution.more_slots}}
