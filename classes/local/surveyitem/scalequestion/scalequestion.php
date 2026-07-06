@@ -25,6 +25,7 @@
 
 namespace block_coursefeedback\local\surveyitem\scalequestion;
 
+use block_coursefeedback\local\backup\backup_invalid_exception;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\surveyitem;
@@ -111,9 +112,9 @@ class scalequestion extends surveyitemtype_with_settings {
             $hasnaoption = (bool) $record->scale->get('hasnoansweroption');
             $optionamount = $record->scale->get('optionamount');
             $show_scale = $record->forceshowscale ||
-                    !$lastsurveyitem ||
-                    $additional_data[$lastsurveyitem->get('id')]->scaleid != $record->scaleid ||
-                    $lastsurveyitem->get('sortindex') !== $surveyitem->get('sortindex') - 1;
+                !$lastsurveyitem ||
+                $additional_data[$lastsurveyitem->get('id')]->scaleid != $record->scaleid ||
+                $lastsurveyitem->get('sortindex') !== $surveyitem->get('sortindex') - 1;
 
             $structure[$surveyitem->get('id')] += [
                 'max_pole' => $record->scale->get('maxoptiontext')->translate(),
@@ -200,5 +201,64 @@ class scalequestion extends surveyitemtype_with_settings {
         }
 
         return $template_data;
+    }
+
+    #[\Override]
+    public function backup_items(array $surveyitems): array {
+        $backup_data = parent::backup_items($surveyitems);
+
+        global $DB;
+        $surveyitemids = array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems);
+        [$insql, $params] = $DB->get_in_or_equal($surveyitemids);
+        $records = $DB->get_records_sql("
+            SELECT sq.surveyitemid, sq.forceshowscale, s.name AS scale_name
+            FROM {block_coursefeedback_surveyitemscalequestion} sq
+            JOIN {block_coursefeedback_scale} s ON sq.scaleid = s.id
+            WHERE sq.surveyitemid $insql
+        ", $params);
+
+        foreach ($records as $record) {
+            // TODO: Ensure no duplicate scale names.
+            $backup_data[$record->surveyitemid] += [
+                'scale_name' => $record->scale_name,
+                'forceshowscale' => boolval($record->forceshowscale),
+            ];
+        }
+
+        return $backup_data;
+    }
+
+    #[\Override]
+    public function restore_from_backup(array $surveyitems, array $backup_data, array $scales): void {
+        parent::restore_from_backup($surveyitems, $backup_data, $scales);
+
+        $records_to_insert = [];
+        foreach ($backup_data as $surveyitemid => $data) {
+            $scale_name = $data->scale_name ?? null;
+            if (!is_string($scale_name)) {
+                throw new backup_invalid_exception("missing or invalid 'scale_name'");
+            }
+
+            $scales_with_name = array_filter($scales, fn($scale) => $scale->get('name') == $scale_name);
+            if (!$scales_with_name) {
+                throw new backup_invalid_exception("scale question references scale '$scale_name', which is missing");
+            }
+            if (count($scales_with_name) > 1) {
+                throw new backup_invalid_exception("scale question references scale '$scale_name', of which there are multiple");
+            }
+
+            $scale = reset($scales_with_name);
+
+            $records_to_insert[] = [
+                'surveyitemid' => $surveyitemid,
+                'scaleid' => $scale->get('id'),
+                'forceshowscale' => $data->forceshowscale ?? false,
+            ];
+        }
+
+        global $DB;
+        $transaction = $DB->start_delegated_transaction();
+        $DB->insert_records('block_coursefeedback_surveyitemscalequestion', $records_to_insert);
+        $transaction->allow_commit();
     }
 }
