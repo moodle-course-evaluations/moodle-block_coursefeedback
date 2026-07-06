@@ -91,6 +91,7 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
             ) {
                 mtrace('Skipping mail sending for survey execution ' . $surveyexecution->get('id') .
                     ' because texts for organization ' . $organization->get('id') . ' are empty.');
+                continue;
             }
 
             $courseid = $surveyexecution->get('courseid');
