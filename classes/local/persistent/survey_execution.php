@@ -103,10 +103,9 @@ class survey_execution extends persistent_with_bulk_actions {
     /**
      * Checks if the SE is currently ongoing.
      *
-     * @param clock $clock
      * @return bool
      */
-    public function is_ongoing(clock $clock): bool {
+    public function is_ongoing(): bool {
         if ($this->get('status') != self::STATUS_STARTED) {
             return false;
         }
@@ -118,17 +117,16 @@ class survey_execution extends persistent_with_bulk_actions {
             return false;
         }
 
-        $now = $clock->time();
+        $now = di::get(clock::class)->time();
         return $now >= $starttime && $now < $endtime;
     }
 
     /**
      * Checks if the survey did run and has ended.
      *
-     * @param clock $clock
      * @return bool
      */
-    public function has_ended(clock $clock): bool {
+    public function has_ended(): bool {
         if ($this->get('status') != self::STATUS_STARTED) {
             return false;
         }
@@ -139,7 +137,7 @@ class survey_execution extends persistent_with_bulk_actions {
             return false;
         }
 
-        return $clock->time() >= $endtime;
+        return di::get(clock::class)->time() >= $endtime;
     }
 
     #[\Override]
