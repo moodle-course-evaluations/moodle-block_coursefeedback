@@ -44,12 +44,16 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 
-    Alpine.data('event', (eventId, eventName) => ({
+    Alpine.data('event', (eventId) => ({
         eventId,
-        eventName,
+        eventName: null,
 
         addingNewSlot: false,
         editingEvent: false,
+
+        init() {
+            this.eventName = this.$root.dataset.eventname;
+        },
 
         async submitSlot(e) {
             const form = e.target;
@@ -88,12 +92,16 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    Alpine.data('slot', (slotId, slotName) => ({
+    Alpine.data('slot', (slotId) => ({
         slotId,
-        slotName,
+        slotName: null,
 
         editingSlot: false,
         addingUser: false,
+
+        init() {
+            this.slotName = this.$root.dataset.slotname;
+        },
 
         startEditingSlotName() {
             this.editingSlot = true;
