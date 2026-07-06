@@ -89,7 +89,7 @@ class save_survey_answers extends external_api {
         // TODO: Cache this.
         $course_data = survey_execution_data::load_from_course_required($course);
 
-        if (!$course_data->survey_execution->is_ongoing(di::get(clock::class))) {
+        if (!$course_data->survey_execution->is_ongoing()) {
             throw new moodle_exception('survey_has_ended', 'block_coursefeedback');
         }
 

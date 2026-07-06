@@ -67,7 +67,7 @@ class survey_cache {
         $courseid = $survey_execution_data->survey_execution->get('courseid');
         if (
             $survey_execution_data->survey_execution->get('status') == survey_execution::STATUS_STARTED
-            && !$survey_execution_data->survey_execution->has_ended($this->clock)
+            && !$survey_execution_data->survey_execution->has_ended()
         ) {
             $survey = survey::for_course($survey_execution_data);
             $this->cache->set($courseid, $survey);
@@ -112,7 +112,7 @@ class survey_cache {
 
         if (
             $data->survey_execution->get('status') == survey_execution::STATUS_PLANNED
-            || $data->survey_execution->has_ended($this->clock)
+            || $data->survey_execution->has_ended()
         ) {
             // Cache the fact that there is an SE that isn't ongoing.
             $this->cache->set($course->id, $data->survey_execution);
@@ -123,7 +123,7 @@ class survey_cache {
         $survey = survey::for_course($data);
         $this->cache->set($course->id, $survey);
 
-        return $data->survey_execution->is_ongoing($this->clock) ? $survey : null;
+        return $data->survey_execution->is_ongoing() ? $survey : null;
     }
 
     /**
@@ -145,23 +145,20 @@ class survey_cache {
         if ($cached_data instanceof survey) {
             // The entire survey is cached, which means it was STARTED and not finished last we checked.
 
-            if ($cached_data->survey_execution->has_ended($this->clock)) {
+            if ($cached_data->survey_execution->has_ended()) {
                 // If the survey has ended, we only cache the SE to limit cache size.
                 // We don't evict because that would have us making DB calls again next time.
                 $this->cache->set($course->id, $cached_data->survey_execution);
                 return null;
             }
 
-            return $cached_data->survey_execution->is_ongoing($this->clock) ? $cached_data : null;
+            return $cached_data->survey_execution->is_ongoing() ? $cached_data : null;
         }
 
         if ($cached_data instanceof survey_execution) {
             // The survey was planned or finished last we checked.
 
-            if (
-                $cached_data->get('status') == survey_execution::STATUS_PLANNED
-                || $cached_data->has_ended($this->clock)
-            ) {
+            if ($cached_data->get('status') == survey_execution::STATUS_PLANNED || $cached_data->has_ended()) {
                 // Still planned or finished.
                 return null;
             }
