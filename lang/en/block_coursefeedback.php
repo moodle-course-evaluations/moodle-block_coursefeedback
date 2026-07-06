@@ -243,6 +243,7 @@ $string['survey_execution_period_is_default'] = 'This is the default survey peri
 $string['survey_execution_period_reset_to_default'] = 'Reset this course to match the default';
 $string['survey_execution_starttime'] = 'Start time of survey in this course';
 $string['survey_finished_thanks'] = 'Thank you for giving feedback!';
+$string['survey_has_ended'] = 'The survey period for this course has already ended.';
 $string['survey_languages'] = 'Languages';
 $string['survey_languages_help'] = 'Select the languages in which the questionnaire should be available. When adding and editing questions, there will be inputs for these languages. Only languages installed in {$a->sitename} will be available here.';
 $string['survey_no_languages'] = 'Please select at least one language.';
