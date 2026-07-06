@@ -19,14 +19,16 @@ namespace block_coursefeedback\external;
 use block_coursefeedback\local\survey_execution_data;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\surveyitemtype_answerdata;
+use core\clock;
 use core\context\course;
+use core\di;
 use core\exception\coding_exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-use moodle_exception;
+use core\exception\moodle_exception;
 
 /**
  * External api to save survey responses.
@@ -86,6 +88,10 @@ class save_survey_answers extends external_api {
 
         // TODO: Cache this.
         $course_data = survey_execution_data::load_from_course_required($course);
+
+        if (!$course_data->survey_execution->is_ongoing(di::get(clock::class))) {
+            throw new moodle_exception('survey_has_ended', 'block_coursefeedback');
+        }
 
         if (
             $DB->record_exists('block_coursefeedback_surveyexecution_user', [

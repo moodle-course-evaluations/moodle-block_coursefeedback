@@ -245,6 +245,7 @@ $string['survey_execution_period_is_default'] = 'Das ist der Standard-Evaluation
 $string['survey_execution_period_reset_to_default'] = 'Diesen Kurs darauf zurücksetzen';
 $string['survey_execution_starttime'] = 'Startzeitpunkt der Evaluation in diesem Kurs';
 $string['survey_finished_thanks'] = 'Vielen Dank für Ihr Feedback!';
+$string['survey_has_ended'] = 'Der Evaluationszeitraum in diesem Kurs hat bereits geendet.';
 $string['survey_languages'] = 'Unterstützte Sprachen';
 $string['survey_languages_help'] = 'Wählen Sie die Sprachen aus, in denen der Fragebogen verfügbar sein soll. Beim Hinzufügen und Bearbeiten von Elementen können Übersetzungen in diese Sprachen angegeben werden. Nur Sprachen, die in {$a->sitename} installiert sind, können hier ausgewählt werden.';
 $string['survey_no_languages'] = 'Geben Sie mindestens eine Sprache an.';
