@@ -41,20 +41,23 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
     $dbman = $DB->get_manager();
 
     // 1) Enforce minimum starting version.
-    if ($oldversion < 2025_05_09_00) {
-        throw new coding_exception(
-            'This upgrade requires plugin version 2025050900 or higher. '
-            . 'Please upgrade to version 2025050900 (git ref f29819d04929e78ff92e836b31784a9d553be82a) before proceeding.'
-        );
+    if ($oldversion < 2025050900) {
+        // Allow the upgrade when confirmoverhaul is set using forced_plugin_settings.
+        if (!($oldversion >= 2025022700 && get_config('block_coursefeedback', 'confirmoverhaul'))) {
+            throw new coding_exception(
+                'This upgrade requires plugin version 2025050900 or higher. '
+                . 'Please upgrade to version 2025050900 (git ref f29819d04929e78ff92e836b31784a9d553be82a) before proceeding.'
+            );
+        }
     }
 
     // 2) Verify that the admin has accepted the major overhaul and possible data loss.
     if ($oldversion < 2025050901) {
         $confirmed = get_config('block_coursefeedback', 'confirmoverhaul');
-        if (empty($confirmed)) {
+        if (!$confirmed) {
             throw new coding_exception(
-                'You must confirm the major overhaul and possible data loss '
-                . 'in the Course Feedback block settings before continuing.'
+                "You must enable 'confirmoverhaul' and accept possible data loss "
+                . 'in the block_coursefeedback plugin settings before continuing.'
             );
         }
 
