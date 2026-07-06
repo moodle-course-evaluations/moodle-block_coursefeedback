@@ -158,7 +158,7 @@ abstract class surveyitemtype {
 
         // Median.
         $acc = 0;
-        $target = intdiv($n, 2);
+        $target = intdiv($n + 1, 2);
         $average_with_next_value = null;
         foreach ($counts as $value => $count) {
             if ($average_with_next_value !== null) {
