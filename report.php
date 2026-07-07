@@ -36,12 +36,12 @@ use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 
+require_login();
+
 $surveypartexecutionoptionid = required_param('id', PARAM_INT);
 $slot = response_slot::get_record(['id' => $surveypartexecutionoptionid], MUST_EXIST);
 $surveypartexecution = survey_part_execution::get_record(['id' => $slot->get('surveypartexecutionid')], MUST_EXIST);
 $surveyexecution = survey_execution::get_record(['id' => $surveypartexecution->get('surveyexecutionid')], MUST_EXIST);
-
-require_login($surveyexecution->get('courseid'));
 
 $slot_users = response_slot_user::get_records(['surveypartexecutionoptionid' => $slot->get('id')]);
 $slot_user_ids = array_map(fn ($slot_user) => $slot_user->get('userid'), $slot_users);
@@ -64,6 +64,13 @@ if (!permission_manager::can_manage_organization($organization)) {
 }
 
 $PAGE->set_context($context);
+
+$course = get_course($surveyexecution->get('courseid'));
+// We've checked that the user is allowed to see the report, but they might not be allowed to see the course.
+if (can_access_course($course, onlyactive: true)) {
+    // If they are allowed to see the course, we also want to show the course navbar and the like.
+    $PAGE->set_course($course);
+}
 
 $title = get_string('report', 'block_coursefeedback');
 
