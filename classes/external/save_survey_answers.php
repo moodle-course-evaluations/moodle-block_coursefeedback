@@ -80,13 +80,17 @@ class save_survey_answers extends external_api {
 
         $context = course::instance($courseid);
         self::validate_context($context);
-        require_capability('block/coursefeedback:filloutsurvey', $context);
+        require_capability('block/coursefeedback:filloutsurvey', $context, doanything: false);
+
+        if (is_role_switched($courseid)) {
+            throw new moodle_exception('no_save_when_switch_role', 'block_coursefeedback');
+        }
 
         $course = get_course($courseid);
 
         $transaction = $DB->start_delegated_transaction();
 
-        // TODO: Cache this.
+        // TODO: Load the survey data from survey_cache.
         $course_data = survey_execution_data::load_from_course_required($course);
 
         if (!$course_data->survey_execution->is_ongoing()) {
