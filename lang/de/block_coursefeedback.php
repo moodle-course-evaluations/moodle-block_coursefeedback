@@ -46,6 +46,7 @@ $string['cannot_manually_add'] = 'Fragebogen-Elemente des Typs \'{$a}\' können 
 $string['center_option_text'] = 'Beschriftung der mittleren Option';
 $string['confirm_event_deletion'] = 'Möchten Sie wirklich die Lehrveranstaltung <q><b>{$a}</b></q> aus der Evaluation löschen?';
 $string['confirm_slot_deletion'] = 'Möchten Sie wirklich die Untergruppe <q><b>{$a}</b></q> aus der Evaluation löschen?';
+$string['could_not_save_participation'] = 'Teilnahme konnte nicht gespeichert werden.';
 $string['course_event_slot_table_heading'] = 'Lehrveranstaltungen und Untergruppen';
 $string['course_not_in_org'] = 'Der Kurs \'{$a->course_name}\' gehört nicht zu Organisationseinheit \'{$a->org_name}\'.';
 $string['course_settings'] = 'Evaluationseinstellungen';

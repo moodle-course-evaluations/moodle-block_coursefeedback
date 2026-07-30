@@ -46,6 +46,7 @@ $string['cannot_manually_add'] = 'Questionnaire elements of type \'{$a}\' cannot
 $string['center_option_text'] = 'Text for the center option';
 $string['confirm_event_deletion'] = 'Are you sure you want to delete the teaching event <q><b>{$a}</b></q>?';
 $string['confirm_slot_deletion'] = 'Are you sure you want to delete the slot <q><b>{$a}</b></q>?';
+$string['could_not_save_participation'] = 'Could not save participation.';
 $string['course_event_slot_table_heading'] = 'Teaching Events and Response Slots';
 $string['course_not_in_org'] = 'The course \'{$a->course_name}\' does not belong to organization \'{$a->org_name}\'.';
 $string['course_settings'] = 'Survey settings';

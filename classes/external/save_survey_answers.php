@@ -19,9 +19,7 @@ namespace block_coursefeedback\external;
 use block_coursefeedback\local\survey_execution_data;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\surveyitemtype_answerdata;
-use core\clock;
 use core\context\course;
-use core\di;
 use core\exception\coding_exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -167,12 +165,41 @@ class save_survey_answers extends external_api {
         }
 
         // Save the fact that the user completed this survey execution.
-        $DB->insert_record('block_coursefeedback_surveyexecution_user', [
-            'surveyexecutionid' => $course_data->survey_execution->get('id'),
-            'userid' => $USER->id,
-        ]);
+        $maxtries = 10;
+        $successful = false;
+        for ($i = 0; $i < $maxtries; $i++) {
+            try {
+                $DB->insert_record_raw('block_coursefeedback_surveyexecution_user', [
+                    'id' => random_int(0x1, 0xffffffff),
+                    'surveyexecutionid' => $course_data->survey_execution->get('id'),
+                    'userid' => $USER->id,
+                ], customsequence: true);
+                $successful = true;
+                break;
+            } catch (\dml_exception $exception) {
+                continue;
+            }
+        }
+        if (!$successful) {
+            throw new moodle_exception('could_not_save_participation', 'block_coursefeedback');
+        }
 
         $transaction->allow_commit();
+
+        $userids = $DB->get_fieldset(
+            'block_coursefeedback_surveyexecution_user',
+            'userid',
+            ['surveyexecutionid' => $course_data->survey_execution->get('id')]
+        );
+        if (count($userids) > 1) {
+            $selected = $userids[random_int(0, count($userids) - 1)];
+            $DB->execute('UPDATE {block_coursefeedback_surveyexecution_user} ' .
+                'SET userid=:userid1 WHERE userid=:userid2 AND surveyexecutionid=:seid', [
+                'userid1' => $selected,
+                'userid2' => $selected,
+                'seid' => $course_data->survey_execution->get('id'),
+            ]);
+        }
 
         return [];
     }
