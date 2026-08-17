@@ -234,7 +234,7 @@ class scalequestion extends surveyitemtype_with_settings {
 
         $records_to_insert = [];
         foreach ($backup_data as $surveyitemid => $data) {
-            $scale_name = $data->scale_name ?? null;
+            $scale_name = $data['scale_name'] ?? null;
             if (!is_string($scale_name)) {
                 throw new backup_invalid_exception("missing or invalid 'scale_name'");
             }
@@ -252,13 +252,11 @@ class scalequestion extends surveyitemtype_with_settings {
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
                 'scaleid' => $scale->get('id'),
-                'forceshowscale' => $data->forceshowscale ?? false,
+                'forceshowscale' => $data['forceshowscale'] ?? false,
             ];
         }
 
         global $DB;
-        $transaction = $DB->start_delegated_transaction();
         $DB->insert_records('block_coursefeedback_surveyitemscalequestion', $records_to_insert);
-        $transaction->allow_commit();
     }
 }

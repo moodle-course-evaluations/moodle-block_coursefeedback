@@ -23,8 +23,9 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\backup\backup_manager;
 use block_coursefeedback\local\persistent\surveypart;
-use block_coursefeedback\local\surveyitem\surveyitem_manager;
+use core\di;
 
 define('CLI_SCRIPT', true);
 
@@ -85,7 +86,7 @@ try {
         }
     }
 
-    $backup_content = surveyitem_manager::backup_surveypart($surveypart, pretty: $options['pretty']);
+    $backup_content = di::get(backup_manager::class)->backup_surveypart($surveypart, pretty: $options['pretty']);
 
     cli_writeln($backup_content, $stream);
 } finally {
