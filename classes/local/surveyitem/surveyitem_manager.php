@@ -30,9 +30,9 @@ use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\persistent\teaching_event;
+use block_coursefeedback\local\survey_page;
 use block_coursefeedback\local\surveyitem\dropdown\dropdown;
 use block_coursefeedback\local\surveyitem\emoji\emoji;
-use block_coursefeedback\local\survey_page;
 use block_coursefeedback\local\surveyitem\info\info;
 use block_coursefeedback\local\surveyitem\multiplechoice\multiplechoice;
 use block_coursefeedback\local\surveyitem\pagebreak\pagebreak;
@@ -93,7 +93,7 @@ class surveyitem_manager {
      * @param surveypart[] $surveyparts
      * @return array<int, surveyitem[]> [int $surveypartid => [surveyitem $surveyitem]]
      */
-    private static function get_surveyitems_for_surveyparts(array $surveyparts): array {
+    public static function get_surveyitems_for_surveyparts(array $surveyparts): array {
         $all_items = surveyitem::get_records_list(
             'surveypartid',
             array_map(fn($sp) => $sp->get('id'), $surveyparts),
@@ -114,7 +114,7 @@ class surveyitem_manager {
      * @param surveyitem[][] $surveyitemsets
      * @return array<string, surveyitem[]> [string $surveyitemtype => [surveyitem $surveyitem]]
      */
-    private static function group_surveyitems_by_type(array $surveyitemsets): array {
+    public static function group_surveyitems_by_type(array $surveyitemsets): array {
         $surveyitems_by_type = [];
         foreach ($surveyitemsets as $surveyitemset) {
             foreach ($surveyitemset as $surveyitem) {
