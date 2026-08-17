@@ -23,7 +23,8 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_coursefeedback\local\surveyitem\surveyitem_manager;
+use block_coursefeedback\local\backup\backup_manager;
+use core\di;
 
 define('CLI_SCRIPT', true);
 
@@ -73,6 +74,8 @@ if ($options['input'] === '-') {
     }
 }
 
-$surveypart = surveyitem_manager::restore_surveypart($backup_content);
+$surveypart = di::get(backup_manager::class)->restore_surveypart($backup_content);
 
 cli_writeln("Survey part restored successfully with ID '{$surveypart->get('id')}' and name '{$surveypart->get('name')}'.");
+$surveypart_link = new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $surveypart->get('id')]);
+cli_writeln("Link to new survey part: $surveypart_link");

@@ -196,15 +196,13 @@ class text extends surveyitemtype_with_settings {
         foreach ($backup_data as $surveyitemid => $data) {
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
-                'initialrows' => $data->initialrows ?? 3,
-                'autoresize' => $data->autoresize ?? true,
-                'maxlength' => $data->maxlength ?? 500,
+                'initialrows' => $data['initialrows'] ?? 3,
+                'autoresize' => $data['autoresize'] ?? true,
+                'maxlength' => $data['maxlength'] ?? 500,
             ];
         }
 
         global $DB;
-        $transaction = $DB->start_delegated_transaction();
         $DB->insert_records('block_coursefeedback_surveyitemtext', $records_to_insert);
-        $transaction->allow_commit();
     }
 }

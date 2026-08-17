@@ -25,9 +25,7 @@
 
 namespace block_coursefeedback\local\surveyitem;
 
-use block_coursefeedback\local\backup\backup_invalid_exception;
 use block_coursefeedback\local\persistent\response_slot;
-use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
@@ -42,13 +40,9 @@ use block_coursefeedback\local\surveyitem\scalequestion\scalequestion;
 use block_coursefeedback\local\surveyitem\singlechoice\singlechoice;
 use block_coursefeedback\local\surveyitem\slot_choice\slot_choice;
 use block_coursefeedback\local\surveyitem\text\text;
-use core\clock;
 use core\di;
 use core\exception\coding_exception;
-use DateTimeImmutable;
-use DateTimeInterface;
 use html_writer;
-use JsonException;
 
 /**
  * Surveyitem manager.
@@ -99,7 +93,7 @@ class surveyitem_manager {
      * @param surveypart[] $surveyparts
      * @return array<int, surveyitem[]> [int $surveypartid => [surveyitem $surveyitem]]
      */
-    private static function get_surveyitems_for_surveyparts(array $surveyparts): array {
+    public static function get_surveyitems_for_surveyparts(array $surveyparts): array {
         $all_items = surveyitem::get_records_list(
             'surveypartid',
             array_map(fn($sp) => $sp->get('id'), $surveyparts),
@@ -120,7 +114,7 @@ class surveyitem_manager {
      * @param surveyitem[][] $surveyitemsets
      * @return array<string, surveyitem[]> [string $surveyitemtype => [surveyitem $surveyitem]]
      */
-    private static function group_surveyitems_by_type(array $surveyitemsets): array {
+    public static function group_surveyitems_by_type(array $surveyitemsets): array {
         $surveyitems_by_type = [];
         foreach ($surveyitemsets as $surveyitemset) {
             foreach ($surveyitemset as $surveyitem) {
@@ -353,218 +347,5 @@ class surveyitem_manager {
         }
 
         return $cache[$response_slot->get('id')];
-    }
-
-    /**
-     * Backs up the given survey part, including all scales and items.
-     *
-     * @param surveypart $surveypart
-     * @param bool $pretty Pretty-print the JSON.
-     * @return string
-     */
-    public static function backup_surveypart(surveypart $surveypart, bool $pretty = false): string {
-        $backup_time = di::get(clock::class)->now()->format(DateTimeInterface::ATOM);
-
-        $surveyitems_by_partid = self::get_surveyitems_for_surveyparts([$surveypart]);
-        $surveyitems_by_type = self::group_surveyitems_by_type($surveyitems_by_partid);
-
-        $json = [
-            'name' => $surveypart->get('name'),
-            'languages' => $surveypart->get_languages(),
-            'backup_time' => $backup_time,
-            'scales' => [],
-            'items' => [],
-        ];
-
-        $scales = scale::get_records(['surveypartid' => $surveypart->get('id')]);
-        foreach ($scales as $scale) {
-            $scale_record = $scale->to_record();
-            unset($scale_record->id);
-            unset($scale_record->surveypartid);
-            $json['scales'][] = [
-                'name' => $scale->get('name'),
-                'optionamount' => intval($scale->get('optionamount')),
-                'minoptiontext' => $scale->get('minoptiontext')->serialize(),
-                'maxoptiontext' => $scale->get('maxoptiontext')->serialize(),
-                'hasnoansweroption' => boolval($scale->get('hasnoansweroption')),
-                'noansweroptiontext' => $scale->get('noansweroptiontext')?->serialize(),
-                'centeroptiontext' => $scale->get('centeroptiontext')?->serialize(),
-            ];
-        }
-
-        foreach ($surveyitems_by_type as $surveyitemtype => $surveyitems) {
-            $type_impl = self::get_surveyitemtype($surveyitemtype);
-
-            $backup_data = $type_impl->backup_items($surveyitems);
-
-            foreach ($surveyitems as $surveyitem) {
-                $json['items'][$surveyitem->get('sortindex')] = [
-                    'type' => $surveyitemtype,
-                    'text' => $surveyitem->get('text')?->serialize(),
-                    'textformat' => $surveyitem->get('textformat'),
-                    'backup_data' => $backup_data[$surveyitem->get('id')] ?? null,
-                ];
-            }
-        }
-
-        // Make sure the items are a list in case of non-sequential 'sortindex'es.
-        ksort($json['items']);
-        $json['items'] = array_values($json['items']);
-
-        return json_encode(
-            $json,
-            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | ($pretty ? JSON_PRETTY_PRINT : 0)
-        );
-    }
-
-    /**
-     * Restores the surveypart from the given backup content.
-     *
-     * @param string $backup_content
-     * @return surveypart
-     */
-    public static function restore_surveypart(string $backup_content): surveypart {
-        try {
-            $json = json_decode(trim($backup_content), depth: 10, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
-            throw new backup_invalid_exception($e->getMessage());
-        }
-
-        global $DB;
-        $transaction = $DB->start_delegated_transaction();
-
-        $backup_datetime = DateTimeImmutable::createFromFormat(
-            DateTimeInterface::ATOM,
-            $json->backup_time ?: throw new backup_invalid_exception("missing 'backup_time'")
-        ) ?: throw new backup_invalid_exception("invalid 'backup_time'");
-        $backup_timestamp = $backup_datetime->getTimestamp();
-        $restore_timestamp = time();
-
-        $name = $json->name ?: throw new backup_invalid_exception("missing 'name'");
-        $name .= " (" . get_string('backup_from_restored_at', 'block_coursefeedback', [
-                'backup_time' => userdate($backup_timestamp, format: get_string('strftimedatetimeshortaccurate', 'langconfig')),
-                'restore_time' => userdate($restore_timestamp, format: get_string('strftimedatetimeshortaccurate', 'langconfig')),
-            ]) . ")";
-
-        $surveypart = new surveypart();
-        $surveypart->set('name', $name);
-        $surveypart->create();
-
-        if (!is_array($json->languages) || !array_is_list($json->languages)) {
-            throw new backup_invalid_exception("'languages' is not a list");
-        }
-        $installed_langs = get_string_manager()->get_list_of_translations();
-        $languages = array_filter($json->languages, function ($lang) use ($installed_langs) {
-            if (!isset($installed_langs[$lang])) {
-                mtrace(
-                    "The backed-up survey part supports '$lang', but that translation is not installed. " .
-                    "Its translations will be imported but not shown until the appropriate language pack is installed and enabled."
-                );
-                return false;
-            }
-            return true;
-        });
-        $surveypart->set_languages($languages);
-
-        $scale_backups = $json->scales ?? [];
-        if (!is_array($scale_backups) || !array_is_list($scale_backups)) {
-            throw new backup_invalid_exception("'scales' is not a list");
-        }
-        $item_backups = $json->items ?? [];
-        if (!is_array($item_backups) || !array_is_list($item_backups)) {
-            throw new backup_invalid_exception("'items' is not a list");
-        }
-
-        $scales = self::restore_scales($scale_backups, $surveypart);
-
-        self::restore_surveyitems($item_backups, $surveypart, $scales);
-
-        $transaction->allow_commit();
-
-        return $surveypart;
-    }
-
-    /**
-     * Restores surveyitems from the given backups.
-     *
-     * @param array $item_backups
-     * @param surveypart $surveypart
-     * @param array $scales
-     * @return void
-     */
-    private static function restore_surveyitems(array $item_backups, surveypart $surveypart, array $scales): void {
-        $items_and_data_by_type = [];
-
-        foreach ($item_backups as $i => $item_backup) {
-            if (!is_object($item_backup)) {
-                throw new backup_invalid_exception("survey item at index $i is not an object");
-            }
-
-            $surveyitemtype = $item_backup->type ?: throw new backup_invalid_exception("survey item at index $i is missing 'type'");
-
-            if (!empty($item_backup->text)) {
-                $text = $item_backup->text;
-                // If there's text, require a textformat.
-                $text_format = $item_backup->textformat
-                    ?: throw new backup_invalid_exception("survey item at index $i is missing 'textformat'");
-            } else {
-                $text = $text_format = null;
-            }
-
-            $surveyitem = new surveyitem();
-            $surveyitem->set_many([
-                'surveypartid' => $surveypart->get('id'),
-                'surveyitemtype' => $surveyitemtype,
-                'sortindex' => $i,
-                'text' => $text,
-                'textformat' => $text_format,
-            ]);
-
-            $backup_data = $item_backup->backup_data ?? null;
-
-            $surveyitem->create();
-            $items_and_data_by_type[$surveyitemtype][] = [$surveyitem, $backup_data];
-        }
-
-        foreach ($items_and_data_by_type as $surveyitemtype => $items_and_data) {
-            try {
-                $type_impl = self::get_surveyitemtype($surveyitemtype);
-            } catch (coding_exception) {
-                throw new backup_invalid_exception("the survey item type '$surveyitemtype' is not supported");
-            }
-
-            $backup_data_by_id = [];
-            foreach ($items_and_data as [$surveyitem, $backup_data]) {
-                $backup_data_by_id[$surveyitem->get('id')] = $backup_data;
-            }
-
-            $type_impl->restore_from_backup(array_column($items_and_data, 0), $backup_data_by_id, scales: $scales);
-        }
-    }
-
-    /**
-     * Restores scales from the given backups and returns the created objects.
-     *
-     * @param array $scale_backups
-     * @param surveypart $surveypart
-     * @return array
-     */
-    public static function restore_scales(array $scale_backups, surveypart $surveypart): array {
-        $scales = [];
-        foreach ($scale_backups as $i => $scale_backup) {
-            if (!is_object($scale_backup)) {
-                throw new backup_invalid_exception("scale at index $i is not an object");
-            }
-
-            $scale = new scale();
-            $scale->set_many([
-                ...((array) $scale_backup),
-                'id' => 0,
-                'surveypartid' => $surveypart->get('id'),
-            ]);
-
-            $scales[] = $scale->create();
-        }
-        return $scales;
     }
 }
