@@ -64,6 +64,9 @@ class backup_manager {
                 // If there's text, require a textformat.
                 $text_format = $item_backup->textformat
                     ?: throw new backup_invalid_exception("survey item at index $i is missing a 'textformat'");
+                if (!in_array($text_format, [FORMAT_MOODLE, FORMAT_HTML, FORMAT_PLAIN, FORMAT_MARKDOWN])) {
+                    throw new backup_invalid_exception("survey item at index $i has an unknown 'textformat': $text_format");
+                }
             } else {
                 $text = $text_format = null;
             }
