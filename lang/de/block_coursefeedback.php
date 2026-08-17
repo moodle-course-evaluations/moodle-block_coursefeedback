@@ -39,6 +39,7 @@ $string['answer_i'] = 'Antwort #{$a}';
 $string['answer_i_in_lang'] = 'Antwort #{$a->i} in {$a->lang}';
 $string['answers_section'] = 'Antwortmöglichkeiten';
 $string['answers_section_help'] = 'Stellen Sie hier die möglichen Antworten auf diese Frage ein. Die unterstützten Sprachen werden in den Fragebogen-Einstellungen verwaltet. Alle Antworten sollten in alle unterstützten Sprachen übersetzt werden, bevor der Fragebogen verwendet wird.';
+$string['array_converter_cannot_convert'] = 'Kann {$a->actualtype} nicht zu \'{$a->typehint}\' konvertieren.';
 $string['at_least_one_translation_required'] = 'Geben Sie bitte mindestens eine Sprache an.';
 $string['backup_from_restored_at'] = 'Sicherung vom {$a->backup_time}, eingespielt am {$a->restore_time}';
 $string['can_teacher_edit_surveyperiod'] = 'Trainer/innen können den Evaluationszeitraum ihrer Kurse anpassen';
