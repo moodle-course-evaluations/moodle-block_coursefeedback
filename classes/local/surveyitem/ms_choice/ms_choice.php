@@ -175,31 +175,25 @@ abstract class ms_choice extends surveyitemtype_with_settings {
 
         $options_to_insert = [];
         foreach ($backup_data as $surveyitemid => $data) {
-            if (!isset($data->options) || !is_array($data->options)) {
+            if (!isset($data['options']) || !is_array($data['options'])) {
                 throw new backup_invalid_exception("'options' is missing or not an array");
-            }
-            if (empty($data->options)) {
-                // Question without answer options. Weird, but valid.
-                continue;
             }
 
             $i = 0;
-            foreach ($data->options as $option) {
-                if (!is_object($option) || !isset($option->text) || !multilang_string::is_valid($option->text)) {
+            foreach ($data['options'] as $option) {
+                if (!is_array($option) || !isset($option['text']) || !multilang_string::is_valid($option['text'])) {
                     throw new backup_invalid_exception('invalid option in survey item');
                 }
 
                 $options_to_insert[] = [
                     'surveyitemid' => $surveyitemid,
-                    'text' => $option->text,
+                    'text' => $option['text'],
                     'sortindex' => $i++,
                 ];
             }
         }
 
         global $DB;
-        $transaction = $DB->start_delegated_transaction();
         $DB->insert_records('block_coursefeedback_surveyitemansweroption', $options_to_insert);
-        $transaction->allow_commit();
     }
 }

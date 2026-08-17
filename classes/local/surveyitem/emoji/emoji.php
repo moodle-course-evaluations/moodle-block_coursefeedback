@@ -309,19 +309,20 @@ class emoji extends surveyitemtype_with_settings {
 
         $records_to_insert = [];
         foreach ($backup_data as $surveyitemid => $data) {
-            if (empty(self::get_available_variants()[$data->variant])) {
-                throw new backup_invalid_exception("emoji question variant '$data->variant' is not supported");
+            if (!($variant = $data['variant'] ?? null)) {
+                throw new backup_invalid_exception("emoji question variant is missing from backup data");
+            }
+            if (empty(self::get_available_variants()[$variant])) {
+                throw new backup_invalid_exception("emoji question variant '$variant' is not supported");
             }
 
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
-                'variant' => $data->variant,
+                'variant' => $variant,
             ];
         }
 
         global $DB;
-        $transaction = $DB->start_delegated_transaction();
         $DB->insert_records('block_coursefeedback_surveyitememojis', $records_to_insert);
-        $transaction->allow_commit();
     }
 }
