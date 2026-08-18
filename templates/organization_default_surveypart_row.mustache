@@ -15,26 +15,33 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template block_coursefeedback/organization_default_surveypart
+    @template block_coursefeedback/organization_default_surveypart_row
 
-    This template renders the editing default surveyparts for an organization.
+    A single row in the table of event types and their associated questionnaires for an organization.
 
     Example context (json):
     {
-         "id":1,
-         "name":"Vorlesung",
-         "surveyparts":[
-            {
-               "id":1,
-               "name":"Survey #1",
-               "selected":true
-            },
-            {
-               "id":2,
-               "name":"Survey #2"
-            }
-         ]
-     }
+      "id": 1,
+      "name": "Vorlesung",
+      "surveypart_chooser_context": {
+        "org_name": "Fakultät I",
+        "has_global_surveyparts": true,
+        "global_surveyparts": [
+          {
+            "id": 1,
+            "name": "Survey #1"
+          }
+        ],
+        "has_organization_surveyparts": true,
+        "organization_surveyparts": [
+          {
+            "id": 2,
+            "name": "Survey #2",
+            "selected": true
+          }
+        ]
+      }
+    }
 }}
 
 <tr>
@@ -47,12 +54,15 @@
                 class="form-control">
     </td>
     <td>
-        <select class="form-control form-select" name="surveypart-{{id}}">
-            <option value="">-</option>
-            {{#surveyparts}}
-                <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
-            {{/surveyparts}}
-        </select>
+        <label class="sr-only" for="block_coursefeedback-surveypart-{{id}}-{{uniqid}}">
+            {{#str}}questionnaire, block_coursefeedback{{/str}}
+        </label>
+        {{#surveypart_chooser_context}}
+            {{< block_coursefeedback/surveypart_chooser }}
+                {{$id}}block_coursefeedback-surveypart-{{id}}-{{uniqid}}{{/id}}
+                {{$name}}surveypart-{{id}}{{/name}}
+            {{/ block_coursefeedback/surveypart_chooser }}
+        {{/surveypart_chooser_context}}
     </td>
     <td>
     </td>

@@ -17,10 +17,10 @@ import Templates from "core/templates";
 
 /**
  *
- * @param {object} surveyparts
+ * @param {object} new_surveypart_chooser_context
  * @returns {Promise<void>}
  */
-export async function init(surveyparts) {
+export async function init(new_surveypart_chooser_context) {
     let additionalCount = 0;
 
     void Templates.prefetchTemplates(['block_coursefeedback/organization_default_surveypart_row']);
@@ -60,7 +60,7 @@ export async function init(surveyparts) {
         const {html} = await Templates.renderForPromise('block_coursefeedback/organization_default_surveypart_row', {
             id: 'new-' + newId,
             name: '',
-            surveyparts: surveyparts,
+            surveypart_chooser_context: new_surveypart_chooser_context,
         });
         const row = document.createElement('tr');
         row.innerHTML = html;
