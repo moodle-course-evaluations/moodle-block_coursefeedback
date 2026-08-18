@@ -28,6 +28,7 @@ use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
+use block_coursefeedback\output\surveypart_chooser;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
@@ -49,7 +50,7 @@ $PAGE->set_title($title);
 
 $returnurl = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]);
 
-$surveyparts = surveypart::get_surveyparts_available_for_organization($id);
+$surveyparts = surveypart::get_surveyparts_available_for_organization($organization);
 $eventtypes = eventtype::get_eventtypes_for_organization($id);
 
 if (optional_param('submit', null, PARAM_ALPHA)) {
@@ -98,36 +99,21 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     redirect($returnurl);
 }
 
-$surveyparts_for_template = [];
+$PAGE->requires->js_call_amd(
+    'block_coursefeedback/organization_default_surveypart',
+    'init',
+    [(new surveypart_chooser($surveyparts, null, $organization))->export_for_template($OUTPUT)]
+);
 
-foreach ($surveyparts as $surveypart) {
-    $surveyparts_for_template[$surveypart->get('id')] = [
-        'id' => $surveypart->get('id'),
-        'name' => $surveypart->get('name'),
-    ];
-}
-
-$PAGE->requires->js_call_amd('block_coursefeedback/organization_default_surveypart', 'init', [
-    'surveyparts' => array_values($surveyparts_for_template),
-]);
-
-$template_eventtypes = [];
-
-foreach ($eventtypes as $eventtype) {
-    $surveyparts_for_eventtype_template = $surveyparts_for_template;
-    if (isset($surveyparts_for_eventtype_template[$eventtype->get('surveypartid')])) {
-        $surveyparts_for_eventtype_template[$eventtype->get('surveypartid')]['selected'] = true;
-    }
-    $template_eventtypes[] = [
-        'id' => $eventtype->get('id'),
-        'name' => $eventtype->get('name'),
-        'surveyparts' => array_values($surveyparts_for_eventtype_template),
-    ];
-}
-
-if (isset($surveyparts_for_template[$organization->get('default_surveypartid')])) {
-    $surveyparts_for_template[$organization->get('default_surveypartid')]['selected'] = true;
-}
+$template_eventtypes = array_map(fn ($eventtype) => [
+    'id' => $eventtype->get('id'),
+    'name' => $eventtype->get('name'),
+    'surveypart_chooser_context' => (new surveypart_chooser(
+        $surveyparts,
+        $eventtype->get('surveypartid'),
+        $organization
+    ))->export_for_template($OUTPUT),
+], array_values($eventtypes));
 
 echo $OUTPUT->header();
 
@@ -135,7 +121,11 @@ echo $OUTPUT->render_from_template('block_coursefeedback/organization_default_su
     'formurl' => $PAGE->url->out(false),
     'sesskey' => sesskey(),
     'returnurl' => $returnurl->out(false),
-    'default_surveyparts' => array_values($surveyparts_for_template),
+    'default_surveypart_chooser_context' => (new surveypart_chooser(
+        $surveyparts,
+        $organization->get('default_surveypartid'),
+        $organization
+    ))->export_for_template($OUTPUT),
     'eventtypes' => $template_eventtypes,
 ]);
 

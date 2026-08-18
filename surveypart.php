@@ -25,6 +25,7 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey;
@@ -42,8 +43,11 @@ require_login();
 $id = required_param('id', PARAM_INT);
 $surveypart = surveypart::get_record(['id' => $id], MUST_EXIST);
 
+$organizationid = $surveypart->get('organizationid');
+$organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
+
 permission_manager::require_permission_for_editing_surveypart($surveypart);
-breadcrumbs_manager::setup_survey($surveypart);
+breadcrumbs_manager::setup_questionnaire($surveypart, $organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $id]));
 $PAGE->set_context(context_system::instance());

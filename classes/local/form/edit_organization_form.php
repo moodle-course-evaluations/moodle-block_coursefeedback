@@ -93,6 +93,40 @@ class edit_organization_form extends \moodleform {
         $mform->addHelpButton('always_show_default_sp', 'always_show_default_sp', 'block_coursefeedback');
         $mform->setType('always_show_default_sp', PARAM_BOOL);
 
+        $mform->addElement(
+            'static',
+            'questionnaire_restriction_note',
+            null,
+            get_string('questionnaire_restriction_note', 'block_coursefeedback')
+        );
+
+        $mform->addElement(
+            'advcheckbox',
+            'can_have_local_questionnaires',
+            get_string('can_have_local_questionnaires', 'block_coursefeedback')
+        );
+        $mform->setType('can_have_local_questionnaires', PARAM_BOOL);
+        $mform->setDefault('can_have_local_questionnaires', 0);
+
+        $mform->addElement(
+            'advcheckbox',
+            'disallow_global_questionnaires',
+            get_string('disallow_global_questionnaires', 'block_coursefeedback')
+        );
+        $mform->setType('disallow_global_questionnaires', PARAM_BOOL);
+        $mform->hideIf('disallow_global_questionnaires', 'can_have_local_questionnaires');
+        $mform->setDefault('disallow_global_questionnaires', 0);
+
         $this->add_action_buttons();
+    }
+
+    #[\Override]
+    public function get_data() {
+        $data = parent::get_data();
+        if ($data) {
+            // Ensure that disallow_global_questionnaires requires can_have_local_questionnaires.
+            $data->disallow_global_questionnaires &= $data->can_have_local_questionnaires ?? false;
+        }
+        return $data;
     }
 }

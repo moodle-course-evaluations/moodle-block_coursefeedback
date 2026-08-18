@@ -43,12 +43,20 @@ class surveyparts_table extends \table_sql {
 
     /**
      * Constructor.
+     *
+     * @param int|null $organizationid
      */
-    public function __construct() {
+    public function __construct(?int $organizationid) {
         global $PAGE;
         parent::__construct('block_coursefeedback-surveyparts_table');
         $this->define_baseurl($PAGE->url);
-        $this->set_sql('id, name', '{' . surveypart::TABLE . '}', 'true');
+
+        $this->set_sql(
+            fields: 'id, name',
+            from: '{' . surveypart::TABLE . '}',
+            where: $organizationid ? 'organizationid = :organizationid' : 'organizationid IS NULL',
+            params: $organizationid ? ['organizationid' => $organizationid] : []
+        );
         $this->column_nosort = ['tools'];
         $this->define_columns(['name', 'tools']);
         $this->define_headers([
