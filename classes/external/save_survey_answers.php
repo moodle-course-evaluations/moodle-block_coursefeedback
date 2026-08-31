@@ -186,19 +186,22 @@ class save_survey_answers extends external_api {
 
         $transaction->allow_commit();
 
-        $userids = $DB->get_fieldset(
+        // PostgreSQL (and probably other RDBMSs) stores rows in the order of (insertion or) last update on disk,
+        // and will implicitly retrieve them in that order when no ORDER BY is used.
+        // As an added precaution to prevent surveyexecution_user rows being correlated to response sets,
+        // we pick a random existing row and update it (without changing any column). On PostgreSQL,
+        // this causes a new tuple with a new ctid to depose the old one, making the row order less predictable with time.
+        $seu_ids = $DB->get_fieldset(
             'block_coursefeedback_surveyexecution_user',
-            'userid',
+            'id',
             ['surveyexecutionid' => $course_data->survey_execution->get('id')]
         );
-        if (count($userids) > 1) {
-            $selected = $userids[random_int(0, count($userids) - 1)];
-            $DB->execute('UPDATE {block_coursefeedback_surveyexecution_user} ' .
-                'SET userid=:userid1 WHERE userid=:userid2 AND surveyexecutionid=:seid', [
-                'userid1' => $selected,
-                'userid2' => $selected,
-                'seid' => $course_data->survey_execution->get('id'),
-            ]);
+        if (count($seu_ids) > 1) {
+            $selected = $seu_ids[random_int(0, count($seu_ids) - 1)];
+            $DB->update_record(
+                'block_coursefeedback_surveyexecution_user',
+                ['id' => $selected, 'surveyexecutionid' => $course_data->survey_execution->get('id')]
+            );
         }
 
         return [];
