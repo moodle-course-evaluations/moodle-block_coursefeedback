@@ -160,8 +160,8 @@ class surveypart extends persistent_with_bulk_actions {
      * @return surveypart[]
      */
     public static function get_surveyparts_available_for_organization(organization $organization): array {
-        $use_org_surveyparts = $organization->get('can_have_local_questionnaires');
-        $use_global_surveyparts = !$organization->get('disallow_global_questionnaires');
+        $use_org_surveyparts = $organization->get('has_local_questionnaires');
+        $use_global_surveyparts = !$organization->get('no_global_questionnaires');
 
         $conditions = [];
         $params = [];

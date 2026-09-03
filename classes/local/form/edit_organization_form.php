@@ -102,20 +102,20 @@ class edit_organization_form extends \moodleform {
 
         $mform->addElement(
             'advcheckbox',
-            'can_have_local_questionnaires',
-            get_string('can_have_local_questionnaires', 'block_coursefeedback')
+            'has_local_questionnaires',
+            get_string('has_local_questionnaires', 'block_coursefeedback')
         );
-        $mform->setType('can_have_local_questionnaires', PARAM_BOOL);
-        $mform->setDefault('can_have_local_questionnaires', 0);
+        $mform->setType('has_local_questionnaires', PARAM_BOOL);
+        $mform->setDefault('has_local_questionnaires', 0);
 
         $mform->addElement(
             'advcheckbox',
-            'disallow_global_questionnaires',
-            get_string('disallow_global_questionnaires', 'block_coursefeedback')
+            'no_global_questionnaires',
+            get_string('no_global_questionnaires', 'block_coursefeedback')
         );
-        $mform->setType('disallow_global_questionnaires', PARAM_BOOL);
-        $mform->hideIf('disallow_global_questionnaires', 'can_have_local_questionnaires');
-        $mform->setDefault('disallow_global_questionnaires', 0);
+        $mform->setType('no_global_questionnaires', PARAM_BOOL);
+        $mform->hideIf('no_global_questionnaires', 'has_local_questionnaires');
+        $mform->setDefault('no_global_questionnaires', 0);
 
         $this->add_action_buttons();
     }
@@ -124,8 +124,8 @@ class edit_organization_form extends \moodleform {
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
-            // Ensure that disallow_global_questionnaires requires can_have_local_questionnaires.
-            $data->disallow_global_questionnaires &= $data->can_have_local_questionnaires ?? false;
+            // Ensure that no_global_questionnaires requires has_local_questionnaires.
+            $data->no_global_questionnaires &= $data->has_local_questionnaires ?? false;
         }
         return $data;
     }
