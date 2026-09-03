@@ -1344,10 +1344,10 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
     }
 
     if ($oldversion < 2026081900) {
-        // Define field can_have_local_questionnaires to be added to block_coursefeedback_organization.
+        // Define field has_local_questionnaires to be added to block_coursefeedback_organization.
         $table = new xmldb_table('block_coursefeedback_organization');
         $field = new xmldb_field(
-            'can_have_local_questionnaires',
+            'has_local_questionnaires',
             XMLDB_TYPE_INTEGER,
             '1',
             null,
@@ -1357,24 +1357,24 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
             'always_show_default_sp'
         );
 
-        // Conditionally launch add field can_have_local_questionnaires.
+        // Conditionally launch add field has_local_questionnaires.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // Define field disallow_global_questionnaires to be added to block_coursefeedback_organization.
+        // Define field no_global_questionnaires to be added to block_coursefeedback_organization.
         $field = new xmldb_field(
-            'disallow_global_questionnaires',
+            'no_global_questionnaires',
             XMLDB_TYPE_INTEGER,
             '1',
             null,
             XMLDB_NOTNULL,
             null,
             '0',
-            'can_have_local_questionnaires'
+            'has_local_questionnaires'
         );
 
-        // Conditionally launch add field disallow_global_questionnaires.
+        // Conditionally launch add field no_global_questionnaires.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
