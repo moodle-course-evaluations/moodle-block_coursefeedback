@@ -24,6 +24,8 @@
  */
 
 use block_coursefeedback\local\form\edit_organization_form;
+use block_coursefeedback\local\manager\breadcrumbs_manager;
+use block_coursefeedback\local\manager\user_organization_cache_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
 use block_coursefeedback\local\persistent\organization_user;
@@ -44,7 +46,7 @@ if ($id) {
     $organization = organization::get_record(['id' => $id], MUST_EXIST);
 }
 
-\block_coursefeedback\local\manager\breadcrumbs_manager::setup_edit_organization($organization);
+breadcrumbs_manager::setup_edit_organization($organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_edit.php', $params));
 if ($id) {
@@ -80,7 +82,7 @@ if ($mform->is_cancelled()) {
     }
     organization_user::set_organization_userids($organization->get('id'), $data->userids);
     organization_category::set_organization_coursecatids($organization->get('id'), $data->coursecatids);
-    \block_coursefeedback\local\manager\user_organization_cache_manager::get_instance()->purge();
+    user_organization_cache_manager::get_instance()->purge();
     redirect($returnurl);
 } // Else display form.
 

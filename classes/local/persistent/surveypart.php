@@ -156,13 +156,26 @@ class surveypart extends persistent_with_bulk_actions {
 
     /**
      * Returns the surveypart available in the given organization.
-     * @param int $organizationid
+     * @param organization $organization
      * @return surveypart[]
      */
-    public static function get_surveyparts_available_for_organization(int $organizationid) {
+    public static function get_surveyparts_available_for_organization(organization $organization): array {
+        $use_org_surveyparts = $organization->get('has_local_questionnaires');
+        $use_global_surveyparts = !$organization->get('no_global_questionnaires');
+
+        $conditions = [];
+        $params = [];
+        if ($use_org_surveyparts) {
+            $conditions[] = "organizationid = :organizationid";
+            $params['organizationid'] = $organization->get('id');
+        }
+        if ($use_global_surveyparts) {
+            $conditions[] = "organizationid IS NULL";
+        }
+
         return self::get_records_select(
-            'organizationid IS NULL or organizationid = :organizationid',
-            ['organizationid' => $organizationid],
+            $conditions ? implode(' OR ', $conditions) : 'FALSE',
+            $params,
             'name ASC'
         );
     }

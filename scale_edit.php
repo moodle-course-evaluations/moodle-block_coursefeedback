@@ -25,6 +25,7 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey_freezer;
@@ -37,7 +38,11 @@ require_login();
 
 $surveypartid = required_param('surveypartid', PARAM_INT);
 $surveypart = surveypart::get_record(['id' => $surveypartid], MUST_EXIST);
+
 permission_manager::require_permission_for_editing_surveypart($surveypart);
+
+$organization_id = $surveypart->get('organizationid');
+$organization = $organization_id ? organization::get_record(['id' => $organization_id], MUST_EXIST) : null;
 
 $id = optional_param('id', null, PARAM_INT);
 di::get(survey_freezer::class)
@@ -53,7 +58,7 @@ if ($id) {
     $params['id'] = $id;
 }
 
-breadcrumbs_manager::setup_edit_survey_scale($surveypart, $id);
+breadcrumbs_manager::setup_edit_survey_scale($surveypart, $id, $organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/scale_edit.php', $params));
 $PAGE->set_context(context_system::instance());

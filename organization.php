@@ -47,6 +47,7 @@ $PAGE->set_title($title);
 echo $OUTPUT->header();
 
 $context = [
+    'name' => $organization->get('name'),
     'organization_settings_url' =>
         new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]),
     'courses_without_evaluation_url' =>
@@ -57,6 +58,8 @@ $context = [
         new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
     'edit_default_survey_period_url' =>
         new moodle_url('/blocks/coursefeedback/organization_edit_default_survey_period.php', ['id' => $id]),
+    'surveyparts_url' =>
+        new moodle_url('/blocks/coursefeedback/surveyparts.php', ['organizationid' => $id]),
     'has_default_survey_period' =>
         $organization->get('default_evaluation_starttime') && $organization->get('default_evaluation_endtime'),
     'default_evaluation_starttime' =>

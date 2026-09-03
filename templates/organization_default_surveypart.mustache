@@ -21,92 +21,114 @@
 
     Example context (json):
     {
-       "formurl":"http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization_default_surveypart.php?id=1",
-       "sesskey":"Sn5pUMAzy8",
-       "returnurl":"http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization.php?id=1",
-       "default_surveyparts":[
+      "formurl": "http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization_default_surveypart.php?id=1",
+      "sesskey": "Sn5pUMAzy8",
+      "returnurl": "http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization.php?id=1",
+      "default_surveypart_chooser_context": {
+        "org_name": "Fakultät I",
+        "has_global_surveyparts": true,
+        "global_surveyparts": [
           {
-             "id":1,
-             "name":"Survey #1"
-          },
-          {
-             "id":2,
-             "name":"Survey #2",
-             "selected":true
+            "id": 1,
+            "name": "Survey #1"
           }
-       ],
-       "eventtypes":[
+        ],
+        "has_organization_surveyparts": true,
+        "organization_surveyparts": [
           {
-             "id":1,
-             "name":"Vorlesung",
-             "surveyparts":[
-                {
-                   "id":1,
-                   "name":"Survey #1",
-                   "selected":true
-                },
-                {
-                   "id":2,
-                   "name":"Survey #2"
-                }
-             ]
-          },
-          {
-             "id":2,
-             "name":"\u00dcbung",
-             "surveyparts":[
-                {
-                   "id":1,
-                   "name":"Survey #1"
-                },
-                {
-                   "id":2,
-                   "name":"Survey #2"
-                }
-             ]
+            "id": 2,
+            "name": "Survey #2",
+            "selected": true
           }
-       ]
+        ]
+      },
+      "eventtypes": [
+        {
+          "id": 1,
+          "name": "Vorlesung",
+          "surveypart_chooser_context": {
+            "org_name": "Fakultät I",
+            "has_global_surveyparts": true,
+            "global_surveyparts": [
+              {
+                "id": 1,
+                "name": "Survey #1"
+              }
+            ],
+            "has_organization_surveyparts": true,
+            "organization_surveyparts": [
+              {
+                "id": 2,
+                "name": "Survey #2",
+                "selected": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "name": "\u00dcbung",
+          "surveypart_chooser_context": {
+            "org_name": "Fakultät I",
+            "has_global_surveyparts": true,
+            "global_surveyparts": [
+              {
+                "id": 1,
+                "name": "Survey #1"
+              }
+            ],
+            "has_organization_surveyparts": true,
+            "organization_surveyparts": [
+              {
+                "id": 2,
+                "name": "Survey #2",
+                "selected": true
+              }
+            ]
+          }
+        }
+      ]
     }
-
 }}
 
 <form action="{{{formurl}}}" method="post" id="block_coursefeedback-default_surveypart_form">
-
-    <div class="row align-items-center  my-3">
-        <div class="col col-auto">
+    <div class="form-row">
+        <div class="form-group col-lg-6 px-2">
+            <label for="block_coursefeedback-surveypart-default-{{uniqid}}" class="py-1">
                 {{#str}}default_surveypart_for_courses_without_eventtype, block_coursefeedback{{/str}}
-        </div>
-        <div class="col col-auto">
-            <select class="form-control form-select" name="surveypart-default">
-                <option value="">-</option>
-                {{#default_surveyparts}}
-                    <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
-                {{/default_surveyparts}}
-            </select>
+            </label>
+            {{#default_surveypart_chooser_context}}
+                {{< block_coursefeedback/surveypart_chooser }}
+                    {{$id}}block_coursefeedback-surveypart-default-{{uniqid}}{{/id}}
+                    {{$name}}surveypart-default{{/name}}
+                {{/ block_coursefeedback/surveypart_chooser }}
+            {{/default_surveypart_chooser_context}}
         </div>
     </div>
 
-    <table class="table table-striped table-hover generaltable">
-        <thead>
+    <div class="form-row">
+        <table class="table table-striped table-hover generaltable">
+            <thead>
             <tr>
                 <th>{{#str}}eventtype, block_coursefeedback{{/str}}</th>
                 <th>{{#str}}questionnaire, block_coursefeedback{{/str}}</th>
                 <th></th>
             </tr>
-        </thead>
-        <tbody>
-        {{#eventtypes}}
-            {{>block_coursefeedback/organization_default_surveypart_row}}
-        {{/eventtypes}}
-        <tr class="add_eventtype_row">
-            <td colspan="3">
-                <div class="btn btn-link add_eventtype_btn">
-                    {{#pix}}t/add{{/pix}} {{#str}}add_eventtype, block_coursefeedback{{/str}}
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            {{#eventtypes}}
+                {{>block_coursefeedback/organization_default_surveypart_row}}
+            {{/eventtypes}}
+            <tr class="add_eventtype_row">
+                <td colspan="3">
+                    <div class="btn btn-link add_eventtype_btn">
+                        {{#pix}}t/add{{/pix}} {{#str}}add_eventtype, block_coursefeedback{{/str}}
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
     <input type="hidden" name="sesskey" value="{{sesskey}}">
     <input type="hidden" name="added" value="">
     <input type="hidden" name="removed" value="">

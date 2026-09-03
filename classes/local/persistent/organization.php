@@ -67,6 +67,14 @@ class organization extends persistent {
                 'type' => PARAM_BOOL,
                 'default' => false,
             ],
+            'has_local_questionnaires' => [
+                'type' => PARAM_BOOL,
+                'default' => false,
+            ],
+            'no_global_questionnaires' => [
+                'type' => PARAM_BOOL,
+                'default' => false,
+            ],
         ];
     }
 }

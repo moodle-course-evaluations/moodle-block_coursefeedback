@@ -113,7 +113,7 @@ $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 $PAGE->set_pagelayout('admin');
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title(get_string('course_settings_of', 'block_coursefeedback', $course));
+$PAGE->set_title(get_string('course_settings_of', 'block_coursefeedback', $course->shortname));
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('course_settings', 'block_coursefeedback'));

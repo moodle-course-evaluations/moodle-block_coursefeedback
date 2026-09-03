@@ -25,6 +25,8 @@
 
 use block_coursefeedback\local\form\surveypart_edit_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
+use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey_freezer;
 use core\di;
@@ -33,18 +35,39 @@ require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
 require_login();
-require_capability('block/coursefeedback:managesurveysglobally', \context_system::instance());
-
-$id = optional_param('id', null, PARAM_INT);
 
 $params = [];
-$surveypart = null;
+$organizationid = $surveypart = null;
+
+$id = optional_param('id', null, PARAM_INT);
 if ($id) {
+    // We are editing an existing SP.
     $params['id'] = $id;
     $surveypart = surveypart::get_record(['id' => $id], MUST_EXIST);
+
+    $organizationid = $surveypart->get('organizationid');
+
+    $org_id_from_query = optional_param('organizationid', null, PARAM_INT);
+    if ($org_id_from_query && $org_id_from_query !== $organizationid) {
+        // Check that it matches the org ID from the SP.
+        throw new coding_exception("Mismatching organizationid in URL ($org_id_from_query) and surveypart ($organizationid)");
+    }
+} else {
+    // We're creating a new SP.
+    $organizationid = optional_param('organizationid', null, PARAM_INT);
 }
 
-breadcrumbs_manager::setup_edit_survey($surveypart);
+$organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
+
+if ($surveypart) {
+    permission_manager::require_permission_for_editing_surveypart($surveypart);
+} else if ($organization) {
+    permission_manager::require_manage_organization($organization);
+} else {
+    require_capability('block/coursefeedback:managesurveysglobally', context_system::instance());
+}
+
+breadcrumbs_manager::setup_edit_questionnaire($surveypart, $organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart_edit.php', $params));
 if ($id) {
@@ -57,7 +80,7 @@ $PAGE->set_context(context_system::instance());
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
 
-$returnurl = new moodle_url('/blocks/coursefeedback/surveyparts.php');
+$returnurl = new moodle_url('/blocks/coursefeedback/surveyparts.php', $organizationid ? ['organizationid' => $organizationid] : []);
 
 $freezer = di::get(survey_freezer::class);
 if ($surveypart) {
@@ -71,7 +94,7 @@ if ($surveypart) {
     $is_frozen = false;
 }
 
-$mform = new surveypart_edit_form($PAGE->url, editable: !$is_frozen);
+$mform = new surveypart_edit_form($PAGE->url, organizationid: $organizationid, editable: !$is_frozen);
 if ($surveypart) {
     $mform->set_data($surveypart->to_form_data());
 }
