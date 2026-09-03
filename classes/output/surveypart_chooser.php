@@ -18,6 +18,7 @@ namespace block_coursefeedback\output;
 
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
+use core\output\bootstrap_renderer;
 use core\output\named_templatable;
 use core\output\renderable;
 use core\output\renderer_base;
@@ -50,12 +51,12 @@ class surveypart_chooser implements named_templatable, renderable {
     }
 
     #[\Override]
-    public function get_template_name(renderer_base $renderer): string {
+    public function get_template_name(renderer_base|bootstrap_renderer $renderer): string {
         return "block_coursefeedback/surveypart_chooser";
     }
 
     #[\Override]
-    public function export_for_template(renderer_base $output): array {
+    public function export_for_template(renderer_base|bootstrap_renderer $output): array {
          $result = [
             'org_name' => $this->organization->get('name'),
          ];

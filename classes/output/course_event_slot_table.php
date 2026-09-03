@@ -23,7 +23,7 @@ use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\persistent\teaching_event;
 use block_coursefeedback\local\survey_execution_data;
 use core\exception\coding_exception;
-use core\output\core_renderer;
+use core\output\bootstrap_renderer;
 use core\output\help_icon;
 use core\output\named_templatable;
 use core\output\renderable;
@@ -66,7 +66,7 @@ class course_event_slot_table implements named_templatable, renderable {
     }
 
     #[\Override]
-    public function get_template_name(renderer_base $renderer): string {
+    public function get_template_name(renderer_base|bootstrap_renderer $renderer): string {
         return 'block_coursefeedback/course_event_slot_table';
     }
 
@@ -201,7 +201,7 @@ class course_event_slot_table implements named_templatable, renderable {
     }
 
     #[\Override]
-    public function export_for_template(renderer_base $output): array {
+    public function export_for_template(renderer_base|bootstrap_renderer $output): array {
         return [
             'course' => [
                 'id' => $this->course->id,
