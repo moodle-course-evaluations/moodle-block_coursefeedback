@@ -117,16 +117,21 @@ $template_eventtypes = array_map(fn ($eventtype) => [
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
-    'formurl' => $PAGE->url->out(false),
-    'sesskey' => sesskey(),
-    'returnurl' => $returnurl->out(false),
-    'default_surveypart_chooser_context' => (new surveypart_chooser(
-        $surveyparts,
-        $organization->get('default_surveypartid'),
-        $organization
-    ))->export_for_template($OUTPUT),
-    'eventtypes' => $template_eventtypes,
-]);
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+
+$renderer->render_organization_page($id, 'eventtypes', function () use ($template_eventtypes, $returnurl, $surveyparts, $organization, $PAGE, $OUTPUT) {
+    echo $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
+        'formurl' => $PAGE->url->out(false),
+        'sesskey' => sesskey(),
+        'returnurl' => $returnurl->out(false),
+        'default_surveypart_chooser_context' => (new surveypart_chooser(
+            $surveyparts,
+            $organization->get('default_surveypartid'),
+            $organization
+        ))->export_for_template($OUTPUT),
+        'eventtypes' => $template_eventtypes,
+    ]);
+});
 
 echo $OUTPUT->footer();

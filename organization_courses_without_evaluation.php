@@ -25,12 +25,14 @@
 
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
+use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\table\courses_without_evaluation_table;
 use block_coursefeedback\task\send_survey_created_message_task;
+use core\task\manager;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
@@ -41,7 +43,7 @@ $id = required_param('id', PARAM_INT);
 $organization = organization::get_record(['id' => $id], MUST_EXIST);
 
 permission_manager::require_manage_organization($organization);
-\block_coursefeedback\local\manager\breadcrumbs_manager::setup_organization_courses_without_evaluation($organization);
+breadcrumbs_manager::setup_organization_courses_without_evaluation($organization);
 
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]));
 $PAGE->set_context($context);
@@ -71,7 +73,7 @@ if ($action) {
                 course_semester_mapping::get_instance()->get_current_semester()->id,
             );
             $surveyexecutionids = array_map(fn (survey_execution $se) => $se->get('id'), $surveyexecutions);
-            \core\task\manager::queue_adhoc_task(
+            manager::queue_adhoc_task(
                 send_survey_created_message_task::create_instance($surveyexecutionids)
             );
             redirect($PAGE->url);
@@ -88,6 +90,10 @@ $table = new courses_without_evaluation_table(course_semester_mapping::get_insta
 
 echo $OUTPUT->header();
 
-$table->out(0, false);
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+$renderer->render_organization_page($id, 'courses', function () use ($table) {
+    $table->out(0, false);
+});
 
 echo $OUTPUT->footer();

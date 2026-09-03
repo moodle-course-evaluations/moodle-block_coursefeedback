@@ -31,6 +31,7 @@ $string['add_new_event_to'] = 'Add a new event to course <q>{$a}</q>';
 $string['add_new_slot_to'] = 'Add a new slot to event <q>{$a}</q>';
 $string['add_surveyitem'] = 'Add questionnaire element';
 $string['all_courses'] = 'All courses';
+$string['event_types_header'] = 'Event types and default questionnaire';
 $string['already_answered'] = 'You already responded to this survey.';
 $string['always_show_default_sp'] = 'Always show the default questionnaire';
 $string['always_show_default_sp_help'] = 'If enabled, the organization\'s default questionnaire will be shown even if the course has explicitly configured teaching events. It will be the first questionnaire, at the beginning of the survey. If left unchecked, the default questionnaire will only be used when no teaching events are configured.';

@@ -1,0 +1,53 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_coursefeedback/organization/nav
+
+    This template renders the organization overview page.
+
+    Example context (json):
+    {
+    }
+
+}}
+
+<div class="list-group">
+    <a class="list-group-item list-group-item-action {{#current_tab_is_settings}}active{{/current_tab_is_settings}}"
+       href="{{{organization_settings_url}}}">
+        {{#str}}settings{{/str}}
+    </a>
+    {{#surveyparts_url}}
+        <a class="list-group-item list-group-item-action {{#current_tab_is_questionnaires}}active{{/current_tab_is_questionnaires}}"
+           href="{{{.}}}">
+            {{#str}}organization_questionnaires, block_coursefeedback, {{name}}{{/str}}
+        </a>
+    {{/surveyparts_url}}
+    <a class="list-group-item list-group-item-action {{#current_tab_is_eventtypes}}active{{/current_tab_is_eventtypes}}" href="{{{eventtypes_url}}}">
+        {{#str}}define_default_surveyparts, block_coursefeedback{{/str}}
+    </a>
+    {{#rub_eventtype_mapping_url}}
+        <a class="list-group-item list-group-item-action" href="{{{rub_eventtype_mapping_url}}}">
+            {{#str}}define_rub_eventtype_mapping, block_coursefeedback{{/str}}
+        </a>
+    {{/rub_eventtype_mapping_url}}
+    <a class="list-group-item list-group-item-action {{#current_tab_is_courses}}active{{/current_tab_is_courses}}" href="{{{courses_url}}}">
+        {{#str}}list_of_courses_without_evaluation, block_coursefeedback{{/str}}
+    </a>
+    <a class="list-group-item list-group-item-action {{#current_tab_is_evaluations}}active{{/current_tab_is_evaluations}}" href="{{{evaluations_url}}}">
+        {{#str}}list_of_evaluations, block_coursefeedback{{/str}}
+    </a>
+</div>

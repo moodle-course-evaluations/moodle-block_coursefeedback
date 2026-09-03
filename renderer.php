@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
+use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organizationstring;
 use block_coursefeedback\local\survey;
 use core\output\plugin_renderer_base;
 
@@ -108,5 +111,50 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         $context['append_to_selector'] = $append_to_selector;
 
         return $this->render_from_template('block_coursefeedback/survey/root', $context);
+    }
+
+    /**
+     * @param int $organizationid
+     * @param string|null $current_tab
+     * @param callable $callback
+     * @return void
+     */
+    public function render_organization_page(int $organizationid, ?string $current_tab, callable $callback): void {
+        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations'];
+        if (!in_array($current_tab, [null, ...$valid_tabs])) {
+            throw new coding_exception("Invalid tab: $current_tab");
+        }
+
+        echo html_writer::start_tag('div', ['class' => 'row']);
+        echo html_writer::start_tag('div', ['class' => 'col-lg-3 mb-2']);
+        $organization_url = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $organizationid]);
+
+        $nav_context = [
+            'organization_settings_url' => $organization_url->out(false, ['tab' => 'settings']),
+            'questionnaires_url' => new moodle_url('/blocks/coursefeedback/surveyparts.php', ['organizationid' => $organizationid]),
+            'eventtypes_url' => new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $organizationid]),
+            'courses_url' => new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $organizationid]),
+            'evaluations_url' => new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $organizationid]),
+        ];
+
+        if (get_config('block_coursefeedback', 'default_survey_creation_method') === default_survey_creation_method::METHOD_RUB) {
+            $nav_context['rub_eventtype_mapping_url'] = new moodle_url(
+                '/blocks/coursefeedback/organization_rub_eventtype_mapping.php',
+                ['id' => $organizationid]
+            );
+        }
+
+        if ($current_tab) {
+            $nav_context['current_tab'] = $current_tab;
+            $nav_context["current_tab_is_$current_tab"] = true;
+        }
+
+        echo $this->render_from_template('block_coursefeedback/organization/nav', $nav_context);
+
+        echo html_writer::end_tag('div');
+        echo html_writer::start_tag('div', ['class' => 'col-lg-9']);
+        $callback();
+        echo html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
     }
 }

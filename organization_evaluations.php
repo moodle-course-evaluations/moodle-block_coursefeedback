@@ -87,6 +87,10 @@ $table = new evaluations_table(course_semester_mapping::get_instance()->get_curr
 
 echo $OUTPUT->header();
 
-$table->out(0, false);
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+$renderer->render_organization_page($id, 'evaluations', function () use ($table) {
+    $table->out(0, false);
+});
 
 echo $OUTPUT->footer();

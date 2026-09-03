@@ -44,6 +44,7 @@ $string['can_teacher_edit_surveyperiod'] = 'Trainer/innen können den Evaluation
 $string['can_teacher_edit_surveysettings'] = 'Trainer/innen können Lehrveranstaltungen und Untergruppen ihrer Kurse anpassen.';
 $string['cannot_manually_add'] = 'Fragebogen-Elemente des Typs \'{$a}\' können nicht manuell hinzugefügt werden.';
 $string['center_option_text'] = 'Beschriftung der mittleren Option';
+$string['event_types_header'] = 'Standard-Fragebogen und Veranstaltungsarten';
 $string['confirm_event_deletion'] = 'Möchten Sie wirklich die Lehrveranstaltung <q><b>{$a}</b></q> aus der Evaluation löschen?';
 $string['confirm_slot_deletion'] = 'Möchten Sie wirklich die Untergruppe <q><b>{$a}</b></q> aus der Evaluation löschen?';
 $string['course_event_slot_table_heading'] = 'Lehrveranstaltungen und Untergruppen';
