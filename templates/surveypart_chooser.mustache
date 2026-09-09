@@ -38,21 +38,22 @@
           "name": "Survey #2",
           "selected": true
         }
-      ]
+      ],
+      "sitename": "ISIS"
     }
 }}
 
 <select class="form-control form-select w-100" name="{{$name}}{{name}}{{/name}}" id="{{$id}}{{id}}{{/id}}">
     <option value="">-</option>
     {{#has_global_surveyparts}}
-        <optgroup label="Globale Fragebögen">
+        <optgroup label="{{#str}} global_questionnaires, block_coursefeedback, {{sitename}} {{/str}}">
             {{#global_surveyparts}}
                 <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
             {{/global_surveyparts}}
         </optgroup>
     {{/has_global_surveyparts}}
     {{#has_organization_surveyparts}}
-        <optgroup label="Fragebögen in {{org_name}}">
+        <optgroup label="{{#str}} questionnaires_in, block_coursefeedback, {{org_name}} {{/str}}">
             {{#organization_surveyparts}}
                 <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
             {{/organization_surveyparts}}

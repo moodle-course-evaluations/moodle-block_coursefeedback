@@ -57,33 +57,35 @@ class surveypart_chooser implements named_templatable, renderable {
 
     #[\Override]
     public function export_for_template(renderer_base|bootstrap_renderer $output): array {
-         $result = [
+        global $SITE;
+        $result = [
             'org_name' => $this->organization->get('name'),
-         ];
+            'sitename' => $SITE->shortname,
+        ];
 
-         foreach ($this->surveyparts as $surveypart) {
-             $sp_context = [
-                 'id' => $surveypart->get('id'),
-                 'name' => $surveypart->get('name'),
-             ];
-             if ($this->selectedid && $this->selectedid === $surveypart->get('id')) {
-                 $sp_context['selected'] = true;
-             }
+        foreach ($this->surveyparts as $surveypart) {
+            $sp_context = [
+                'id' => $surveypart->get('id'),
+                'name' => $surveypart->get('name'),
+            ];
+            if ($this->selectedid && $this->selectedid === $surveypart->get('id')) {
+                $sp_context['selected'] = true;
+            }
 
-             if (!$surveypart->get('organizationid')) {
-                 $result['global_surveyparts'][] = $sp_context;
-             } else if ($surveypart->get('organizationid') === $this->organization->get('id')) {
-                 $result['organization_surveyparts'][] = $sp_context;
-             }
-         }
+            if (!$surveypart->get('organizationid')) {
+                $result['global_surveyparts'][] = $sp_context;
+            } else if ($surveypart->get('organizationid') === $this->organization->get('id')) {
+                $result['organization_surveyparts'][] = $sp_context;
+            }
+        }
 
-         if (!empty($result['global_surveyparts'])) {
-             $result['has_global_surveyparts'] = true;
-         }
-         if (!empty($result['organization_surveyparts'])) {
-             $result['has_organization_surveyparts'] = true;
-         }
+        if (!empty($result['global_surveyparts'])) {
+            $result['has_global_surveyparts'] = true;
+        }
+        if (!empty($result['organization_surveyparts'])) {
+            $result['has_organization_surveyparts'] = true;
+        }
 
-         return $result;
+        return $result;
     }
 }
