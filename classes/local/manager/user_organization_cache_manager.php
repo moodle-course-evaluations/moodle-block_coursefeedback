@@ -69,7 +69,9 @@ class user_organization_cache_manager {
      */
     public function get_user_organizationids(): array {
         if (!$this->usercache->has('user_organizationids')) {
-            $this->usercache->set('user_organizationids', self::fetch_user_organizationids());
+            $user_organizationids = self::fetch_user_organizationids();
+            $this->usercache->set('user_organizationids', $user_organizationids);
+            return $user_organizationids;
         }
         return $this->usercache->get('user_organizationids');
     }

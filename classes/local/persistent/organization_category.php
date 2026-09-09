@@ -16,7 +16,8 @@
 
 namespace block_coursefeedback\local\persistent;
 
-use core\persistent;
+use core\exception\moodle_exception;
+use dml_write_exception;
 
 /**
  * Maps organizations to course categories.
@@ -26,13 +27,14 @@ use core\persistent;
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class organization_category extends persistent {
+class organization_category extends persistent_with_bulk_actions {
 
     /** Table name for the persistent. */
     public const TABLE = 'block_coursefeedback_organization_coursecat';
 
     /**
      * Return the definition of the properties of this model.
+     *
      * @return array
      */
     protected static function define_properties() {
@@ -48,6 +50,7 @@ class organization_category extends persistent {
 
     /**
      * Returns all coursecatids for the organization.
+     *
      * @param int $organizationid
      * @return array
      */
@@ -59,33 +62,41 @@ class organization_category extends persistent {
 
     /**
      * Sets the coursecatids for the organization.
+     *
      * @param int $organizationid
      * @param array $coursecatids
      */
     public static function set_organization_coursecatids(int $organizationid, array $coursecatids): void {
-        global $DB;
-        $existingcoursecatids = self::get_organization_coursecatids($organizationid);
-        foreach ($existingcoursecatids as $existingcoursecatid) {
-            if (!in_array($existingcoursecatid, $coursecatids)) {
-                $DB->delete_records(
-                    self::TABLE,
-                    ['coursecatid' => $existingcoursecatid, 'organizationid' => $organizationid]
-                );
-            }
-        }
+        try {
+            self::diff_create_delete([
+                'organizationid' => $organizationid,
+            ], 'coursecatid', $coursecatids);
+        } catch (dml_write_exception $e) {
+            // We optimistically assume there is no conflict and only check for one when the write fails.
+            global $DB;
 
-        foreach ($coursecatids as $coursecatid) {
-            if (!in_array($coursecatid, $existingcoursecatids)) {
-                $organizationcategory = new organization_category();
-                $organizationcategory->set('coursecatid', $coursecatid);
-                $organizationcategory->set('organizationid', $organizationid);
-                $organizationcategory->save();
+            if ($coursecatids) {
+                [$insql, $params] = $DB->get_in_or_equal($coursecatids, SQL_PARAMS_NAMED);
+
+                $conflicting_record = $DB->get_record_sql("
+                    SELECT coursecat.name AS cat_name, org.name AS org_name
+                    FROM {block_coursefeedback_organization_coursecat} occ
+                    JOIN {course_categories} coursecat ON occ.coursecatid = coursecat.id
+                    JOIN {block_coursefeedback_organization} org ON occ.organizationid = org.id
+                    WHERE coursecat.id $insql
+                ", $params);
+                if ($conflicting_record) {
+                    throw new moodle_exception('coursecat_assignment_conflict', 'block_coursefeedback', a: $conflicting_record);
+                }
             }
+
+            throw $e;
         }
     }
 
     /**
      * Returns all coursecatids which belong to this organization.
+     *
      * @param int $organizationid
      * @return array
      */
@@ -102,6 +113,7 @@ class organization_category extends persistent {
     /**
      * Fetch the organization for the given category. This returns the organization associated with
      * the nearest parent category, or null, if no parent category is associated with an organization.
+     *
      * @param \core_course_category $category
      * @return null|int The organization id.
      */

@@ -36,16 +36,19 @@ use core\di;
 require_once(__DIR__ . '/../../config.php');
 global $DB, $CFG, $OUTPUT, $PAGE;
 
-require_login();
-$context = context_system::instance();
 $id = required_param('id', PARAM_INT);
+$context = context_system::instance();
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]));
+$PAGE->set_context($context);
+
+require_login();
 $organization = organization::get_record(['id' => $id], MUST_EXIST);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_evaluations($organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]));
-$PAGE->set_context($context);
+$PAGE->set_heading($organization->get('name'));
+$PAGE->set_title(get_string('list_of_evaluations', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
 $action = optional_param('action', null, PARAM_ALPHANUMEXT);
 if ($action) {
@@ -77,16 +80,14 @@ if ($action) {
     }
 }
 
-$title = get_string('list_of_evaluations', 'block_coursefeedback') . ': ' . $organization->get('name');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
-
-$returnurl = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]);
 
 $table = new evaluations_table(course_semester_mapping::get_instance()->get_current_semester(), $organization);
 
 echo $OUTPUT->header();
 
-$table->out(0, false);
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+$renderer->render_organization_page($organization, 'evaluations', fn() => $table->out(0, false));
 
 echo $OUTPUT->footer();

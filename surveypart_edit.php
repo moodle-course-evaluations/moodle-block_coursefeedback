@@ -34,27 +34,35 @@ use core\di;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
+$params = [];
+$id = optional_param('id', null, PARAM_INT);
+$organizationid = optional_param('organizationid', null, PARAM_INT);
+if ($id) {
+    $params['id'] = $id;
+} else if ($organizationid) {
+    $params['organizationid'] = $organizationid;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart_edit.php', $params));
+$PAGE->set_context(context_system::instance());
+
 require_login();
 
-$params = [];
-$organizationid = $surveypart = null;
-
-$id = optional_param('id', null, PARAM_INT);
+$surveypart = null;
 if ($id) {
     // We are editing an existing SP.
-    $params['id'] = $id;
     $surveypart = surveypart::get_record(['id' => $id], MUST_EXIST);
+    $org_id_from_questionnaire = $surveypart->get('organizationid');
 
-    $organizationid = $surveypart->get('organizationid');
-
-    $org_id_from_query = optional_param('organizationid', null, PARAM_INT);
-    if ($org_id_from_query && $org_id_from_query !== $organizationid) {
+    if ($organizationid && $organizationid !== $org_id_from_questionnaire) {
         // Check that it matches the org ID from the SP.
-        throw new coding_exception("Mismatching organizationid in URL ($org_id_from_query) and surveypart ($organizationid)");
+        throw new coding_exception(
+            "Mismatching organizationid in URL ($organizationid) and surveypart ($org_id_from_questionnaire)"
+        );
     }
-} else {
-    // We're creating a new SP.
-    $organizationid = optional_param('organizationid', null, PARAM_INT);
+    if (!$organizationid) {
+        $organizationid = $org_id_from_questionnaire;
+    }
 }
 
 $organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
@@ -69,14 +77,7 @@ if ($surveypart) {
 
 breadcrumbs_manager::setup_edit_questionnaire($surveypart, $organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart_edit.php', $params));
-if ($id) {
-    $title = get_string('edit_surveypart', 'block_coursefeedback');
-} else {
-    $title = get_string('new_surveypart', 'block_coursefeedback');
-}
-
-$PAGE->set_context(context_system::instance());
+$title = get_string($id ? 'edit_surveypart' : 'new_surveypart', 'block_coursefeedback');
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
 

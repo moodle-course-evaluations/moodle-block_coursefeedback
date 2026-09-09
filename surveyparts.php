@@ -32,9 +32,16 @@ use core\output\single_button;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
 
+$organizationid = optional_param('organizationid', null, PARAM_INT);
+
+$PAGE->set_url(new moodle_url(
+    '/blocks/coursefeedback/surveyparts.php',
+    $organizationid ? ['organizationid' => $organizationid] : []
+));
+$PAGE->set_context(context_system::instance());
+
 require_login();
 
-$organizationid = optional_param('organizationid', null, PARAM_INT);
 $organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
 
 if ($organization) {
@@ -45,29 +52,36 @@ if ($organization) {
 
 breadcrumbs_manager::setup_questionnaires($organization);
 
-$PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url(
-    '/blocks/coursefeedback/surveyparts.php',
-    $organizationid ? ['organizationid' => $organizationid] : []
-));
-
-$title = $organization
-    ? get_string('questionnaires_in', 'block_coursefeedback', $organization->get('name'))
-    : get_string('questionnaires', 'block_coursefeedback');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
+if ($organization) {
+    $PAGE->set_heading($organization->get('name'));
+    $PAGE->set_title(get_string('questionnaires', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
+} else {
+    $PAGE->set_heading(get_string('questionnaires', 'block_coursefeedback'));
+    $PAGE->set_title(get_string('questionnaires', 'block_coursefeedback'));
+}
 
 $table = new surveyparts_table($organizationid);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->render(new single_button(
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+
+$add_button_html = $OUTPUT->render(new single_button(
     url: new moodle_url('/blocks/coursefeedback/surveypart_edit.php', $organizationid ? ['organizationid' => $organizationid] : []),
     label: get_string('new_surveypart', 'block_coursefeedback'),
     method: 'get',
     type: single_button::BUTTON_PRIMARY
 )) . '<br><br>';
 
-$table->out(48, false);
+if ($organization) {
+    $renderer->render_organization_page($organization, 'questionnaires', function () use ($add_button_html, $table) {
+        echo $add_button_html;
+        $table->out(48, false);
+    });
+} else {
+    echo $add_button_html;
+    $table->out(48, false);
+}
 
 echo $OUTPUT->footer();

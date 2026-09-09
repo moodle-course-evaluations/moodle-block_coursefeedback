@@ -39,8 +39,11 @@ use core\output\notification;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
-require_login();
 $id = required_param('id', PARAM_INT);
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $id]));
+$PAGE->set_context(context_system::instance());
+
+require_login();
 $surveypart = surveypart::get_record(['id' => $id], MUST_EXIST);
 
 $organizationid = $surveypart->get('organizationid');
@@ -49,8 +52,6 @@ $organization = $organizationid ? organization::get_record(['id' => $organizatio
 permission_manager::require_permission_for_editing_surveypart($surveypart);
 breadcrumbs_manager::setup_questionnaire($surveypart, $organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $id]));
-$PAGE->set_context(context_system::instance());
 $title = $surveypart->get('name');
 $PAGE->set_heading($title);
 $PAGE->set_title($title);

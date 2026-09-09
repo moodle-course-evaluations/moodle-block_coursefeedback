@@ -34,9 +34,19 @@ use core\di;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
+$surveypartid = required_param('surveypartid', PARAM_INT);
+$id = optional_param('id', null, PARAM_INT);
+
+$params = ['surveypartid' => $surveypartid];
+if ($id) {
+     $params['id'] = $id;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/scale_edit.php', $params));
+$PAGE->set_context(context_system::instance());
+
 require_login();
 
-$surveypartid = required_param('surveypartid', PARAM_INT);
 $surveypart = surveypart::get_record(['id' => $surveypartid], MUST_EXIST);
 
 permission_manager::require_permission_for_editing_surveypart($surveypart);
@@ -44,24 +54,19 @@ permission_manager::require_permission_for_editing_surveypart($surveypart);
 $organization_id = $surveypart->get('organizationid');
 $organization = $organization_id ? organization::get_record(['id' => $organization_id], MUST_EXIST) : null;
 
-$id = optional_param('id', null, PARAM_INT);
 di::get(survey_freezer::class)
     ->check_survey_part_action($surveypart, $id ? "edit scale '$id'" : "add scale");
 
-$params = ['surveypartid' => $surveypartid];
 $scale = null;
 if ($id) {
     $scale = scale::get_record(['id' => $id], MUST_EXIST);
     if ($scale->get('surveypartid') != $surveypart->get('id')) {
         throw new coding_exception('Scale does not belong to surveypart');
     }
-    $params['id'] = $id;
 }
 
 breadcrumbs_manager::setup_edit_survey_scale($surveypart, $id, $organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/scale_edit.php', $params));
-$PAGE->set_context(context_system::instance());
 if ($scale) {
     $title = get_string('edit_scale', 'block_coursefeedback');
 } else {

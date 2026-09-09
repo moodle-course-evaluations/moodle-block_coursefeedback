@@ -33,22 +33,21 @@ use block_coursefeedback\output\surveypart_chooser;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
 
-require_login();
-$context = context_system::instance();
 $id = required_param('id', PARAM_INT);
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]));
+$PAGE->set_context(context_system::instance());
+
+require_login();
+
 $organization = organization::get_record(['id' => $id], MUST_EXIST);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_default_surveypart($organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]));
-$PAGE->set_context($context);
+$PAGE->set_heading($organization->get('name'));
+$PAGE->set_title(get_string('event_types', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
-$title = get_string('define_default_surveyparts', 'block_coursefeedback') . ': ' . $organization->get('name');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
-
-$returnurl = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]);
 
 $surveyparts = surveypart::get_surveyparts_available_for_organization($organization);
 $eventtypes = eventtype::get_eventtypes_for_organization($id);
@@ -117,16 +116,23 @@ $template_eventtypes = array_map(fn ($eventtype) => [
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
-    'formurl' => $PAGE->url->out(false),
-    'sesskey' => sesskey(),
-    'returnurl' => $returnurl->out(false),
-    'default_surveypart_chooser_context' => (new surveypart_chooser(
-        $surveyparts,
-        $organization->get('default_surveypartid'),
-        $organization
-    ))->export_for_template($OUTPUT),
-    'eventtypes' => $template_eventtypes,
-]);
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+
+$renderer->render_organization_page(
+    $organization,
+    'eventtypes',
+    $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
+        'formurl' => $PAGE->url->out(false),
+        'sesskey' => sesskey(),
+        'returnurl' => $returnurl->out(false),
+        'default_surveypart_chooser_context' => (new surveypart_chooser(
+            $surveyparts,
+            $organization->get('default_surveypartid'),
+            $organization
+        ))->export_for_template($OUTPUT),
+        'eventtypes' => $template_eventtypes,
+    ])
+);
 
 echo $OUTPUT->footer();
