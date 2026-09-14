@@ -65,8 +65,8 @@
         </span>
     {{/editable}}
     {{#editable}}
-        <div class="scroll-container">
-            <div class="input-group" x-show="editing" x-cloak>
+        <div class="scroll-container" x-show="editing" x-cloak>
+            <div class="input-group">
                 <input type="datetime-local"
                        class="form-control"
                        x-model="starttime"

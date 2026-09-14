@@ -33,8 +33,13 @@ use core\di;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
-require_login();
 $surveypartid = required_param('surveypartid', PARAM_INT);
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/scales.php', ['surveypartid' => $surveypartid]));
+$PAGE->set_context(context_system::instance());
+
+require_login();
+
 $surveypart = surveypart::get_record(['id' => $surveypartid]);
 
 permission_manager::require_permission_for_editing_surveypart($surveypart);
@@ -42,8 +47,6 @@ breadcrumbs_manager::setup_survey_scales($surveypart);
 
 $freezer = di::get(survey_freezer::class);
 
-$PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/scales.php', ['surveypartid' => $surveypartid]));
 $title = get_string('view_scales', 'block_coursefeedback');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);

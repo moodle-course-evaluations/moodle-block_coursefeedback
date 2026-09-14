@@ -43,11 +43,11 @@ breadcrumbs_manager::setup_organization_default_surveypart($organization);
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_rub_eventtype_mapping.php', ['id' => $id]));
 $PAGE->set_context($context);
 
-$title = get_string('define_default_surveyparts', 'block_coursefeedback') . ': ' . $organization->get('name');
+$title = get_string('event_types', 'block_coursefeedback') . ': ' . $organization->get('name');
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]);
 
 $eventtypes = eventtype::get_eventtypes_for_organization($id);
 $eventtypes_by_id = [];

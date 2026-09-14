@@ -25,6 +25,8 @@
 namespace block_coursefeedback\local\form;
 
 use moodle_exception;
+use moodle_url;
+use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,7 +41,22 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class surveypart_edit_form extends \moodleform {
+class surveypart_edit_form extends moodleform {
+
+    /**
+     * Constructor.
+     * @param moodle_url $action
+     * @param int|null $organizationid
+     * @param bool $editable
+     */
+    public function __construct(
+        moodle_url $action,
+        /** @var int|null */
+        private readonly ?int $organizationid,
+        bool $editable
+    ) {
+        parent::__construct($action, editable: $editable);
+    }
 
     /**
      * Defines forms elements
@@ -48,6 +65,12 @@ class surveypart_edit_form extends \moodleform {
     public function definition(): void {
         global $CFG;
         $mform = $this->_form;
+
+        if ($this->organizationid) {
+            $mform->addElement('hidden', 'organizationid');
+            $mform->setType('organizationid', PARAM_INT);
+            $mform->setConstant('organizationid', $this->organizationid);
+        }
 
         $mform->addElement('text', 'name', get_string('name', 'block_coursefeedback'));
         $mform->setType('name', PARAM_TEXT);

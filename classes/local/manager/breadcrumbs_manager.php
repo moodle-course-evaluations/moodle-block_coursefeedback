@@ -22,6 +22,7 @@
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\manager;
 
 use block_coursefeedback\local\persistent\organization;
@@ -29,6 +30,7 @@ use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use context_system;
 use moodle_url;
+use navigation_node;
 
 /**
  * Breadcrumbs manager.
@@ -42,7 +44,8 @@ class breadcrumbs_manager {
 
     /**
      * Create two navigation_nodes, because the first two navigation nodes are never shown?
-     * @return \navigation_node
+     *
+     * @return navigation_node
      */
     public static function create_root() {
         global $PAGE;
@@ -51,9 +54,10 @@ class breadcrumbs_manager {
 
     /**
      * Setup evaluation administration overview.
-     * @return \navigation_node
+     *
+     * @return navigation_node
      */
-    public static function setup_evaluation_admin_overview(): \navigation_node {
+    public static function setup_evaluation_admin_overview(): navigation_node {
         $node = self::create_root()->add(
             get_string('evaluationadministration', 'block_coursefeedback'),
             new moodle_url('/blocks/coursefeedback/overview.php'),
@@ -64,15 +68,24 @@ class breadcrumbs_manager {
 
     /**
      * Setup list of organizations breadcrumbs.
-     * @return \navigation_node
+     *
+     * @return navigation_node
      */
-    public static function setup_organizations(): \navigation_node {
+    public static function setup_organizations(): navigation_node {
         global $CFG, $PAGE;
         if (has_capability('moodle/site:config', context_system::instance())) {
             require_once($CFG->libdir . '/adminlib.php');
-            admin_externalpage_setup('block_coursefeedback_category_organization');
+            admin_externalpage_setup(
+                'block_coursefeedback_category_organization',
+                // Don't override an already-set $PAGE->url.
+                actualurl: $PAGE->has_set_url() ? $PAGE->url : ''
+            );
             return $PAGE->settingsnav->find_active_node();
         } else {
+            global $PAGE;
+            $PAGE->primarynav->find_active_node()?->make_inactive();
+            $PAGE->primarynav->get('evaluation_administration')?->make_active();
+
             if (permission_manager::can_do_any_evaluation_administration()) {
                 $parent = self::setup_evaluation_admin_overview();
             } else {
@@ -89,28 +102,14 @@ class breadcrumbs_manager {
 
     /**
      * Setup organization breadcrumbs.
+     *
      * @param organization $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_organization(organization $organization): \navigation_node {
+    public static function setup_organization(organization $organization): navigation_node {
         $parent = self::setup_organizations();
         $node = $parent->add(
             $organization->get('name'),
-            new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $organization->get('id')]),
-        );
-        $node->make_active();
-        return $node;
-    }
-
-    /**
-     * Setup organization settings breadcrumbs.
-     * @param organization $organization
-     * @return \navigation_node
-     */
-    public static function setup_organization_settings(organization $organization): \navigation_node {
-        $parent = self::setup_organization($organization);
-        $node = $parent->add(
-            get_string('general_settings_and_permissions', 'block_coursefeedback'),
             new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $organization->get('id')]),
         );
         $node->make_active();
@@ -118,36 +117,23 @@ class breadcrumbs_manager {
     }
 
     /**
-     * Setup edit organization breadcrumbs.
+     * Setup organization settings breadcrumbs.
+     *
      * @param organization|null $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_edit_organization(?organization $organization): \navigation_node {
-        $parent = self::setup_organizations();
-        $params = [];
+    public static function setup_organization_settings(?organization $organization): navigation_node {
         if ($organization) {
-            $params['id'] = $organization->get('id');
+            $parent = self::setup_organization($organization);
+        } else {
+            $parent = self::setup_organizations();
         }
-        $node = $parent->add(
-            get_string($organization ? 'edit_organization' : 'new_organization', 'block_coursefeedback'),
-            new moodle_url('/blocks/coursefeedback/organization_edit.php', $params),
-        );
-        $node->make_active();
-        return $node;
-    }
 
-    /**
-     * Setup edit default survey period for organization breadcrumbs.
-     * @param organization $organization
-     * @return \navigation_node
-     */
-    public static function setup_organization_default_survey_period(organization $organization): \navigation_node {
-        $parent = self::setup_organization($organization);
         $node = $parent->add(
-            get_string('edit_default_survey_period', 'block_coursefeedback'),
+            get_string($organization ? 'settings' : 'new'),
             new moodle_url(
-                '/blocks/coursefeedback/organization_edit_default_survey_period.php',
-                ['id' => $organization->get('id')],
+                '/blocks/coursefeedback/organization_settings.php',
+                $organization ? ['id' => $organization->get('id')] : []
             ),
         );
         $node->make_active();
@@ -156,10 +142,11 @@ class breadcrumbs_manager {
 
     /**
      * Setup organization courses without evaluation breadcrumbs.
+     *
      * @param organization $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_organization_courses_without_evaluation(organization $organization): \navigation_node {
+    public static function setup_organization_courses_without_evaluation(organization $organization): navigation_node {
         $parent = self::setup_organization($organization);
         $node = $parent->add(
             get_string('list_of_courses_without_evaluation', 'block_coursefeedback'),
@@ -174,10 +161,11 @@ class breadcrumbs_manager {
 
     /**
      * Setup organization evaluations breadcrumbs.
+     *
      * @param organization $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_organization_evaluations(organization $organization): \navigation_node {
+    public static function setup_organization_evaluations(organization $organization): navigation_node {
         $parent = self::setup_organization($organization);
         $node = $parent->add(
             get_string('list_of_evaluations', 'block_coursefeedback'),
@@ -192,13 +180,14 @@ class breadcrumbs_manager {
 
     /**
      * Setup organization default surveypart breadcrumbs.
+     *
      * @param organization $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_organization_default_surveypart(organization $organization): \navigation_node {
+    public static function setup_organization_default_surveypart(organization $organization): navigation_node {
         $parent = self::setup_organization($organization);
         $node = $parent->add(
-            get_string('define_default_surveyparts', 'block_coursefeedback'),
+            get_string('event_types', 'block_coursefeedback'),
             new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $organization->get('id')]),
         );
         $node->make_active();
@@ -206,11 +195,12 @@ class breadcrumbs_manager {
     }
 
     /**
-     * Sets up the root 'Surveys' navigation node.
+     * Sets up the questionnaires (survey parts) node, either for global questionnaires or org-scoped ones.
+     *
      * @param ?organization $organization
-     * @return \navigation_node
+     * @return navigation_node
      */
-    public static function setup_surveys(?organization $organization = null): \navigation_node {
+    public static function setup_questionnaires(?organization $organization = null): navigation_node {
         global $CFG, $PAGE;
         if ($organization) {
             $parent = self::setup_organization($organization);
@@ -240,11 +230,13 @@ class breadcrumbs_manager {
 
     /**
      * Sets up the navigation node for a specific survey.
+     *
      * @param surveypart $surveypart
-     * @return \navigation_node
+     * @param organization|null $organization
+     * @return navigation_node
      */
-    public static function setup_survey(surveypart $surveypart): \navigation_node {
-        $parent = self::setup_surveys();
+    public static function setup_questionnaire(surveypart $surveypart, ?organization $organization): navigation_node {
+        $parent = self::setup_questionnaires($organization);
         $node = $parent->add(
             $surveypart->get('name'),
             new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $surveypart->get('id')]),
@@ -255,14 +247,19 @@ class breadcrumbs_manager {
 
     /**
      * Sets up the navigation node for editing a survey.
+     *
      * @param surveypart|null $surveypart
-     * @return \navigation_node
+     * @param organization|null $organization
+     * @return navigation_node
      */
-    public static function setup_edit_survey(?surveypart $surveypart): \navigation_node {
-        $parent = self::setup_surveys();
-        $params = [];
+    public static function setup_edit_questionnaire(?surveypart $surveypart, ?organization $organization): navigation_node {
+        $parent = self::setup_questionnaires($organization);
         if ($surveypart) {
-            $params['id'] = $surveypart->get('id');
+            $params = ['id' => $surveypart->get('id')];
+        } else if ($organization) {
+            $params = ['organizationid' => $organization->get('id')];
+        } else {
+            $params = [];
         }
         $node = $parent->add(
             get_string($surveypart ? 'edit_surveypart' : 'new_surveypart', 'block_coursefeedback'),
@@ -274,12 +271,18 @@ class breadcrumbs_manager {
 
     /**
      * Sets up the navigation node for editing a surveyitem.
+     *
      * @param surveypart $surveypart
      * @param surveyitem|null $surveyitem
-     * @return \navigation_node
+     * @param organization|null $organization
+     * @return navigation_node
      */
-    public static function setup_edit_surveyitem(surveypart $surveypart, ?surveyitem $surveyitem): \navigation_node {
-        $parent = self::setup_survey($surveypart);
+    public static function setup_edit_surveyitem(
+        surveypart $surveypart,
+        ?surveyitem $surveyitem,
+        ?organization $organization
+    ): navigation_node {
+        $parent = self::setup_questionnaire($surveypart, $organization);
         $params = ['surveypartid' => $surveypart->get('id')];
         if ($surveyitem) {
             $params['id'] = $surveyitem->get('id');
@@ -294,11 +297,13 @@ class breadcrumbs_manager {
 
     /**
      * Sets up the navigation node for the scales overview.
+     *
      * @param surveypart $surveypart
-     * @return \navigation_node
+     * @param organization|null $organization
+     * @return navigation_node
      */
-    public static function setup_survey_scales(surveypart $surveypart): \navigation_node {
-        $parent = self::setup_survey($surveypart);
+    public static function setup_survey_scales(surveypart $surveypart, ?organization $organization = null): navigation_node {
+        $parent = self::setup_questionnaire($surveypart, $organization);
         $node = $parent->add(
             get_string('scales', 'block_coursefeedback'),
             new moodle_url('/blocks/coursefeedback/scales.php', ['surveypartid' => $surveypart->get('id')]),
@@ -309,12 +314,18 @@ class breadcrumbs_manager {
 
     /**
      * Sets up the edit scale navigation node.
+     *
      * @param surveypart $surveypart
      * @param int|null $scaleid
-     * @return \navigation_node
+     * @param organization|null $organization
+     * @return navigation_node
      */
-    public static function setup_edit_survey_scale(surveypart $surveypart, ?int $scaleid): \navigation_node {
-        $parent = self::setup_survey($surveypart);
+    public static function setup_edit_survey_scale(
+        surveypart $surveypart,
+        ?int $scaleid,
+        ?organization $organization
+    ): navigation_node {
+        $parent = self::setup_questionnaire($surveypart, $organization);
         $params = ['surveyitemid' => $surveypart->get('id')];
         if ($scaleid) {
             $params['id'] = $scaleid;

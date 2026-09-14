@@ -21,55 +21,15 @@
  * @copyright  2025 innoCampus, Technische Universität Berlin
  * @copyright  2025 IT.Services, Ruhr-Universität Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @deprecated
  */
 
-use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
-use block_coursefeedback\local\manager\breadcrumbs_manager;
-use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\persistent\organization;
-
 require_once(__DIR__ . '/../../config.php');
-global $CFG, $OUTPUT, $PAGE;
+
+debugging('organization.php is deprecated. Please use organization_settings.php instead.', DEBUG_DEVELOPER);
+
+$id = required_param('id', PARAM_INT);
 
 require_login();
-$context = context_system::instance();
-$id = required_param('id', PARAM_INT);
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
-$PAGE->set_context($context);
-permission_manager::require_manage_organization($organization);
-breadcrumbs_manager::setup_organization($organization);
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $id]));
 
-$title = $organization->get('name');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
-
-echo $OUTPUT->header();
-
-$context = [
-    'organization_settings_url' =>
-        new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]),
-    'courses_without_evaluation_url' =>
-        new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]),
-    'evaluations_url' =>
-        new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]),
-    'default_surveypart_url' =>
-        new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
-    'edit_default_survey_period_url' =>
-        new moodle_url('/blocks/coursefeedback/organization_edit_default_survey_period.php', ['id' => $id]),
-    'has_default_survey_period' =>
-        $organization->get('default_evaluation_starttime') && $organization->get('default_evaluation_endtime'),
-    'default_evaluation_starttime' =>
-        $organization->get('default_evaluation_starttime'),
-    'default_evaluation_endtime' =>
-        $organization->get('default_evaluation_endtime'),
-];
-
-if (get_config('block_coursefeedback', 'default_survey_creation_method') === default_survey_creation_method::METHOD_RUB) {
-    $context['rub_eventtype_mapping_url'] =
-        new moodle_url('/blocks/coursefeedback/organization_rub_eventtype_mapping.php', ['id' => $id]);
-}
-
-echo $OUTPUT->render_from_template('block_coursefeedback/organization', $context);
-
-echo $OUTPUT->footer();
+redirect(new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]));

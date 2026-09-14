@@ -70,7 +70,7 @@ class my_organizations_table extends \table_sql {
      */
     public function col_name($row) {
         return \html_writer::link(
-            new moodle_url('/blocks/coursefeedback/organization.php', ['id' => $row->id]),
+            new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $row->id]),
             $row->name
         );
     }

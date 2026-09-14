@@ -41,11 +41,16 @@ use stdClass;
 class permission_manager {
 
     /**
-     * Helper function which checks the permission for editing something in the surveypart.
+     * Helper function that checks the permission for editing something in the surveypart.
+     *
      * @param surveypart $surveypart
      */
-    public static function require_permission_for_editing_surveypart(surveypart $surveypart) {
-        require_capability('block/coursefeedback:managesurveysglobally', \context_system::instance());
+    public static function require_permission_for_editing_surveypart(surveypart $surveypart): void {
+        if ($surveypart->get('organizationid')) {
+            self::can_manage_organization($surveypart->get('organizationid'));
+        } else {
+            require_capability('block/coursefeedback:managesurveysglobally', \context_system::instance());
+        }
     }
 
     /**
@@ -61,18 +66,22 @@ class permission_manager {
 
     /**
      * Whether the current user is an organization manager for the given organization.
-     * @param ?organization $organization
+     * @param organization|int|null $organization The organization, its ID, or null to check if the user can manage global
+     *                                            questionnaires.
      * @return bool
      */
-    public static function can_manage_organization(?organization $organization): bool {
+    public static function can_manage_organization(organization|int|null $organization): bool {
         $context = \context_system::instance();
         if (!$organization) {
             return has_capability('block/coursefeedback:managesurveysglobally', $context);
         }
         if (has_capability('block/coursefeedback:manageorganizations', $context)) {
+            // The user is allowed to manage all organizations.
             return true;
         }
-        return user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_for($organization->get('id'));
+
+        $organization_id = is_int($organization) ? $organization : $organization->get('id');
+        return user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_for($organization_id);
     }
 
     /**

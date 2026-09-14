@@ -25,6 +25,7 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey_freezer;
@@ -32,32 +33,43 @@ use block_coursefeedback\local\surveyitem\surveyitem_form;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\surveyitem\surveyitemtype_with_settings;
 use core\di;
+use core\exception\moodle_exception;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
-require_login();
-
 $id = optional_param('id', null, PARAM_INT);
 $surveypartid = required_param('surveypartid', PARAM_INT);
+$type = required_param('type', PARAM_ALPHANUMEXT);
+
+$params = ['surveypartid' => $surveypartid, 'type' => $type];
+if ($id) {
+    $params['id'] = $id;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveyitem_edit.php', $params));
+$PAGE->set_context(context_system::instance());
+
+require_login();
+
 $surveypart = surveypart::get_record(['id' => $surveypartid], MUST_EXIST);
 
 permission_manager::require_permission_for_editing_surveypart($surveypart);
 
+$organization_id = $surveypart->get('organizationid');
+$organization = $organization_id ? organization::get_record(['id' => $organization_id], MUST_EXIST) : null;
+
 di::get(survey_freezer::class)
     ->check_survey_part_action($surveypart, $id ? "edit survey item '$id'" : "add survey item");
 
-$type = required_param('type', PARAM_ALPHANUMEXT);
 $surveyitemtype = surveyitem_manager::get_surveyitemtype($type);
 if (!$surveyitemtype->can_be_added()) {
     throw new moodle_exception('cannot_manually_add', 'block_coursefeedback', a: $surveyitemtype->get_name());
 }
 
-$params = ['surveypartid' => $surveypartid, 'type' => $type];
 
 $surveyitem = null;
 if ($id) {
-    $params['id'] = $id;
     $surveyitem = surveyitem::get_record(['id' => $id], MUST_EXIST);
     if ($surveyitem->get('surveypartid') !== $surveypartid || $surveyitem->get('surveyitemtype') !== $type) {
         // Generic error message.
@@ -65,21 +77,18 @@ if ($id) {
     }
 }
 
-breadcrumbs_manager::setup_edit_surveyitem($surveypart, $surveyitem);
+breadcrumbs_manager::setup_edit_surveyitem($surveypart, $surveyitem, $organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/surveyitem_edit.php', $params));
 if ($id) {
     $title = get_string('edit_surveyitem', 'block_coursefeedback');
 } else {
     $title = get_string('new_surveyitem', 'block_coursefeedback');
 }
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
 
 $returnurl = new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $surveypartid]);
-
 
 if ($surveyitemtype instanceof surveyitemtype_with_settings) {
     $mform = $surveyitemtype->get_settings_form($PAGE->url, $surveypart);

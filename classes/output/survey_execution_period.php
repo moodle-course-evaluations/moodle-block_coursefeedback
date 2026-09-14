@@ -18,6 +18,7 @@ namespace block_coursefeedback\output;
 
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\survey_execution;
+use core\output\bootstrap_renderer;
 use core\output\inplace_editable;
 use core\output\named_templatable;
 use core\output\renderable;
@@ -55,7 +56,7 @@ class survey_execution_period implements named_templatable, renderable {
     }
 
     #[\Override]
-    public function get_template_name(renderer_base $renderer): string {
+    public function get_template_name(renderer_base|bootstrap_renderer $renderer): string {
         return 'block_coursefeedback/survey_execution_period';
     }
 
@@ -76,7 +77,7 @@ class survey_execution_period implements named_templatable, renderable {
     }
 
     #[\Override]
-    public function export_for_template(renderer_base $output): array {
+    public function export_for_template(renderer_base|bootstrap_renderer $output): array {
         $context = [
             'editable' => $this->editable,
             'survey_execution_id' => $this->survey_execution->get('id'),

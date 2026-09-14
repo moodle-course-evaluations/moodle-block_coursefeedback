@@ -23,42 +23,52 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\manager\breadcrumbs_manager;
+use block_coursefeedback\local\persistent\organization_user;
+use block_coursefeedback\local\table\my_organizations_table;
+use block_coursefeedback\local\table\organizations_table;
+
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE, $USER;
 
-require_login();
-$context = context_system::instance();
-
-\block_coursefeedback\local\manager\breadcrumbs_manager::setup_organizations();
-
-$PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organizations.php'));
+$context = context_system::instance();
+$PAGE->set_context($context);
+
+require_login();
+
+breadcrumbs_manager::setup_organizations();
+
 $PAGE->set_heading(get_string('organizations', 'block_coursefeedback'));
 
 if (!has_capability('block/coursefeedback:manageorganizations', $context)) {
-    $records = \block_coursefeedback\local\persistent\organization_user::get_records(['userid' => $USER->id], limit: 2);
+    $records = organization_user::get_records(['userid' => $USER->id], limit: 2);
     if (count($records) == 0) {
-        throw new \core\exception\coding_exception('You are not allowed to access this page.');
+        throw new coding_exception('You are not allowed to access this page.');
     } else if (count($records) == 1) {
-        redirect(new moodle_url('/blocks/coursefeedback/organization.php', ['id' => array_pop($records)->get('organizationid')]));
+        redirect(
+            new moodle_url(
+                '/blocks/coursefeedback/organization_settings.php',
+                ['id' => reset($records)->get('organizationid')]
+            )
+        );
     }
 }
 
 echo $OUTPUT->header();
 
 if (has_capability('block/coursefeedback:manageorganizations', $context)) {
-    $table = new \block_coursefeedback\local\table\organizations_table();
-    echo $OUTPUT->render(new single_button(
-        new moodle_url('/blocks/coursefeedback/organization_edit.php'),
+    $table = new organizations_table();
+    echo html_writer::div($OUTPUT->render(new single_button(
+        new moodle_url('/blocks/coursefeedback/organization_settings.php'),
         get_string('new_organization', 'block_coursefeedback'),
-        'post',
+        'get',
         single_button::BUTTON_PRIMARY
-    ));
-
-    $table->out(48, false);
+    )), class: 'mb-2');
 } else {
-    $table = new \block_coursefeedback\local\table\my_organizations_table();
-    $table->out(48, false);
+    $table = new my_organizations_table();
 }
+
+$table->out(48, false);
 
 echo $OUTPUT->footer();
