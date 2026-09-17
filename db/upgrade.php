@@ -24,6 +24,7 @@
  */
 
 use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
+use block_coursefeedback\task\infer_semesters_after_migration;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1381,6 +1382,105 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
 
         // Coursefeedback savepoint reached.
         upgrade_block_savepoint(true, 2026081900, 'coursefeedback');
+    }
+
+    if ($oldversion < 2026091400) {
+        // Define table block_coursefeedback_organization_semester to be created.
+        $table = new xmldb_table('block_coursefeedback_organization_semester');
+
+        $transaction = $DB->start_delegated_transaction();
+
+        // Adding fields to table block_coursefeedback_organization_semester.
+        // Note that we rename default_evaluation_starttime to evaluation_starttime while we're at it to fulfill Moodle column
+        // name length requirements in queries. (And _starttime analogously.)
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('organizationid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('semesterid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('semestername', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('default_surveypartid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('evaluation_starttime', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('evaluation_endtime', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('can_teacher_edit_speriod', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('can_teacher_edit_ssettings', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('always_show_default_sp', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table block_coursefeedback_organization_semester.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('usermodified', XMLDB_KEY_FOREIGN, ['usermodified'], 'user', ['id']);
+        $table->add_key('fk_organizationid', XMLDB_KEY_FOREIGN, ['organizationid'], 'block_coursefeedback_organization', ['id']);
+        $table->add_key(
+            'fk_default_surveypartid',
+            XMLDB_KEY_FOREIGN,
+            ['default_surveypartid'],
+            'block_coursefeedback_surveypart',
+            ['id']
+        );
+
+        // Adding indexes to table block_coursefeedback_organization_semester.
+        $table->add_index('ui_organizationid_semesterid', XMLDB_INDEX_UNIQUE, ['organizationid', 'semesterid']);
+
+        // Conditionally launch create table for block_coursefeedback_organization_semester.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $organizations = $DB->get_records('block_coursefeedback_organization');
+        $semester_records = [];
+        foreach ($organizations as $organization) {
+            $semester_records[] = [
+                ...(array) $organization,
+                'id' => null,
+                'organizationid' => $organization->id,
+                // These were renamed.
+                'evaluation_starttime' => $organization->default_evaluation_starttime,
+                'evaluation_endtime' => $organization->default_evaluation_endtime,
+                // These will be replaced by an ad-hoc task ASAP.
+                'semesterid' => -100,
+                'semestername' => '[placeholder]',
+            ];
+        }
+
+        if ($semester_records) {
+            $DB->insert_records('block_coursefeedback_organization_semester', $semester_records);
+        }
+
+        // Setting a sensible semester requires us to call plugin code, which is not permitted in plugin upgrades.
+        // Instead, an ad-hoc task is recommended.
+        \core\task\manager::queue_adhoc_task(new infer_semesters_after_migration(), checkforexisting: true);
+
+        // Drop the moved columns from the organizations table.
+        $table = new xmldb_table('block_coursefeedback_organization');
+
+        $key = new xmldb_key(
+            'fk_default_surveypartid',
+            XMLDB_KEY_FOREIGN,
+            ['default_surveypartid'],
+            'block_coursefeedback_surveypart',
+            ['id']
+        );
+
+        // Launch drop key fk_default_surveypartid.
+        $dbman->drop_key($table, $key);
+
+        foreach (
+            [
+                'default_surveypartid', 'default_evaluation_starttime', 'default_evaluation_endtime', 'can_teacher_edit_speriod',
+                'can_teacher_edit_ssettings', 'always_show_default_sp',
+            ] as $column
+        ) {
+            $field = new xmldb_field($column);
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->drop_field($table, $field);
+            }
+        }
+
+        $transaction->allow_commit();
+
+        // Coursefeedback savepoint reached.
+        upgrade_block_savepoint(true, 2026091400, 'coursefeedback');
     }
 
     return true;

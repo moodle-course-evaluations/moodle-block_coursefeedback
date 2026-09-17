@@ -144,13 +144,13 @@ class organization_settings_form extends moodleform {
         $mform->addElement('header', 'default_survey_period_header', get_string('default_survey_period', 'block_coursefeedback'));
         $mform->setExpanded('default_survey_period_header');
 
-        $mform->addElement('date_time_selector', 'default_evaluation_starttime', get_string('start', 'block_coursefeedback'));
-        $mform->setType('default_evaluation_starttime', PARAM_INT);
-        $mform->addRule('default_evaluation_starttime', get_string('required'), 'required', null, 'client');
+        $mform->addElement('date_time_selector', 'evaluation_starttime', get_string('start', 'block_coursefeedback'));
+        $mform->setType('evaluation_starttime', PARAM_INT);
+        $mform->addRule('evaluation_starttime', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('date_time_selector', 'default_evaluation_endtime', get_string('end', 'block_coursefeedback'));
-        $mform->setType('default_evaluation_endtime', PARAM_INT);
-        $mform->addRule('default_evaluation_endtime', get_string('required'), 'required', null, 'client');
+        $mform->addElement('date_time_selector', 'evaluation_endtime', get_string('end', 'block_coursefeedback'));
+        $mform->setType('evaluation_endtime', PARAM_INT);
+        $mform->addRule('evaluation_endtime', get_string('required'), 'required', null, 'client');
 
         $mform->addElement(
             'header',
@@ -192,8 +192,8 @@ class organization_settings_form extends moodleform {
     #[\Override]
     public function validation($data, $files): array {
         $errors = parent::validation($data, $files);
-        if ($data['default_evaluation_starttime'] > $data['default_evaluation_endtime']) {
-            $errors['default_evaluation_endtime'] = get_string('end_must_be_after_start', 'block_coursefeedback');
+        if ($data['evaluation_starttime'] > $data['evaluation_endtime']) {
+            $errors['evaluation_endtime'] = get_string('end_must_be_after_start', 'block_coursefeedback');
         }
         return $errors;
     }

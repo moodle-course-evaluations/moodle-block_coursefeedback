@@ -151,8 +151,8 @@ class block_coursefeedback extends block_base {
 
             $context = [
                 'organization_name' => $organization->get('name'),
-                'starttime' => $survey_execution->get('starttime') ?? $organization->get('default_evaluation_starttime'),
-                'endtime' => $survey_execution->get('endtime') ?? $organization->get('default_evaluation_endtime'),
+                'starttime' => $survey_execution->get('starttime') ?? $organization->get('evaluation_starttime'),
+                'endtime' => $survey_execution->get('endtime') ?? $organization->get('evaluation_endtime'),
             ];
 
             if ($can_view_course_settings) {

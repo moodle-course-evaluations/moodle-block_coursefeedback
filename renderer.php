@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\survey;
 use core\output\notification;
 use core\output\plugin_renderer_base;
@@ -117,12 +119,18 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
      * Renders the prologue and epilogue of an organization page, including the navigation.
      *
      * @param organization $organization
+     * @param organization_semester|null $semester
      * @param string|null $current_tab
      * @param string|callable $content
      * @return void
      */
-    public function render_organization_page(organization $organization, ?string $current_tab, string|callable $content): void {
-        if (!$organization->get('default_evaluation_starttime') || !$organization->get('default_evaluation_endtime')) {
+    public function render_organization_page(
+        organization $organization,
+        ?organization_semester $semester,
+        ?string $current_tab,
+        string|callable $content
+    ): void {
+        if ($semester && (!$semester->get('evaluation_starttime') || !$semester->get('evaluation_endtime'))) {
             echo $this->render(new notification(
                 get_string('no_default_survey_period_set', 'block_coursefeedback'),
                 notification::NOTIFY_WARNING
@@ -131,7 +139,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
 
         $id = $organization->get('id');
 
-        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations'];
+        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations', 'semester_settings'];
         if (!in_array($current_tab, [null, ...$valid_tabs])) {
             throw new coding_exception("Invalid tab: $current_tab");
         }
@@ -139,11 +147,27 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         echo html_writer::start_tag('div', ['class' => 'row']);
         echo html_writer::start_tag('div', ['class' => 'col-lg-3 mb-2']);
 
+        $semester_mapping = course_semester_mapping::get_instance();
+        $current_semester = $semester_mapping->get_current_semester();
+        $semester_contexts = array_map(fn($semester) => [
+            'name' => $semester->name,
+            'is_current' => $semester->id === $current_semester->id,
+            'is_selected' => $semester->id === $current_semester->id,
+            'url' => new moodle_url('/blocks/coursefeedback/new_semester.php', [
+                "organizationid" => $organization->get('id'),
+                "semesterid" => $semester->id,
+            ]),
+        ], $semester_mapping->get_semesters());
+        // TODO: The selected semester may not be the current one.
+        $selected_semester_context = array_filter($semester_contexts, fn($semester) => $semester['is_current'])[0];
+
         $nav_context = [
             'organization_settings_url' => new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]),
             'eventtypes_url' => new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
             'courses_url' => new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]),
             'evaluations_url' => new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]),
+            'semesters' => $semester_contexts,
+            'selected_semester' => $selected_semester_context,
         ];
 
         if ($organization->get('has_local_questionnaires')) {

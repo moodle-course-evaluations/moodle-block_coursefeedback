@@ -27,6 +27,8 @@
 $string['add_block'] = 'Add global block, which is shown in every course with a survey';
 $string['add_eventtype'] = 'Add new event type';
 $string['add_more_blanks'] = 'Add more blanks';
+$string['current_semester'] = '(Current)';
+$string['not_current_semester'] = '(Not currently active!)';
 $string['add_new_event_to'] = 'Add a new event to course <q>{$a}</q>';
 $string['add_new_slot_to'] = 'Add a new slot to event <q>{$a}</q>';
 $string['add_surveyitem'] = 'Add questionnaire element';

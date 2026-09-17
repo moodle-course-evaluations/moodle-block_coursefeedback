@@ -68,7 +68,7 @@ class start_surveys_task extends scheduled_task {
             FROM {" . survey_execution::TABLE . "} se
             JOIN {" . organization::TABLE . "} o ON se.organizationid = o.id
             WHERE se.status = " . survey_execution::STATUS_PLANNED . "
-                AND :time >= COALESCE(se.starttime, o.default_evaluation_starttime)",
+                AND :time >= COALESCE(se.starttime, o.evaluation_starttime)",
             ['time' => time() + self::CREATE_SURVEYS_IN_ADVANCE_SECONDS],
         );
 
@@ -145,10 +145,10 @@ class start_surveys_task extends scheduled_task {
             }
 
             if (!$se->get('starttime')) {
-                $se->set('starttime', $survey_execution_data->organization->get('default_evaluation_starttime'));
+                $se->set('starttime', $survey_execution_data->organization->get('evaluation_starttime'));
             }
             if (!$se->get('endtime')) {
-                $se->set('endtime', $survey_execution_data->organization->get('default_evaluation_endtime'));
+                $se->set('endtime', $survey_execution_data->organization->get('evaluation_endtime'));
             }
             $se->set('status', survey_execution::STATUS_STARTED);
             $se->save();

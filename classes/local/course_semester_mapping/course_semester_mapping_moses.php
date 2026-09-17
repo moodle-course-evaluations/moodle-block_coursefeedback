@@ -21,6 +21,7 @@ use core\exception\coding_exception;
 use core\exception\moodle_exception;
 use core\plugin_manager;
 use local_moses\api\semester_resource;
+use local_moses\course_data;
 use local_moses\moses_api;
 
 /**
@@ -78,8 +79,7 @@ class course_semester_mapping_moses extends course_semester_mapping {
 
         $resources = $this->semester_res->get_all_since($min_considered_time);
         if (!$resources) {
-            $this->semester_res->update_all();
-            $resources = $this->semester_res->get_all_since($min_considered_time);
+            debugging('local_moses returned no semesters');
         }
         return array_map($this->from_moses_record(...), $resources);
     }
@@ -88,13 +88,36 @@ class course_semester_mapping_moses extends course_semester_mapping {
     public function get_current_semester(): evaluation_semester {
         $current_semester = $this->semester_res->get_current();
         if (!$current_semester) {
-            $this->semester_res->update_all();
-            $current_semester = $this->semester_res->get_current();
-        }
-        if (!$current_semester) {
             throw new moodle_exception("local_moses_no_current_semester", 'block_coursefeedback');
         }
         return $this->from_moses_record($current_semester);
+    }
+
+    #[\Override]
+    public function get_semester_by_id(int $id): ?evaluation_semester {
+        $semester = $this->semester_res->get_by_id($id);
+        return $semester ? $this->from_moses_record($semester) : null;
+    }
+
+    #[\Override]
+    public function get_semester_active_at(int $timestamp): ?evaluation_semester {
+        $semester = $this->semester_res->get_current($timestamp);
+        return $semester ? $this->from_moses_record($semester) : null;
+    }
+
+    #[\Override]
+    public function get_course_semester(int $courseid): ?evaluation_semester {
+        $moses_data = course_data::get_by_course_id($courseid);
+        if (!$moses_data || $moses_data->semesterid <= 0) {
+            return null;
+        }
+
+        $semester = $this->semester_res->get_by_id($moses_data->semesterid);
+        if (!$semester) {
+            throw new coding_exception("Course '$courseid' has Moses semesterid '$moses_data->semesterid' which doesn't exist");
+        }
+
+        return $this->from_moses_record($semester);
     }
 
     #[\Override]

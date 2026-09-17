@@ -55,6 +55,24 @@ abstract class course_semester_mapping {
     abstract public function get_current_semester(): evaluation_semester;
 
     /**
+     * @param int $id
+     * @return evaluation_semester|null
+     */
+    abstract public function get_semester_by_id(int $id): ?evaluation_semester;
+
+    /**
+     * @param int $timestamp
+     * @return evaluation_semester|null
+     */
+    abstract public function get_semester_active_at(int $timestamp): ?evaluation_semester;
+
+    /**
+     * @param int $courseid
+     * @return evaluation_semester|null
+     */
+    abstract public function get_course_semester(int $courseid): ?evaluation_semester;
+
+    /**
      * Return sql to filter courses by this semester.
      * @param evaluation_semester $semester
      * @param string $alias_course_table What the course table is aliased to in the query.

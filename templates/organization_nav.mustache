@@ -21,8 +21,14 @@
 
     Example context (json):
     {
+      "organization_settings_url": {},
+      "eventtypes_url": {},
+      "courses_url": {},
+      "evaluations_url": {},
+      "questionnaires_url": {},
+      "current_tab": "settings",
+      "current_tab_is_settings": true
     }
-
 }}
 
 <div class="list-group">
@@ -36,18 +42,45 @@
             {{#str}}questionnaires, block_coursefeedback, {{name}}{{/str}}
         </a>
     {{/questionnaires_url}}
-    <a class="list-group-item list-group-item-action {{#current_tab_is_eventtypes}}active{{/current_tab_is_eventtypes}}" href="{{{eventtypes_url}}}">
-        {{#str}}event_types, block_coursefeedback{{/str}}
-    </a>
-    {{#rub_eventtype_mapping_url}}
-        <a class="list-group-item list-group-item-action" href="{{{rub_eventtype_mapping_url}}}">
-            {{#str}}define_rub_eventtype_mapping, block_coursefeedback{{/str}}
-        </a>
-    {{/rub_eventtype_mapping_url}}
-    <a class="list-group-item list-group-item-action {{#current_tab_is_courses}}active{{/current_tab_is_courses}}" href="{{{courses_url}}}">
-        {{#str}}list_of_courses_without_evaluation, block_coursefeedback{{/str}}
-    </a>
-    <a class="list-group-item list-group-item-action {{#current_tab_is_evaluations}}active{{/current_tab_is_evaluations}}" href="{{{evaluations_url}}}">
-        {{#str}}list_of_evaluations, block_coursefeedback{{/str}}
-    </a>
+    <div class="list-group-item">
+        <div class="border-left">
+            <div class="ml-2 mb-2">
+                <label class="text-muted">Selected Semester</label>
+                <div class="dropdown">
+                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{selected_semester.name}}
+                        {{#selected_semester.is_current}}{{#str}}
+                            current_semester, block_coursefeedback {{/str}}{{/selected_semester.is_current}}
+                        {{^selected_semester.is_current}}<span class="text-warning">{{#str}}
+                            not_current_semester, block_coursefeedback {{/str}}</span>{{/selected_semester.is_current}}
+                    </a>
+                    <div class="dropdown-menu">
+                        {{#semesters}}
+                            <a class="dropdown-item {{#is_current}}active{{/is_current}}" href="{{{url}}}">{{name}}</a>
+                        {{/semesters}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group rounded-0 rounded-right">
+                <a class="list-group-item list-group-item-action {{#current_tab_is_eventtypes}}active{{/current_tab_is_eventtypes}} border-left-0"
+                   href="{{{eventtypes_url}}}">
+                    {{#str}}event_types, block_coursefeedback{{/str}}
+                </a>
+                {{#rub_eventtype_mapping_url}}
+                    <a class="list-group-item list-group-item-action border-left-0" href="{{{rub_eventtype_mapping_url}}}">
+                        {{#str}}define_rub_eventtype_mapping, block_coursefeedback{{/str}}
+                    </a>
+                {{/rub_eventtype_mapping_url}}
+                <a class="list-group-item list-group-item-action {{#current_tab_is_courses}}active{{/current_tab_is_courses}} border-left-0"
+                   href="{{{courses_url}}}">
+                    {{#str}}list_of_courses_without_evaluation, block_coursefeedback{{/str}}
+                </a>
+                <a class="list-group-item list-group-item-action {{#current_tab_is_evaluations}}active{{/current_tab_is_evaluations}} border-left-0"
+                   href="{{{evaluations_url}}}">
+                    {{#str}}list_of_evaluations, block_coursefeedback{{/str}}
+                </a>
+            </div>
+        </div>
+    </div>
 </div>

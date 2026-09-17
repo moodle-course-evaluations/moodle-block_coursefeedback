@@ -150,8 +150,8 @@ class evaluations_table extends no_pagination_table {
      * @return string
      */
     public function col_starttime($row) {
-        $starttime = $row->starttime ?? $this->organization->get('default_evaluation_starttime');
-        $endtime = $row->endtime ?? $this->organization->get('default_evaluation_endtime');
+        $starttime = $row->starttime ?? $this->organization->get('evaluation_starttime');
+        $endtime = $row->endtime ?? $this->organization->get('evaluation_endtime');
         return html_writer::span(
             userdate($starttime, $this->strings->strftimedatetimeshort)
             . ' - ' . userdate($endtime, $this->strings->strftimedatetimeshort),

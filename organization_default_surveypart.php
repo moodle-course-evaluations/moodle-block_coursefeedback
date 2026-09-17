@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\eventtype;
@@ -39,13 +40,21 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
+$current_semester = course_semester_mapping::get_instance()->get_current_semester();
+[$organization, $orgsem] = organization::get_for_semester($id, $current_semester);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_default_surveypart($organization);
 
 $PAGE->set_heading($organization->get('name'));
 $PAGE->set_title(get_string('event_types', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
+
+if (!$orgsem) {
+    redirect(new moodle_url('/blocks/coursefeedback/new_semester.php', [
+        'organizationid' => $id,
+        'semesterid' => $current_semester->id,
+    ]));
+}
 
 $returnurl = new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]);
 
@@ -121,6 +130,7 @@ $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 $renderer->render_organization_page(
     $organization,
+    $orgsem,
     'eventtypes',
     $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
         'formurl' => $PAGE->url->out(false),
@@ -128,7 +138,7 @@ $renderer->render_organization_page(
         'returnurl' => $returnurl->out(false),
         'default_surveypart_chooser_context' => (new surveypart_chooser(
             $surveyparts,
-            $organization->get('default_surveypartid'),
+            $orgsem->get('default_surveypartid'),
             $organization
         ))->export_for_template($OUTPUT),
         'eventtypes' => $template_eventtypes,
