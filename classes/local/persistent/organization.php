@@ -16,6 +16,9 @@
 
 namespace block_coursefeedback\local\persistent;
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
+use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
+use core\exception\coding_exception;
 use core\persistent;
 
 /**
@@ -26,7 +29,7 @@ use core\persistent;
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class organization extends persistent {
+class organization extends persistent_with_bulk_actions {
 
     /** Table name for the persistent. */
     public const TABLE = 'block_coursefeedback_organization';
@@ -35,37 +38,10 @@ class organization extends persistent {
      * Return the definition of the properties of this model.
      * @return array
      */
-    protected static function define_properties() {
+    protected static function define_properties(): array {
         return [
             'name' => [
                 'type' => PARAM_TEXT,
-            ],
-            'default_surveypartid' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'default_evaluation_starttime' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'default_evaluation_endtime' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'can_teacher_edit_speriod' => [
-                'type' => PARAM_BOOL,
-                'default' => true,
-            ],
-            'can_teacher_edit_ssettings' => [
-                'type' => PARAM_BOOL,
-                'default' => true,
-            ],
-            'always_show_default_sp' => [
-                'type' => PARAM_BOOL,
-                'default' => false,
             ],
             'has_local_questionnaires' => [
                 'type' => PARAM_BOOL,
@@ -76,5 +52,36 @@ class organization extends persistent {
                 'default' => false,
             ],
         ];
+    }
+
+    /**
+     * @param int $organizationid
+     * @return array{0: self, 1: ?organization_semester}
+     */
+    public static function get_for_current_semester(int $organizationid): array {
+        $semester = course_semester_mapping::get_instance()->get_current_semester();
+        return self::get_for_semester($organizationid, $semester);
+    }
+
+    /**
+     * @param int $organizationid
+     * @param evaluation_semester $semester
+     * @return array{0: self, 1: ?organization_semester}
+     */
+    public static function get_for_semester(int $organizationid, evaluation_semester $semester): array {
+        $org_fields = self::get_sql_fields('o', 'o_');
+        $org_semester_fields = organization_semester::get_sql_fields('os', 'os_');
+
+        global $DB;
+        $record = $DB->get_record_sql("
+            SELECT $org_fields, $org_semester_fields
+            FROM {block_coursefeedback_organization} o
+            LEFT JOIN {block_coursefeedback_organization_semester} os ON o.id = os.organizationid AND os.semesterid = :semesterid
+            WHERE o.id = :organizationid
+        ", ['semesterid' => $semester->id, 'organizationid' => $organizationid], MUST_EXIST);
+
+        $organization = self::extract($record, 'o_');
+        $organization_semester = organization_semester::extract($record, 'os_');
+        return [$organization, $organization_semester];
     }
 }

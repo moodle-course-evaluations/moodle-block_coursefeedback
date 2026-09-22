@@ -27,6 +27,8 @@
 $string['add_block'] = 'Globalen Block hinzufügen, der in jedem Kurs mit einer Umfrage angezeigt wird.';
 $string['add_eventtype'] = 'Veranstaltungsart hinzufügen';
 $string['add_more_blanks'] = 'Mehr Leerfelder';
+$string['current_semester'] = '(Aktuell)';
+$string['not_current_semester'] = '(Nicht aktuell!)';
 $string['add_new_event_to'] = 'Lehrveranstaltung im Kurs <q>{$a}</q> hinzufügen';
 $string['add_new_slot_to'] = 'Untergruppe in Lehrveranstaltung <q>{$a}</q> hinzufügen';
 $string['add_surveyitem'] = 'Element hinzufügen';

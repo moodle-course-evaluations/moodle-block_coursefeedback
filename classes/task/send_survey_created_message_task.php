@@ -151,8 +151,8 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
         object $course
     ): string {
         $dateformatstr = get_string('strftimedatetimeshort', 'core_langconfig');
-        $starttime = $survey_execution->get('starttime') ?? $organization->get('default_evaluation_starttime');
-        $endtime = $survey_execution->get('endtime') ?? $organization->get('default_evaluation_endtime');
+        $starttime = $survey_execution->get('starttime') ?? $organization->get('evaluation_starttime');
+        $endtime = $survey_execution->get('endtime') ?? $organization->get('evaluation_endtime');
         $placeholders = [
             '##NAME##' => fullname($user),
             '##COURSE_NAME##' => $course->fullname,

@@ -42,7 +42,7 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
+[$organization, $organization_semester] = $organizationid ? organization::get_for_current_semester($organizationid) : [null, null];
 
 if ($organization) {
     permission_manager::require_manage_organization($organization);
@@ -75,10 +75,15 @@ $add_button_html = $OUTPUT->render(new single_button(
 )) . '<br><br>';
 
 if ($organization) {
-    $renderer->render_organization_page($organization, 'questionnaires', function () use ($add_button_html, $table) {
-        echo $add_button_html;
-        $table->out(48, false);
-    });
+    $renderer->render_organization_page(
+        $organization,
+        $organization_semester,
+        'questionnaires',
+        function () use ($add_button_html, $table) {
+            echo $add_button_html;
+            $table->out(48, false);
+        }
+    );
 } else {
     echo $add_button_html;
     $table->out(48, false);

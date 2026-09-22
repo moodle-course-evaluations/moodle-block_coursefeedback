@@ -34,6 +34,7 @@ class evaluation_semester {
      * @param int $id
      * @param string|lang_string $name
      * @param int $sort_index
+     * @param bool $is_current
      */
     public function __construct(
         /** @var int $id Unique identifier of the semester, as defined by the implementation. */
@@ -41,7 +42,9 @@ class evaluation_semester {
         /** @var string|lang_string $name Human readable name of the semester. */
         public readonly string|lang_string $name,
         /** @var int $sort_index Any integer that is higher for later semesters. */
-        public readonly int $sort_index
+        public readonly int $sort_index,
+        /** @var bool $is_current Whether this is the semester we are currently in. */
+        public readonly bool $is_current,
     ) {
     }
 }

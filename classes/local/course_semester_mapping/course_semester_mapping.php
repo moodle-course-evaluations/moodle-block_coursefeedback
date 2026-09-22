@@ -41,9 +41,9 @@ abstract class course_semester_mapping {
     public const MAP_MATCH_ALL = 'match-all';
 
     /**
-     * Returns all available semesters.
+     * Returns all available semesters, indexed by their IDs.
      *
-     * @return evaluation_semester[]
+     * @return array<int, evaluation_semester>
      */
     abstract public function get_semesters(): array;
 
@@ -53,6 +53,24 @@ abstract class course_semester_mapping {
      * @return evaluation_semester
      */
     abstract public function get_current_semester(): evaluation_semester;
+
+    /**
+     * @param int $id
+     * @return evaluation_semester|null
+     */
+    abstract public function get_semester_by_id(int $id): ?evaluation_semester;
+
+    /**
+     * @param int $timestamp
+     * @return evaluation_semester|null
+     */
+    abstract public function get_semester_active_at(int $timestamp): ?evaluation_semester;
+
+    /**
+     * @param int $courseid
+     * @return evaluation_semester|null
+     */
+    abstract public function get_course_semester(int $courseid): ?evaluation_semester;
 
     /**
      * Return sql to filter courses by this semester.
