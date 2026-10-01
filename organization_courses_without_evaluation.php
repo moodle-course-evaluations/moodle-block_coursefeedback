@@ -42,7 +42,8 @@ $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_courses_witho
 $PAGE->set_context(context_system::instance());
 
 require_login();
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
+
+[$organization, $organization_semester] = organization::get_for_current_semester($id);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_courses_without_evaluation($organization);
@@ -53,7 +54,7 @@ if ($action) {
     require_sesskey();
     switch ($action) {
         case 'create-default':
-            if (!$organization->get('default_evaluation_starttime') || !$organization->get('default_evaluation_endtime')) {
+            if (!$organization->get('evaluation_starttime') || !$organization->get('evaluation_endtime')) {
                 throw new \core\exception\moodle_exception('define_evaluation_period_before', 'block_coursefeedback');
             }
             $courseids = required_param_array('selected', PARAM_INT);
@@ -93,6 +94,6 @@ echo $OUTPUT->header();
 
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
-$renderer->render_organization_page($organization, 'courses', fn() => $table->out(0, false));
+$renderer->render_organization_page($organization, $organization_semester, 'courses', fn() => $table->out(0, false));
 
 echo $OUTPUT->footer();

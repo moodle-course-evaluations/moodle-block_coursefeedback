@@ -42,7 +42,7 @@ $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_evaluations.p
 $PAGE->set_context($context);
 
 require_login();
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
+[$organization, $organization_semester] = organization::get_for_current_semester($id);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_evaluations($organization);
@@ -88,6 +88,6 @@ echo $OUTPUT->header();
 
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
-$renderer->render_organization_page($organization, 'evaluations', fn() => $table->out(0, false));
+$renderer->render_organization_page($organization, $organization_semester, 'evaluations', fn() => $table->out(0, false));
 
 echo $OUTPUT->footer();

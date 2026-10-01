@@ -1,0 +1,54 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_coursefeedback/semester_dropdown
+
+    Template purpose and description.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+    }
+}}
+
+<div class="dropdown">
+    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{{button_text}}}
+        {{^button_text}}
+            {{#selected_semester}}
+                {{name}}
+                {{#is_current}}{{#str}}current_semester, block_coursefeedback {{/str}}{{/is_current}}
+                {{^is_current}}
+                    <span class="text-warning">{{#str}}not_current_semester, block_coursefeedback {{/str}}</span>
+                {{/is_current}}
+            {{/selected_semester}}
+        {{/button_text}}
+    </a>
+    <div class="dropdown-menu">
+        {{#semesters}}
+            <a class="dropdown-item {{#is_selected}}active{{/is_selected}}" href="{{{url}}}">{{name}} {{#is_current}}{{#str}}current_semester, block_coursefeedback {{/str}}{{/is_current}}</a>
+        {{/semesters}}
+    </div>
+</div>
