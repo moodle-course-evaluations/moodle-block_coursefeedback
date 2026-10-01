@@ -17,6 +17,7 @@
 namespace block_coursefeedback\local\default_survey_creation_method;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
 
 /**
@@ -30,7 +31,11 @@ use block_coursefeedback\local\persistent\survey_execution;
 class empty_survey_creation_method extends default_survey_creation_method {
 
     #[\Override]
-    public static function create_survey_execution(array $courseids, organization $organization, int $semester): array {
+    public static function create_survey_execution(
+        array $courseids,
+        organization $organization,
+        organization_semester $orgsem
+    ): array {
         $ses = [];
         foreach ($courseids as $courseid) {
             $se = new survey_execution(0, (object) [
@@ -38,6 +43,7 @@ class empty_survey_creation_method extends default_survey_creation_method {
                 'endtime' => null,
                 'courseid' => $courseid,
                 'organizationid' => $organization->get('id'),
+                'orgsemid' => $orgsem->get('id'),
                 'status' => 0,
             ]);
             $se->save();

@@ -35,9 +35,9 @@ class organization_texts extends persistent {
      * Return the definition of the properties of this model.
      * @return array
      */
-    protected static function define_properties() {
+    protected static function define_properties(): array {
         return [
-            'organizationid' => [
+            'orgsemid' => [
                 'type' => PARAM_INT,
             ],
             'survey_created_message_body' => [
