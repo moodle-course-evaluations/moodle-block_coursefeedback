@@ -37,9 +37,10 @@ class course_semester_mapping_match_all extends course_semester_mapping {
      */
     public function __construct() {
         $this->semester = new evaluation_semester(
-            id: 1,
+            id: 0,
             name: new lang_string('all_courses', 'block_coursefeedback'),
-            sort_index: 0
+            sort_index: 0,
+            is_current: true
         );
     }
 
@@ -50,6 +51,24 @@ class course_semester_mapping_match_all extends course_semester_mapping {
 
     #[\Override]
     public function get_current_semester(): evaluation_semester {
+        return $this->semester;
+    }
+
+    #[\Override]
+    public function get_semester_by_id(int $id): ?evaluation_semester {
+        if ($id === $this->semester->id) {
+            return $this->semester;
+        }
+        return null;
+    }
+
+    #[\Override]
+    public function get_semester_active_at(int $timestamp): ?evaluation_semester {
+        return $this->semester;
+    }
+
+    #[\Override]
+    public function get_course_semester(int $courseid): ?evaluation_semester {
         return $this->semester;
     }
 
