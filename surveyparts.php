@@ -25,8 +25,9 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\table\surveyparts_table;
+use core\di;
 use core\output\single_button;
 
 require_once(__DIR__ . '/../../config.php');
@@ -42,7 +43,12 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = $organizationid ? organization::get_record(['id' => $organizationid], MUST_EXIST) : null;
+$semester_manager = di::get(semester_manager::class);
+if ($organizationid) {
+    [$organization, $semester, $orgsem] = $semester_manager->get_triplet_by_current_semester($organizationid);
+} else {
+    $organization = $semester = $orgsem = null;
+}
 
 if ($organization) {
     permission_manager::require_manage_organization($organization);
@@ -75,10 +81,16 @@ $add_button_html = $OUTPUT->render(new single_button(
 )) . '<br><br>';
 
 if ($organization) {
-    $renderer->render_organization_page($organization, 'questionnaires', function () use ($add_button_html, $table) {
-        echo $add_button_html;
-        $table->out(48, false);
-    });
+    $renderer->render_organization_page(
+        $organization,
+        $semester,
+        $orgsem,
+        'questionnaires',
+        function () use ($add_button_html, $table) {
+            echo $add_button_html;
+            $table->out(48, false);
+        }
+    );
 } else {
     echo $add_button_html;
     $table->out(48, false);

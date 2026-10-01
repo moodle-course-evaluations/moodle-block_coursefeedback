@@ -19,6 +19,7 @@ namespace block_coursefeedback\local;
 use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\response_slot_user;
 use block_coursefeedback\local\persistent\survey_execution;
@@ -44,6 +45,7 @@ class survey_execution_data {
      *
      * @param survey_execution $survey_execution
      * @param organization $organization
+     * @param organization_semester $orgsem
      * @param array<int, teaching_event> $events_by_id
      * @param array<int, eventtype> $types_by_event_id
      * @param array<int, survey_part_execution> $spes_by_event_id
@@ -57,6 +59,8 @@ class survey_execution_data {
         public readonly survey_execution $survey_execution,
         /** @var organization $organization */
         public readonly organization $organization,
+        /** @var organization_semester $orgsem */
+        public readonly organization_semester $orgsem,
         /** @var array<int, teaching_event> $events_by_id */
         public array $events_by_id,
         /** @var array<int, eventtype> $types_by_event_id */
@@ -85,6 +89,7 @@ class survey_execution_data {
 
         $se_fields = survey_execution::get_sql_fields('se', 'se_');
         $organization_fields = organization::get_sql_fields('o', 'o_');
+        $orgsem_fields = organization_semester::get_sql_fields('os', 'os_');
         $event_fields = teaching_event::get_sql_fields('te', 'te_');
         $event_type_fields = eventtype::get_sql_fields('et', 'et_');
         $spe_fields = survey_part_execution::get_sql_fields('spe', 'spe_');
@@ -95,10 +100,11 @@ class survey_execution_data {
             ->get_sql(alias: 'u', namedparams: true, prefix: 'u_');
 
         $recordset = $DB->get_recordset_sql("
-            SELECT $se_fields, $organization_fields, $event_fields, $event_type_fields,
+            SELECT $se_fields, $organization_fields, $orgsem_fields, $event_fields, $event_type_fields,
                    $spe_fields, $sp_fields, $slot_fields $user_fields_sql->selects
             FROM {" . survey_execution::TABLE . "} se
-            LEFT JOIN {" . organization::TABLE . "} o ON se.organizationid = o.id
+            LEFT JOIN {" . organization_semester::TABLE . "} os ON se.orgsemid = os.id
+            LEFT JOIN {" . organization::TABLE . "} o ON se.organizationid = o.id AND os.organizationid = o.id
             LEFT JOIN {" . teaching_event::TABLE . "} te ON se.courseid = te.courseid
             LEFT JOIN {" . eventtype::TABLE . "} et ON te.eventtypeid = et.id
             LEFT JOIN {" . survey_part_execution::TABLE . "} spe ON se.id = spe.surveyexecutionid AND te.id = spe.eventid
@@ -123,6 +129,7 @@ class survey_execution_data {
             foreach ($record_extractor->yield_records('se_') as $se_record) {
                 $survey_execution = new survey_execution(record: $se_record);
                 $organization = new organization(record: $record_extractor->get_related('o_'));
+                $orgsem = new organization_semester(record: $record_extractor->get_related('os_'));
 
                 $events_by_id = [];
                 $event_types_by_id = [];
@@ -195,6 +202,7 @@ class survey_execution_data {
                 $datas[] = new self(
                     survey_execution: $survey_execution,
                     organization: $organization,
+                    orgsem: $orgsem,
                     events_by_id: $events_by_id,
                     types_by_event_id: $types_by_event_id,
                     spes_by_event_id: $spes_by_event_id,

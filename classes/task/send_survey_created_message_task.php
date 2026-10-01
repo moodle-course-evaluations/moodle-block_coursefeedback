@@ -18,12 +18,14 @@ namespace block_coursefeedback\task;
 
 use block_coursefeedback\local\course_feedback_data;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\organization_texts;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\persistent\teaching_event;
 use block_coursefeedback\local\survey_execution_data;
 use context_course;
+use core\exception\moodle_exception;
 use core_user;
 use moodle_url;
 
@@ -66,22 +68,29 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
         [$insql, $inparams] = $DB->get_in_or_equal($surveyexecutionids, SQL_PARAMS_NAMED);
         $surveyexecutions = survey_execution::get_records_select("id $insql", $inparams);
 
-        $organization_by_id = [];
+        $organizations_by_id = [];
+        $orgsems_by_id = [];
         $organization_texts_by_id = [];
 
         foreach ($surveyexecutions as $surveyexecution) {
             $organizationid = $surveyexecution->get('organizationid');
-            if (!isset($organization_texts_by_id[$organizationid])) {
-                $organization_by_id[$organizationid] = organization::get_record(['id' => $organizationid]);
-                $organization_texts_by_id[$organizationid] = organization_texts::get_record(['organizationid' => $organizationid]);
+            if (!isset($organizations_by_id[$organizationid])) {
+                $organizations_by_id[$organizationid] = organization::get_record(['id' => $organizationid]);
             }
 
-            $organization = $organization_by_id[$organizationid];
-            $organization_texts = $organization_texts_by_id[$organizationid];
+            $orgsemid = $surveyexecution->get('orgsemid');
+            $orgsems_by_id[$orgsemid] ??= organization_semester::get_record(['id' => $orgsemid]);
+            if (!isset($organization_texts_by_id[$orgsemid])) {
+                $organization_texts_by_id[$orgsemid] = organization_texts::get_record(['orgsemid' => $orgsemid]);
+            }
 
-            if (!$organization || !$organization_texts) {
+            $organization = $organizations_by_id[$organizationid];
+            $orgsem = $orgsems_by_id[$orgsemid];
+            $organization_texts = $organization_texts_by_id[$orgsemid];
+
+            if (!$organization || !$orgsem || !$organization_texts) {
                 mtrace('Skipping mail sending for survey execution ' . $surveyexecution->get('id') .
-                    ' because of missing organization or organization_texts for id ' . $organizationid);
+                    ' because of missing organization, orgsem or organization_texts for id ' . $organizationid);
                 continue;
             }
 
@@ -104,7 +113,7 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
                     $organization_texts->get('survey_created_message_subject'),
                     $user,
                     $surveyexecution,
-                    $organization,
+                    $orgsem,
                     $course,
                 );
 
@@ -112,7 +121,7 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
                     $organization_texts->get('survey_created_message_body'),
                     $user,
                     $surveyexecution,
-                    $organization,
+                    $orgsem,
                     $course,
                 );
 
@@ -136,10 +145,11 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
 
     /**
      * Replaces the placeholders in $text with the given information.
+     *
      * @param string $text
      * @param object $user
      * @param survey_execution $survey_execution
-     * @param organization $organization
+     * @param organization_semester $orgsem
      * @param object $course
      * @return string
      */
@@ -147,12 +157,12 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
         string $text,
         object $user,
         survey_execution $survey_execution,
-        organization $organization,
+        organization_semester $orgsem,
         object $course
     ): string {
         $dateformatstr = get_string('strftimedatetimeshort', 'core_langconfig');
-        $starttime = $survey_execution->get('starttime') ?? $organization->get('default_evaluation_starttime');
-        $endtime = $survey_execution->get('endtime') ?? $organization->get('default_evaluation_endtime');
+        $starttime = $survey_execution->get('starttime') ?? $orgsem->get('evaluation_starttime');
+        $endtime = $survey_execution->get('endtime') ?? $orgsem->get('evaluation_endtime');
         $placeholders = [
             '##NAME##' => fullname($user),
             '##COURSE_NAME##' => $course->fullname,

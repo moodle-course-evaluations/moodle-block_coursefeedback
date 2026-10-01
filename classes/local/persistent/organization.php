@@ -16,8 +16,6 @@
 
 namespace block_coursefeedback\local\persistent;
 
-use core\persistent;
-
 /**
  * An organizational unit, such as a faculty, in which evaluations are conducted.
  *
@@ -26,7 +24,7 @@ use core\persistent;
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class organization extends persistent {
+class organization extends persistent_with_bulk_actions {
 
     /** Table name for the persistent. */
     public const TABLE = 'block_coursefeedback_organization';
@@ -35,37 +33,10 @@ class organization extends persistent {
      * Return the definition of the properties of this model.
      * @return array
      */
-    protected static function define_properties() {
+    protected static function define_properties(): array {
         return [
             'name' => [
                 'type' => PARAM_TEXT,
-            ],
-            'default_surveypartid' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'default_evaluation_starttime' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'default_evaluation_endtime' => [
-                'type' => PARAM_INT,
-                'null' => NULL_ALLOWED,
-                'default' => null,
-            ],
-            'can_teacher_edit_speriod' => [
-                'type' => PARAM_BOOL,
-                'default' => true,
-            ],
-            'can_teacher_edit_ssettings' => [
-                'type' => PARAM_BOOL,
-                'default' => true,
-            ],
-            'always_show_default_sp' => [
-                'type' => PARAM_BOOL,
-                'default' => false,
             ],
             'has_local_questionnaires' => [
                 'type' => PARAM_BOOL,

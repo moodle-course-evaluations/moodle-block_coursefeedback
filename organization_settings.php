@@ -23,26 +23,32 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\form\organization_settings_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\user_organization_cache_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
-use block_coursefeedback\local\persistent\organization_texts;
 use block_coursefeedback\local\persistent\organization_user;
+use core\output\notification;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
 $id = optional_param('id', null, PARAM_INT);
+
 $PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_settings.php', $id ? ['id' => $id] : []));
 $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = $id ? organization::get_record(['id' => $id], MUST_EXIST) : null;
-$organization_texts = $id ? organization_texts::get_record(['organizationid' => $id]) : null;
+$semester_mapping = course_semester_mapping::get_instance();
+
+$organization = null;
+if ($id) {
+    $organization = organization::get_record(['id' => $id]);
+}
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_settings($organization);
@@ -55,27 +61,22 @@ if ($organization) {
     $PAGE->set_title(get_string('new_organization', 'block_coursefeedback'));
 }
 
-$is_user_privileged = has_capability('block/coursefeedback:manageorganizations', context_system::instance());
+$editable = has_capability('block/coursefeedback:manageorganizations', context_system::instance());
 
-$mform = new organization_settings_form($PAGE->url, $is_user_privileged);
+$mform = new organization_settings_form($PAGE->url, editable: $editable);
 
 if ($organization) {
-    $data = $organization->to_record();
+    $data = (array) $organization->to_record();
 
-    $data->userids = array_values(organization_user::get_organization_userids($organization->get('id')));
-    $data->coursecatids = array_values(organization_category::get_organization_coursecatids($organization->get('id')));
-
-    if ($organization_texts) {
-        $data->survey_created_message_body = $organization_texts->get('survey_created_message_body');
-        $data->survey_created_message_subject = $organization_texts->get('survey_created_message_subject');
-    }
+    $data['userids'] = array_values(organization_user::get_organization_userids($organization->get('id')));
+    $data['coursecatids'] = array_values(organization_category::get_organization_coursecatids($organization->get('id')));
 
     $mform->set_data($data);
 }
 
 if ($mform->is_cancelled()) {
     redirect($organization ? $PAGE->url : new moodle_url('/blocks/coursefeedback/organizations.php'));
-} else if ($submitted_data = $mform->get_data()) {
+} else if ($editable && $submitted_data = $mform->get_data()) {
     if (!$organization) {
         $organization = new organization();
     }
@@ -85,20 +86,9 @@ if ($mform->is_cancelled()) {
     $organization->set_many(organization::properties_filter($submitted_data));
     $organization->save();
 
-    if (!$organization_texts) {
-        $organization_texts = new organization_texts(record: (object) [
-            'organizationid' => $organization->get('id'),
-        ]);
-    }
-
-    $organization_texts->set_many(organization_texts::properties_filter($submitted_data));
-    $organization_texts->save();
-
-    if ($is_user_privileged) {
-        organization_user::set_organization_userids($organization->get('id'), $submitted_data->userids);
-        organization_category::set_organization_coursecatids($organization->get('id'), $submitted_data->coursecatids);
-        user_organization_cache_manager::get_instance()->purge();
-    }
+    organization_user::set_organization_userids($organization->get('id'), $submitted_data->userids);
+    organization_category::set_organization_coursecatids($organization->get('id'), $submitted_data->coursecatids);
+    user_organization_cache_manager::get_instance()->purge();
 
     $transaction->allow_commit();
 
@@ -111,7 +101,17 @@ echo $OUTPUT->header();
 $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 if ($organization) {
-    $renderer->render_organization_page($organization, 'settings', $mform->display(...));
+    $renderer->render_organization_page($organization, null, null, 'settings', function () use ($mform, $editable) {
+        global $OUTPUT;
+        if (!$editable) {
+            echo $OUTPUT->render(new notification(
+                get_string('only_editable_by_admins', 'block_coursefeedback'),
+                notification::NOTIFY_INFO,
+                closebutton: false
+            ));
+        }
+        $mform->display();
+    });
 } else {
     $mform->display();
 }
