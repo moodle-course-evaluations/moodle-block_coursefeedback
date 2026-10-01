@@ -23,8 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_info;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
@@ -33,13 +35,23 @@ use block_coursefeedback\output\surveypart_chooser;
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
 
-$id = required_param('id', PARAM_INT);
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]));
+$organizationid = required_param('id', PARAM_INT);
+$orgsemid = optional_param('orgsemid', null, PARAM_INT);
+
+$params = ['id' => $organizationid];
+if ($orgsemid) {
+    $params['orgsemid'] = $orgsemid;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', $params));
 $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
+$semester_mapping = course_semester_mapping::get_instance();
+[$organization, $semester_info] = $orgsemid
+    ? organization::get_with_orgsem_by_id($organizationid, $orgsemid)
+    : organization::get_for_current_semester($organizationid);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_default_surveypart($organization);
@@ -47,13 +59,24 @@ breadcrumbs_manager::setup_organization_default_surveypart($organization);
 $PAGE->set_heading($organization->get('name'));
 $PAGE->set_title(get_string('event_types', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]);
+if (!$semester_info->orgsem) {
+    redirect(new moodle_url('/blocks/coursefeedback/semester_settings.php', [
+        'organizationid' => $organizationid,
+        'semesterid' => $semester_info->semester->id,
+    ]));
+}
+
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $organizationid]);
 
 $surveyparts = surveypart::get_surveyparts_available_for_organization($organization);
-$eventtypes = eventtype::get_eventtypes_for_organization($id);
+$eventtypes = eventtype::get_eventtypes_for_organization($organizationid);
 
 if (optional_param('submit', null, PARAM_ALPHA)) {
     require_sesskey();
+
+    global $DB;
+    $transaction = $DB->start_delegated_transaction();
+
     $addedids = required_param('added', PARAM_RAW);
     $addedids = \core\param::INT->clean_param_array(json_decode($addedids));
     foreach ($addedids as $addedid) {
@@ -90,11 +113,12 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     if (!isset($surveyparts[$default_surveypartid])) {
         $default_surveypartid = null;
     }
-    if ($default_surveypartid !== $organization->get('default_surveypartid')) {
-        $organization->set('default_surveypartid', $default_surveypartid);
-        $organization->update();
+    if ($default_surveypartid !== $orgsem->get('default_surveypartid')) {
+        $orgsem->set('default_surveypartid', $default_surveypartid);
+        $orgsem->update();
     }
 
+    $transaction->allow_commit();
     redirect($returnurl);
 }
 
@@ -121,6 +145,7 @@ $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 $renderer->render_organization_page(
     $organization,
+    $semester_info,
     'eventtypes',
     $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
         'formurl' => $PAGE->url->out(false),
@@ -128,7 +153,7 @@ $renderer->render_organization_page(
         'returnurl' => $returnurl->out(false),
         'default_surveypart_chooser_context' => (new surveypart_chooser(
             $surveyparts,
-            $organization->get('default_surveypartid'),
+            $semester_info->orgsem->get('default_surveypartid'),
             $organization
         ))->export_for_template($OUTPUT),
         'eventtypes' => $template_eventtypes,

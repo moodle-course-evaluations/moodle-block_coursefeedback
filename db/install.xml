@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/coursefeedback/db" VERSION="20260819" COMMENT="XMLDB file for Moodle blocks/coursefeedback"
+<XMLDB PATH="blocks/coursefeedback/db" VERSION="20260915" COMMENT="XMLDB file for Moodle blocks/coursefeedback"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -46,12 +46,6 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="default_surveypartid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="default_evaluation_starttime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="default_evaluation_endtime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="can_teacher_edit_speriod" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-        <FIELD NAME="can_teacher_edit_ssettings" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-        <FIELD NAME="always_show_default_sp" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="has_local_questionnaires" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="no_global_questionnaires" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -61,7 +55,6 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="fk_default_surveypartid" TYPE="foreign" FIELDS="default_surveypartid" REFTABLE="block_coursefeedback_surveypart" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="block_coursefeedback_organization_coursecat" COMMENT="Maps coursecategories to organizations.">
@@ -128,6 +121,32 @@
         <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="fk_organizationid" TYPE="foreign" FIELDS="organizationid" REFTABLE="block_coursefeedback_organization" REFFIELDS="id"/>
       </KEYS>
+    </TABLE>
+    <TABLE NAME="block_coursefeedback_organization_semester" COMMENT="Organizations settings for a single semester.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="organizationid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="semesterid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="The semester id as defined by the course_semester_mapping implementation. May not reference a DB table."/>
+        <FIELD NAME="semestername" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The semester name, persisted here in case the mapping implementation is changed or removed."/>
+        <FIELD NAME="default_surveypartid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="evaluation_starttime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="evaluation_endtime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="can_teacher_edit_speriod" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="can_teacher_edit_ssettings" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="always_show_default_sp" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_organizationid" TYPE="foreign" FIELDS="organizationid" REFTABLE="block_coursefeedback_organization" REFFIELDS="id"/>
+        <KEY NAME="fk_default_surveypartid" TYPE="foreign" FIELDS="default_surveypartid" REFTABLE="block_coursefeedback_surveypart" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ui_organizationid_semesterid" UNIQUE="true" FIELDS="organizationid, semesterid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="block_coursefeedback_rub_eventtype_mapping" COMMENT="Mapping for coursetypes from the RUB Campus DB to eventtypes from this plugin">
       <FIELDS>

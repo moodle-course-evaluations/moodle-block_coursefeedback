@@ -82,11 +82,11 @@ class survey_execution_period implements named_templatable, renderable {
             'editable' => $this->editable,
             'survey_execution_id' => $this->survey_execution->get('id'),
             'starttime' => $this->timestamp_to_iso_and_user($this->survey_execution->get('starttime') ??
-                $this->organization->get('default_evaluation_starttime')),
+                $this->organization->get('evaluation_starttime')),
             'endtime' => $this->timestamp_to_iso_and_user($this->survey_execution->get('endtime') ??
-                $this->organization->get('default_evaluation_endtime')),
-            'default_starttime' => $this->timestamp_to_iso_and_user($this->organization->get('default_evaluation_starttime')),
-            'default_endtime' => $this->timestamp_to_iso_and_user($this->organization->get('default_evaluation_endtime')),
+                $this->organization->get('evaluation_endtime')),
+            'default_starttime' => $this->timestamp_to_iso_and_user($this->organization->get('evaluation_starttime')),
+            'default_endtime' => $this->timestamp_to_iso_and_user($this->organization->get('evaluation_endtime')),
         ];
         $context['json_context'] = json_encode($context);
         return $context;

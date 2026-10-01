@@ -23,25 +23,47 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\form\organization_settings_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_info;
 use block_coursefeedback\local\manager\user_organization_cache_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\organization_texts;
 use block_coursefeedback\local\persistent\organization_user;
+use core\output\notification;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $DB, $OUTPUT, $PAGE;
 
 $id = optional_param('id', null, PARAM_INT);
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_settings.php', $id ? ['id' => $id] : []));
+$orgsemid = optional_param('orgsemid', null, PARAM_INT);
+
+$params = [];
+if ($id) {
+    $params['id'] = $id;
+}
+if ($orgsemid) {
+    $params['orgsemid'] = $orgsemid;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_settings.php', $params));
 $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$organization = $id ? organization::get_record(['id' => $id], MUST_EXIST) : null;
+$semester_mapping = course_semester_mapping::get_instance();
+
+$organization = $orgsem = $semester_info = null;
+if ($id) {
+    [$organization, $semester_info] = $orgsemid
+        ? organization::get_with_orgsem_by_id($id, $orgsemid)
+        : organization::get_for_current_semester($id);
+}
+
 $organization_texts = $id ? organization_texts::get_record(['organizationid' => $id]) : null;
 
 permission_manager::require_manage_organization($organization);
@@ -57,17 +79,21 @@ if ($organization) {
 
 $is_user_privileged = has_capability('block/coursefeedback:manageorganizations', context_system::instance());
 
-$mform = new organization_settings_form($PAGE->url, $is_user_privileged);
+$mform = new organization_settings_form($PAGE->url, editable: $is_user_privileged);
 
 if ($organization) {
-    $data = $organization->to_record();
+    $data = (array) $organization->to_record();
 
-    $data->userids = array_values(organization_user::get_organization_userids($organization->get('id')));
-    $data->coursecatids = array_values(organization_category::get_organization_coursecatids($organization->get('id')));
+    $data['userids'] = array_values(organization_user::get_organization_userids($organization->get('id')));
+    $data['coursecatids'] = array_values(organization_category::get_organization_coursecatids($organization->get('id')));
 
     if ($organization_texts) {
-        $data->survey_created_message_body = $organization_texts->get('survey_created_message_body');
-        $data->survey_created_message_subject = $organization_texts->get('survey_created_message_subject');
+        $data['survey_created_message_body'] = $organization_texts->get('survey_created_message_body');
+        $data['survey_created_message_subject'] = $organization_texts->get('survey_created_message_subject');
+    }
+
+    if ($orgsem) {
+        $data = array_merge($data, (array) $orgsem->to_record());
     }
 
     $mform->set_data($data);
@@ -84,6 +110,9 @@ if ($mform->is_cancelled()) {
 
     $organization->set_many(organization::properties_filter($submitted_data));
     $organization->save();
+
+    $orgsem?->set_many(organization_semester::properties_filter($submitted_data));
+    $orgsem?->save();
 
     if (!$organization_texts) {
         $organization_texts = new organization_texts(record: (object) [
@@ -111,7 +140,17 @@ echo $OUTPUT->header();
 $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 if ($organization) {
-    $renderer->render_organization_page($organization, 'settings', $mform->display(...));
+    $renderer->render_organization_page($organization, $semester_info, 'settings', function () use ($mform, $is_user_privileged) {
+        global $OUTPUT;
+        if (!$is_user_privileged) {
+            echo $OUTPUT->render(new notification(
+                get_string('only_editable_by_admins', 'block_coursefeedback'),
+                notification::NOTIFY_INFO,
+                closebutton: false
+            ));
+        }
+        $mform->display();
+    });
 } else {
     $mform->display();
 }
