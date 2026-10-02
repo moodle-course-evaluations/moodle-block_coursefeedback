@@ -26,7 +26,7 @@ use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\form\organization_semester_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_pair;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
@@ -56,14 +56,14 @@ $PAGE->set_context(context_system::instance());
 require_login();
 
 $semester = course_semester_mapping::get_instance()->require_semester_by_id($semesterid);
-[$organization, $semester_info] = organization::get_with_orgsem_by_semester($organizationid, $semester);
-$orgsem = $semester_info->orgsem;
+[$organization, $semester_pair] = organization::get_with_orgsem_by_semester($organizationid, $semester);
+$orgsem = $semester_pair->orgsem;
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization($organization);
 
 $PAGE->set_heading($organization->get('name'));
-$PAGE->set_title($semester_info->get_name() . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
+$PAGE->set_title($semester_pair->get_name() . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
 $mform = new organization_semester_form($PAGE->url);
 
@@ -105,7 +105,7 @@ echo $OUTPUT->header();
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
 
-$renderer->render_organization_page($organization, $semester_info, 'semester_settings', function () use (
+$renderer->render_organization_page($organization, $semester_pair, 'semester_settings', function () use (
     $mform,
     $renderer,
     $organizationid,
@@ -117,8 +117,8 @@ $renderer->render_organization_page($organization, $semester_info, 'semester_set
         echo get_string('filled_in_from', 'block_coursefeedback', $base_orgsem->get('semestername'));
     }
     $fill_in_dropdown = new semester_dropdown(
-        di::get(semester_manager::class)->load_initialized_semesters($organizationid),
-        fn($semester_info) => new moodle_url($PAGE->url, ['baseid' => $semester_info->orgsem->get('id')]),
+        di::get(semester_manager::class)->get_initialized_semesters($organizationid),
+        fn($semester_pair) => new moodle_url($PAGE->url, ['baseid' => $semester_pair->orgsem->get('id')]),
         button_text: get_string('fill_in_from', 'block_coursefeedback'),
     );
     echo $renderer->render($fill_in_dropdown);

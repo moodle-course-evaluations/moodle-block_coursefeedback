@@ -25,7 +25,7 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_pair;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\table\surveyparts_table;
 use core\output\single_button;
@@ -43,7 +43,7 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-[$organization, $semester_info] = $organizationid ? organization::get_for_current_semester($organizationid) : [null, null];
+[$organization, $semester_pair] = $organizationid ? organization::get_for_current_semester($organizationid) : [null, null];
 
 if ($organization) {
     permission_manager::require_manage_organization($organization);
@@ -78,7 +78,7 @@ $add_button_html = $OUTPUT->render(new single_button(
 if ($organization) {
     $renderer->render_organization_page(
         $organization,
-        $semester_info,
+        $semester_pair,
         'questionnaires',
         function () use ($add_button_html, $table) {
             echo $add_button_html;

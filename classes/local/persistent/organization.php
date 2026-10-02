@@ -18,7 +18,7 @@ namespace block_coursefeedback\local\persistent;
 
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_pair;
 use core\dml\sql_join;
 use core\exception\coding_exception;
 
@@ -57,7 +57,7 @@ class organization extends persistent_with_bulk_actions {
 
     /**
      * @param int $organizationid
-     * @return array{0: self, 1: semester_info}
+     * @return array{0: self, 1: semester_pair}
      */
     public static function get_for_current_semester(int $organizationid): array {
         $semester = course_semester_mapping::get_instance()->get_current_semester();
@@ -90,17 +90,17 @@ class organization extends persistent_with_bulk_actions {
     /**
      * @param int $organizationid
      * @param evaluation_semester $semester
-     * @return array{0: self, 1: semester_info}
+     * @return array{0: self, 1: semester_pair}
      */
     public static function get_with_orgsem_by_semester(int $organizationid, evaluation_semester $semester): array {
         [$organization, $orgsem] =  self::get_with_orgsem($organizationid, 'os.semesterid = :semesterid', ['semesterid' => $semester->id]);
-        return [$organization, new semester_info($semester, $orgsem)];
+        return [$organization, new semester_pair($semester, $orgsem)];
     }
 
     /**
      * @param int $organizationid
      * @param int $orgsemid
-     * @return array{0: self, 1: semester_info}
+     * @return array{0: self, 1: semester_pair}
      */
     public static function get_with_orgsem_by_id(int $organizationid, int $orgsemid): array {
         [$organization, $orgsem] = self::get_with_orgsem($organizationid, 'os.id = :orgsemid', ['orgsemid' => $orgsemid]);
@@ -113,6 +113,6 @@ class organization extends persistent_with_bulk_actions {
             ? null
             : course_semester_mapping::get_instance()->require_semester_by_id($semesterid);
 
-        return [$organization, new semester_info($semester, $orgsem)];
+        return [$organization, new semester_pair($semester, $orgsem)];
     }
 }

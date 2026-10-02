@@ -14,7 +14,7 @@ use core\exception\coding_exception;
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class semester_info {
+class semester_pair {
 
     /**
      * Constructor.

@@ -43,7 +43,7 @@ class eventtype extends persistent {
             'active' => [
                 'type' => PARAM_BOOL,
             ],
-            'organizationid' => [
+            'orgsemid' => [
                 'type' => PARAM_INT,
             ],
             'surveypartid' => [
@@ -56,10 +56,10 @@ class eventtype extends persistent {
 
     /**
      * Returns all eventtypes available in the organization.
-     * @param int $organizationid
+     * @param int $orgsemid
      * @return eventtype[]
      */
-    public static function get_eventtypes_for_organization(int $organizationid): array {
-        return self::get_records(['organizationid' => $organizationid], 'id');
+    public static function get_eventtypes_for_orgsem(int $orgsemid): array {
+        return self::get_records(['orgsemid' => $orgsemid], sort: 'id');
     }
 }

@@ -49,7 +49,7 @@ class survey_execution extends persistent_with_bulk_actions {
             'courseid' => [
                 'type' => PARAM_INT,
             ],
-            'organizationid' => [
+            'orgsemid' => [
                 'type' => PARAM_INT,
             ],
             'starttime' => [

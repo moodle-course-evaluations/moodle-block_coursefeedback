@@ -46,20 +46,26 @@ class semester_manager {
 
     /**
      * @param int $organizationid
-     * @return semester_info[]
+     * @return semester_pair[]
      */
-    public function load_initialized_semesters(int $organizationid): array {
+    public function get_initialized_semesters(int $organizationid): array {
         return array_filter(
-            $this->load_all_semesters($organizationid),
+            $this->get_all_semesters($organizationid),
             fn($semester) => $semester->orgsem !== null
         );
     }
 
+    public function get_current_semester(int $organizationid): semester_pair {
+        $semester = $this->semester_mapping->get_current_semester();
+        $orgsem = organization_semester::get_record(['semesterid' => $semester->id, 'organizationid' => $organizationid]);
+        return new semester_pair($semester, $orgsem);
+    }
+
     /**
      * @param int $organizationid
-     * @return semester_info[]
+     * @return semester_pair[]
      */
-    public function load_all_semesters(int $organizationid): array {
+    public function get_all_semesters(int $organizationid): array {
         $organization_semesters = organization_semester::get_records(['organizationid' => $organizationid], sort: 'id');
         $mapping_semesters = array_values($this->semester_mapping->get_semesters());
         usort($mapping_semesters, fn($a, $b) => $a->sort_index <=> $b->sort_index);
@@ -92,7 +98,7 @@ class semester_manager {
             $pair[1] = $org_semester;
         }
 
-        return array_map(fn($pair) => new semester_info(...$pair), $pairs);
+        return array_map(fn($pair) => new semester_pair(...$pair), $pairs);
     }
 
     /**

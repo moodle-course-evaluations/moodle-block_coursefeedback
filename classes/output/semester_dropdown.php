@@ -16,7 +16,9 @@
 
 namespace block_coursefeedback\output;
 
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
+use block_coursefeedback\local\manager\semester_pair;
+use block_coursefeedback\local\persistent\organization_semester;
 use Closure;
 use core\output\named_templatable;
 use core\output\renderable;
@@ -29,15 +31,15 @@ class semester_dropdown implements named_templatable, renderable {
      * Constructor.
      *
      * @param array $semesters
-     * @param Closure(semester_info): moodle_url|string $link_generator
+     * @param Closure(?evaluation_semester, ?organization_semester): moodle_url|string $link_generator
      * @param string|null $button_text
      * @param int|null $selected_semester_id
      * @param int|null $selected_orgsem_id
      */
     public function __construct(
-        /** @var semester_info[] $semesters */
+        /** @var semester_pair[] $semesters */
         private readonly array $semesters,
-        /** @var Closure(semester_info): moodle_url|string $link_generator */
+        /** @var Closure(?evaluation_semester, ?organization_semester): moodle_url|string $link_generator */
         private readonly Closure $link_generator,
         /** @var string|null $button_text */
         private readonly ?string $button_text = null,
@@ -59,15 +61,15 @@ class semester_dropdown implements named_templatable, renderable {
             'button_text' => $this->button_text,
         ];
 
-        foreach ($this->semesters as $semester_info) {
-            $is_selected = $semester_info->orgsem && $semester_info->orgsem->get('id') === $this->selected_orgsem_id
-                || $semester_info->semester && $semester_info->semester->id === $this->selected_semester_id;
+        foreach ($this->semesters as $semester_pair) {
+            $is_selected = $semester_pair->orgsem && $semester_pair->orgsem->get('id') === $this->selected_orgsem_id
+                || $semester_pair->semester && $semester_pair->semester->id === $this->selected_semester_id;
 
             $semester_context = $context['semesters'][] = [
-                'name' => $semester_info->get_name(),
-                'is_current' => $semester_info->is_current(),
+                'name' => $semester_pair->get_name(),
+                'is_current' => $semester_pair->is_current(),
                 'is_selected' => $is_selected,
-                'url' => ($this->link_generator)($semester_info),
+                'url' => ($this->link_generator)($semester_pair),
             ];
 
             if ($is_selected) {

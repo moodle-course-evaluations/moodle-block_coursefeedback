@@ -34,22 +34,30 @@ global $CFG, $OUTPUT, $PAGE;
 
 require_login();
 $context = context_system::instance();
-$id = required_param('id', PARAM_INT);
-$organization = organization::get_record(['id' => $id], MUST_EXIST);
+$organizationid = required_param('id', PARAM_INT);
+
+[$organization, $semester_pair] = organization::get_for_current_semester($organizationid);
+
+if (!$semester_pair->orgsem) {
+    redirect(new moodle_url('/blocks/coursefeedback/semester_settings.php', [
+        'organizationid' => $organizationid,
+        'semesterid' => $semester_pair->semester->id,
+    ]));
+}
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_default_surveypart($organization);
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_rub_eventtype_mapping.php', ['id' => $id]));
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_rub_eventtype_mapping.php', ['id' => $organizationid]));
 $PAGE->set_context($context);
 
 $title = get_string('event_types', 'block_coursefeedback') . ': ' . $organization->get('name');
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $organizationid]);
 
-$eventtypes = eventtype::get_eventtypes_for_organization($id);
+$eventtypes = eventtype::get_eventtypes_for_orgsem($semester_pair->orgsem->get('id'));
 $eventtypes_by_id = [];
 foreach ($eventtypes as $eventtype) {
     $eventtypes_by_id[$eventtype->get('id')] = $eventtype;

@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
+use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_pair;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\survey;
 use block_coursefeedback\output\semester_dropdown;
 use core\di;
@@ -121,18 +124,27 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
      * Renders the prologue and epilogue of an organization page, including the navigation.
      *
      * @param organization $organization
-     * @param semester_info $semester_info
+     * @param evaluation_semester|organization_semester $semester_or_orgsem
      * @param string|null $current_tab
      * @param string|callable $content
      * @return void
      */
     public function render_organization_page(
         organization $organization,
-        semester_info $semester_info,
+        evaluation_semester|organization_semester $semester_or_orgsem,
         ?string $current_tab,
         string|callable $content
     ): void {
-        $orgsem = $semester_info?->orgsem;
+        $semester_manager = di::get(semester_manager::class);
+
+        if ($semester_or_orgsem instanceof evaluation_semester) {
+            $semester = $semester_or_orgsem;
+            $orgsem = organization_semester::get_by_semester($organization->get('id'), $semester);
+        } else {
+            $orgsem = $semester_or_orgsem;
+            $semester = $orgsem->get_semester();
+        }
+
         if ($orgsem && (!$orgsem->get('evaluation_starttime') || !$orgsem->get('evaluation_endtime'))) {
             echo $this->render(new notification(
                 get_string('no_default_survey_period_set', 'block_coursefeedback'),
@@ -151,17 +163,17 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         echo html_writer::start_tag('div', ['class' => 'col-lg-4 mb-2']);
 
         $semester_dropdown = new semester_dropdown(
-            di::get(semester_manager::class)->load_all_semesters($id),
-            fn($semester_info) => $semester_info->orgsem
+            $semester_manager->get_all_semesters($id),
+            fn($link_semester, $link_orgsem) => $link_orgsem
                 ? new moodle_url('/blocks/coursefeedback/organization_settings.php', [
                     "id" => $organization->get('id'),
-                    "orgsemid" => $semester_info->orgsem->get('id'),
+                    "orgsemid" => $link_orgsem->get('id'),
                 ])
                 : new moodle_url('/blocks/coursefeedback/semester_settings.php', [
                     "organizationid" => $organization->get('id'),
-                    "semesterid" => $semester_info->semester->id,
+                    "semesterid" => $link_semester->id,
                 ]),
-            selected_semester_id: $semester_info?->semester?->id,
+            selected_semester_id: $semester->id,
             selected_orgsem_id: $orgsem?->get('id'),
         );
 
@@ -174,7 +186,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
             $nav_context = array_merge($nav_context, [
                 'semester_settings_url' => new moodle_url('/blocks/coursefeedback/semester_settings.php', [
                     'organizationid' => $id,
-                    'semesterid' => $semester_info->semester?->id ?? $semester_info->orgsem->get('semesterid'),
+                    'semesterid' => $semester?->id ?? $orgsem->get('semesterid'),
                 ]),
                 'eventtypes_url' => new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
                 'courses_url' =>
@@ -186,7 +198,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
             // option.
             $nav_context['setup_new_semester_url'] = new moodle_url('/blocks/coursefeedback/semester_settings.php', [
                 'organizationid' => $id,
-                'semesterid' => $semester_info->semester->id,
+                'semesterid' => $semester->id,
             ]);
         }
 

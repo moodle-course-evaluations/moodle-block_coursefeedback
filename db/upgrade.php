@@ -1395,7 +1395,7 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
         // name length requirements in queries. (And _starttime analogously.)
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('organizationid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('semesterid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('semesterid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('semestername', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
         $table->add_field('default_surveypartid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('evaluation_starttime', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
@@ -1477,11 +1477,40 @@ function xmldb_block_coursefeedback_upgrade(int $oldversion): bool {
             }
         }
 
+        // Some other tables now need to reference semesters instead of organizations.
+
+        $orgsemids_by_orgids = array_flip($DB->get_records_menu(
+            'block_coursefeedback_organization_semester',
+            fields: 'id, organizationid'
+        ));
+
+        block_coursefeedback_migrate_organizationid_to_orgsemid(
+            'block_coursefeedback_eventtype',
+            $orgsemids_by_orgids,
+            is_unique: false,
+            drop_old: true,
+        );
+        block_coursefeedback_migrate_organizationid_to_orgsemid(
+            'block_coursefeedback_organization_texts',
+            $orgsemids_by_orgids,
+            is_unique: true,
+            drop_old: true,
+        );
+        block_coursefeedback_migrate_organizationid_to_orgsemid(
+            'block_coursefeedback_surveyexecution',
+            $orgsemids_by_orgids,
+            is_unique: false,
+            // We'll probably drop the organizationid column from this at some point, but not now.
+            drop_old: false
+        );
+
         $transaction->allow_commit();
 
         // Coursefeedback savepoint reached.
         upgrade_block_savepoint(true, 2026091400, 'coursefeedback');
     }
+
+    // TODO: Maybe add unique index to block_coursefeedback_surveyexecution?
 
     return true;
 }
