@@ -17,6 +17,7 @@
 namespace block_coursefeedback\local;
 
 use coding_exception;
+use core\exception\moodle_exception;
 use Generator;
 use JsonException;
 use JsonSerializable;
@@ -85,6 +86,25 @@ class multilang_string implements JsonSerializable {
         }
 
         return new static((array) $deserialized);
+    }
+
+    /**
+     * Checks if the given string can be deserialized as a multilang string.
+     *
+     * @param mixed $string
+     * @return bool
+     */
+    public static function is_valid(mixed $string): bool {
+        if (!is_string($string)) {
+            return false;
+        }
+
+        try {
+            self::deserialize($string);
+            return true;
+        } catch (moodle_exception) {
+            return false;
+        }
     }
 
     #[\Override]
