@@ -208,7 +208,11 @@ class breadcrumbs_manager {
         } else {
             if (has_capability('moodle/site:config', context_system::instance())) {
                 require_once($CFG->libdir . '/adminlib.php');
-                admin_externalpage_setup('block_coursefeedback_category_survey');
+                admin_externalpage_setup(
+                    'block_coursefeedback_category_survey',
+                    // Don't override an already-set $PAGE->url.
+                    actualurl: $PAGE->has_set_url() ? $PAGE->url : ''
+                );
                 return $PAGE->settingsnav->find_active_node();
             } else {
                 if (permission_manager::can_do_any_evaluation_administration()) {
