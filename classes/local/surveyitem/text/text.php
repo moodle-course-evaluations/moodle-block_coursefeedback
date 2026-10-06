@@ -50,7 +50,8 @@ class text extends surveyitemtype_with_settings {
     #[\Override]
     public function save_settings_form_data(surveyitem $surveyitem, surveypart $surveypart, object $formdata): void {
         global $DB;
-        $old_record = $record = $DB->get_record('block_coursefeedback_surveyitemtext', ['surveyitemid' => $surveyitem->get('id')]);
+        $old_record = $DB->get_record('block_coursefeedback_surveyitemtext', ['surveyitemid' => $surveyitem->get('id')]);
+        $record = clone $old_record;
         if (!$record) {
             $record = (object) ['surveyitemid' => $surveyitem->get('id')];
         }
