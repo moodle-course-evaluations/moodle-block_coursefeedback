@@ -17,6 +17,7 @@
 namespace block_coursefeedback\output;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
 use core\output\bootstrap_renderer;
 use core\output\inplace_editable;
@@ -42,14 +43,14 @@ class survey_execution_period implements named_templatable, renderable {
      * Constructor.
      *
      * @param survey_execution $survey_execution
-     * @param organization $organization
+     * @param organization_semester $orgsem
      * @param bool $editable
      */
     public function __construct(
         /** @var survey_execution $survey_execution */
         private readonly survey_execution $survey_execution,
-        /** @var organization $organization */
-        private readonly organization $organization,
+        /** @var organization_semester $orgsem */
+        private readonly organization_semester $orgsem,
         /** @var bool $editable */
         private readonly bool $editable
     ) {
@@ -82,11 +83,11 @@ class survey_execution_period implements named_templatable, renderable {
             'editable' => $this->editable,
             'survey_execution_id' => $this->survey_execution->get('id'),
             'starttime' => $this->timestamp_to_iso_and_user($this->survey_execution->get('starttime') ??
-                $this->organization->get('evaluation_starttime')),
+                $this->orgsem->get('evaluation_starttime')),
             'endtime' => $this->timestamp_to_iso_and_user($this->survey_execution->get('endtime') ??
-                $this->organization->get('evaluation_endtime')),
-            'default_starttime' => $this->timestamp_to_iso_and_user($this->organization->get('evaluation_starttime')),
-            'default_endtime' => $this->timestamp_to_iso_and_user($this->organization->get('evaluation_endtime')),
+                $this->orgsem->get('evaluation_endtime')),
+            'default_starttime' => $this->timestamp_to_iso_and_user($this->orgsem->get('evaluation_starttime')),
+            'default_endtime' => $this->timestamp_to_iso_and_user($this->orgsem->get('evaluation_endtime')),
         ];
         $context['json_context'] = json_encode($context);
         return $context;

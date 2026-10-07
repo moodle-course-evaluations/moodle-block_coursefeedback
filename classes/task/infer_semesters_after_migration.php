@@ -20,6 +20,7 @@ use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
+use core\plugin_manager;
 use core\task\adhoc_task;
 
 /**

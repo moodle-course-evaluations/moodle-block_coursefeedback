@@ -48,7 +48,14 @@
     </a>
     <div class="dropdown-menu">
         {{#semesters}}
-            <a class="dropdown-item {{#is_selected}}active{{/is_selected}}" href="{{{url}}}">{{name}} {{#is_current}}{{#str}}current_semester, block_coursefeedback {{/str}}{{/is_current}}</a>
+            <a class="dropdown-item {{#is_selected}}active{{/is_selected}} {{^is_initialized}}text-muted{{/is_initialized}}"
+               {{^is_initialized}}title="{{#str}}semester_not_initialized, block_coursefeedback{{/str}}"{{/is_initialized}}
+               href="{{{url}}}">
+                {{name}} {{#is_current}}{{#str}}current_semester, block_coursefeedback{{/str}}{{/is_current}}
+                {{^is_initialized}}
+                    <span class="float-end ml-2">∗</span>
+                {{/is_initialized}}
+            </a>
         {{/semesters}}
     </div>
 </div>

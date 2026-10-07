@@ -16,12 +16,13 @@
 
 namespace block_coursefeedback\external;
 
-use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\output\survey_execution_period;
 use coding_exception;
+use context_system;
 use core\di;
 use core\exception\moodle_exception;
 use core_date;
@@ -138,13 +139,10 @@ class update_survey_execution extends external_api {
 
         $survey_execution = survey_execution::get_record(['id' => $surveyexecutionid], MUST_EXIST);
 
-        $organization =
-            course_organization_mapping::get_instance()->get_organization_for_course($survey_execution->get('courseid'));
+        self::validate_context(context_system::instance());
+        $course = get_course($survey_execution->get('courseid'));
 
-        $courseid = $survey_execution->get('courseid');
-
-        self::validate_context(\context_system::instance());
-        $course = get_course($courseid);
+        [$organization, , $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($course);
 
         if (
             !permission_manager::can_edit_course_survey_period(
@@ -164,11 +162,7 @@ class update_survey_execution extends external_api {
 
         global $PAGE;
         $renderer = $PAGE->get_renderer('block_coursefeedback');
-        $survey_execution_period = new survey_execution_period(
-            $survey_execution,
-            $organization,
-            editable: true
-        );
+        $survey_execution_period = new survey_execution_period($survey_execution, $orgsem, editable: true);
         return [
             'html' => $renderer->render($survey_execution_period),
         ];

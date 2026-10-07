@@ -139,7 +139,7 @@ class course_event_slot_table implements named_templatable, renderable {
         if ($this->availableeventtypes === null) {
             $this->availableeventtypes = eventtype::get_records([
                 'active' => true,
-                'organizationid' => $this->survey_data->organization->get('id'),
+                'orgsemid' => $this->survey_data->orgsem->get('id'),
             ]);
         }
 

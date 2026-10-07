@@ -26,11 +26,13 @@
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_manager;
+use block_coursefeedback\local\manager\semester_tuple;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\output\surveypart_chooser;
+use core\di;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
@@ -48,10 +50,10 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$semester_mapping = course_semester_mapping::get_instance();
-[$organization, $semester_info] = $orgsemid
-    ? organization::get_with_orgsem_by_id($organizationid, $orgsemid)
-    : organization::get_for_current_semester($organizationid);
+$semester_manager = di::get(semester_manager::class);
+[$organization, $semester, $orgsem] = $orgsemid
+    ? $semester_manager->get_triplet_by_orgsemid($organizationid, $orgsemid)
+    : $semester_manager->get_triplet_by_current_semester($organizationid);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_default_surveypart($organization);
@@ -59,17 +61,15 @@ breadcrumbs_manager::setup_organization_default_surveypart($organization);
 $PAGE->set_heading($organization->get('name'));
 $PAGE->set_title(get_string('event_types', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
-if (!$semester_info->orgsem) {
+if (!$orgsem) {
     redirect(new moodle_url('/blocks/coursefeedback/semester_settings.php', [
         'organizationid' => $organizationid,
-        'semesterid' => $semester_info->semester->id,
+        'semesterid' => $semester->id,
     ]));
 }
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $organizationid]);
-
 $surveyparts = surveypart::get_surveyparts_available_for_organization($organization);
-$eventtypes = eventtype::get_eventtypes_for_organization($organizationid);
+$eventtypes = eventtype::get_eventtypes_for_orgsem($orgsem->get('id'));
 
 if (optional_param('submit', null, PARAM_ALPHA)) {
     require_sesskey();
@@ -89,7 +89,7 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
             'name' => $eventtypename,
             'active' => true,
             'surveypartid' => $surveypartid,
-            'organizationid' => $organization->get('id'),
+            'orgsemid' => $orgsem->get('id'),
         ]);
         $neweventtype->save();
     }
@@ -119,7 +119,7 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     }
 
     $transaction->allow_commit();
-    redirect($returnurl);
+    redirect($PAGE->url);
 }
 
 $PAGE->requires->js_call_amd(
@@ -145,15 +145,16 @@ $renderer = $PAGE->get_renderer('block_coursefeedback');
 
 $renderer->render_organization_page(
     $organization,
-    $semester_info,
+    $semester,
+    $orgsem,
     'eventtypes',
     $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
         'formurl' => $PAGE->url->out(false),
         'sesskey' => sesskey(),
-        'returnurl' => $returnurl->out(false),
+        'returnurl' => $PAGE->url->out(false),
         'default_surveypart_chooser_context' => (new surveypart_chooser(
             $surveyparts,
-            $semester_info->orgsem->get('default_surveypartid'),
+            $orgsem->get('default_surveypartid'),
             $organization
         ))->export_for_template($OUTPUT),
         'eventtypes' => $template_eventtypes,

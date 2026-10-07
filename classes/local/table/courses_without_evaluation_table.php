@@ -27,8 +27,11 @@ namespace block_coursefeedback\local\table;
 use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
+use block_coursefeedback\local\manager\semester_tuple;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
+use core\exception\coding_exception;
 use core\output\html_writer;
 
 defined('MOODLE_INTERNAL') || die;
@@ -51,10 +54,11 @@ class courses_without_evaluation_table extends no_pagination_table {
     /**
      * Constructor.
      *
-     * @param evaluation_semester $semester
      * @param organization $organization
+     * @param organization_semester $orgsem
+     * @param evaluation_semester $semester
      */
-    public function __construct(evaluation_semester $semester, organization $organization) {
+    public function __construct(organization $organization, organization_semester $orgsem, evaluation_semester $semester) {
         global $OUTPUT, $PAGE;
         parent::__construct('block_coursefeedback-courses_without_evaluation');
         $this->define_baseurl($PAGE->url);
@@ -65,9 +69,9 @@ class courses_without_evaluation_table extends no_pagination_table {
             "{course} c
             $semester_join->joins
             $organization_join->joins
-            LEFT JOIN {" . survey_execution::TABLE . "} se ON c.id = se.courseid AND se.organizationid = :organizationid",
+            LEFT JOIN {" . survey_execution::TABLE . "} se ON c.id = se.courseid AND se.orgsemid = :orgsemid",
             "se.id IS NULL AND $semester_join->wheres AND $organization_join->wheres",
-            ['organizationid' => $organization->get('id'), ...$semester_join->params, ...$organization_join->params],
+            ['orgsemid' => $orgsem->get('id'), ...$semester_join->params, ...$organization_join->params],
         );
         $this->column_nosort = ['checkbox', 'tools'];
         $this->define_columns(['checkbox', 'name', 'tools']);

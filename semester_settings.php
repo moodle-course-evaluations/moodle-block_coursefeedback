@@ -26,7 +26,7 @@ use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\form\organization_semester_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\semester_info;
+use block_coursefeedback\local\manager\semester_tuple;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
@@ -55,15 +55,14 @@ $PAGE->set_context(context_system::instance());
 
 require_login();
 
-$semester = course_semester_mapping::get_instance()->require_semester_by_id($semesterid);
-[$organization, $semester_info] = organization::get_with_orgsem_by_semester($organizationid, $semester);
-$orgsem = $semester_info->orgsem;
+$semester_manager = di::get(semester_manager::class);
+[$organization, $semester, $orgsem] = $semester_manager->get_triplet_by_semesterid($organizationid, $semesterid);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization($organization);
 
 $PAGE->set_heading($organization->get('name'));
-$PAGE->set_title($semester_info->get_name() . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
+$PAGE->set_title($semester?->name ?? $orgsem->get('semestername') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
 $mform = new organization_semester_form($PAGE->url);
 
@@ -105,23 +104,36 @@ echo $OUTPUT->header();
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
 
-$renderer->render_organization_page($organization, $semester_info, 'semester_settings', function () use (
+$renderer->render_organization_page($organization, $semester, $orgsem, 'semester_settings', function () use (
     $mform,
     $renderer,
     $organizationid,
-    $base_orgsem
+    $base_orgsem,
+    $semester,
+    $orgsem
 ) {
     global $PAGE;
 
     if ($base_orgsem) {
         echo get_string('filled_in_from', 'block_coursefeedback', $base_orgsem->get('semestername'));
+        echo "\n";
+        $reset_url = clone($PAGE->url);
+        $reset_url->remove_params('baseid');
+        echo html_writer::link($reset_url, get_string('reset'));
     }
-    $fill_in_dropdown = new semester_dropdown(
-        di::get(semester_manager::class)->load_initialized_semesters($organizationid),
-        fn($semester_info) => new moodle_url($PAGE->url, ['baseid' => $semester_info->orgsem->get('id')]),
-        button_text: get_string('fill_in_from', 'block_coursefeedback'),
+
+    $other_initialized_semesters = array_filter(
+        di::get(semester_manager::class)->get_initialized_semesters($organizationid),
+        fn($pair) => !semester_manager::are_semester_equal($semester, $orgsem, ...$pair)
     );
-    echo $renderer->render($fill_in_dropdown);
+
+    if ($other_initialized_semesters) {
+        echo $renderer->render(new semester_dropdown(
+            $other_initialized_semesters,
+            fn($_, $orgsem) => new moodle_url($PAGE->url, ['baseid' => $orgsem->get('id')]),
+            button_text: get_string('fill_in_from', 'block_coursefeedback'),
+        ));
+    }
 
     $mform->display();
 });

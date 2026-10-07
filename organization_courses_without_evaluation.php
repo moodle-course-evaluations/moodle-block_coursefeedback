@@ -27,23 +27,36 @@ use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
 use block_coursefeedback\local\persistent\survey_execution;
+use block_coursefeedback\local\semester\semester_state;
 use block_coursefeedback\local\table\courses_without_evaluation_table;
 use block_coursefeedback\task\send_survey_created_message_task;
+use core\di;
 use core\task\manager;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
 
-$id = required_param('id', PARAM_INT);
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]));
+$organizationid = required_param('id', PARAM_INT);
+$orgsemid = optional_param('orgsemid', null, PARAM_INT);
+
+$params = ['id' => $organizationid];
+if ($orgsemid) {
+    $params['orgsemid'] = $orgsemid;
+}
+
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', $params));
 $PAGE->set_context(context_system::instance());
 
 require_login();
 
-[$organization, $organization_semester] = organization::get_for_current_semester($id);
+$semester_manager = di::get(semester_manager::class);
+[$organization, $semester, $orgsem] = $orgsemid
+    ? $semester_manager->get_triplet_by_orgsemid($organizationid, $orgsemid)
+    : $semester_manager->get_triplet_by_current_semester($organizationid);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_courses_without_evaluation($organization);
@@ -54,8 +67,8 @@ if ($action) {
     require_sesskey();
     switch ($action) {
         case 'create-default':
-            if (!$organization->get('evaluation_starttime') || !$organization->get('evaluation_endtime')) {
-                throw new \core\exception\moodle_exception('define_evaluation_period_before', 'block_coursefeedback');
+            if (!$orgsem->get('evaluation_starttime') || !$orgsem->get('evaluation_endtime')) {
+                throw new moodle_exception('define_evaluation_period_before', 'block_coursefeedback');
             }
             $courseids = required_param_array('selected', PARAM_INT);
             $coursecatids = organization_category::get_all_recursive_coursecatids($organization->get('id'));
@@ -71,7 +84,7 @@ if ($action) {
             $surveyexecutions = default_survey_creation_method::get_instance()::create_survey_execution(
                 $courseids,
                 $organization,
-                course_semester_mapping::get_instance()->get_current_semester()->id,
+                $orgsem
             );
             $surveyexecutionids = array_map(fn (survey_execution $se) => $se->get('id'), $surveyexecutions);
             manager::queue_adhoc_task(
@@ -86,14 +99,14 @@ $PAGE->set_title(
     get_string('list_of_courses_without_evaluation', 'block_coursefeedback') . $PAGE::TITLE_SEPARATOR . $organization->get('name')
 );
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $organizationid]);
 
-$table = new courses_without_evaluation_table(course_semester_mapping::get_instance()->get_current_semester(), $organization);
+$table = new courses_without_evaluation_table($organization, $orgsem, $semester);
 
 echo $OUTPUT->header();
 
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
-$renderer->render_organization_page($organization, $organization_semester, 'courses', fn() => $table->out(0, false));
+$renderer->render_organization_page($organization, $semester, $orgsem, 'courses', fn() => $table->out(0, false));
 
 echo $OUTPUT->footer();

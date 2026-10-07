@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
-use block_coursefeedback\local\manager\semester_info;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\survey;
+use block_coursefeedback\local\urls;
 use block_coursefeedback\output\semester_dropdown;
 use core\di;
 use core\output\notification;
@@ -121,18 +123,25 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
      * Renders the prologue and epilogue of an organization page, including the navigation.
      *
      * @param organization $organization
-     * @param semester_info $semester_info
+     * @param evaluation_semester|null $semester
+     * @param organization_semester|null $orgsem
      * @param string|null $current_tab
      * @param string|callable $content
      * @return void
      */
     public function render_organization_page(
         organization $organization,
-        semester_info $semester_info,
+        ?evaluation_semester $semester,
+        ?organization_semester $orgsem,
         ?string $current_tab,
         string|callable $content
     ): void {
-        $orgsem = $semester_info?->orgsem;
+        $semester_manager = di::get(semester_manager::class);
+
+        if (!$semester && !$orgsem) {
+            [$_, $semester, $orgsem] = $semester_manager->get_triplet_by_current_semester($organization->get('id'));
+        }
+
         if ($orgsem && (!$orgsem->get('evaluation_starttime') || !$orgsem->get('evaluation_endtime'))) {
             echo $this->render(new notification(
                 get_string('no_default_survey_period_set', 'block_coursefeedback'),
@@ -140,7 +149,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
             ));
         }
 
-        $id = $organization->get('id');
+        $organizationid = $organization->get('id');
 
         $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations', 'semester_settings'];
         if (!in_array($current_tab, [null, ...$valid_tabs])) {
@@ -151,57 +160,34 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         echo html_writer::start_tag('div', ['class' => 'col-lg-4 mb-2']);
 
         $semester_dropdown = new semester_dropdown(
-            di::get(semester_manager::class)->load_all_semesters($id),
-            fn($semester_info) => $semester_info->orgsem
-                ? new moodle_url('/blocks/coursefeedback/organization_settings.php', [
-                    "id" => $organization->get('id'),
-                    "orgsemid" => $semester_info->orgsem->get('id'),
-                ])
-                : new moodle_url('/blocks/coursefeedback/semester_settings.php', [
-                    "organizationid" => $organization->get('id'),
-                    "semesterid" => $semester_info->semester->id,
-                ]),
-            selected_semester_id: $semester_info?->semester?->id,
+            $semester_manager->get_all_semesters($organizationid),
+            fn($link_semester, $link_orgsem) => $link_orgsem
+                ? urls::semester_settings($organizationid, $link_orgsem->get('semesterid'))
+                : urls::semester_settings($organizationid, $link_semester->id),
+            selected_semester_id: $semester?->id,
             selected_orgsem_id: $orgsem?->get('id'),
         );
 
         $nav_context = [
             'semester_dropdown_context' => $semester_dropdown->export_for_template($this),
-            'organization_settings_url' => new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]),
+            'organization_settings_url' => urls::organization_settings($organizationid),
         ];
 
         if ($orgsem) {
             $nav_context = array_merge($nav_context, [
-                'semester_settings_url' => new moodle_url('/blocks/coursefeedback/semester_settings.php', [
-                    'organizationid' => $id,
-                    'semesterid' => $semester_info->semester?->id ?? $semester_info->orgsem->get('semesterid'),
-                ]),
-                'eventtypes_url' => new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
-                'courses_url' =>
-                    new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]),
-                'evaluations_url' => new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]),
+                'semester_settings_url' => urls::semester_settings($organizationid, $semester?->id ?? $orgsem->get('semesterid')),
+                'eventtypes_url' => urls::event_types($organizationid, $orgsem->get('id')),
+                'courses_url' => urls::courses_without_evaluations($organizationid, $orgsem->get('id')),
+                'evaluations_url' => urls::evaluations($organizationid, $orgsem->get('id')),
             ]);
         } else {
-            // This is th same URL as for an existing semester, but we use a different label to make it clear why it's the only
+            // This is the same URL as for an existing semester, but we use a different label to make it clear why it's the only
             // option.
-            $nav_context['setup_new_semester_url'] = new moodle_url('/blocks/coursefeedback/semester_settings.php', [
-                'organizationid' => $id,
-                'semesterid' => $semester_info->semester->id,
-            ]);
+            $nav_context['setup_new_semester_url'] = urls::semester_settings($organizationid, $semester->id);
         }
 
         if ($organization->get('has_local_questionnaires')) {
-            $nav_context['questionnaires_url'] = new moodle_url(
-                '/blocks/coursefeedback/surveyparts.php',
-                ['organizationid' => $id]
-            );
-        }
-
-        if (get_config('block_coursefeedback', 'default_survey_creation_method') === default_survey_creation_method::METHOD_RUB) {
-            $nav_context['rub_eventtype_mapping_url'] = new moodle_url(
-                '/blocks/coursefeedback/organization_rub_eventtype_mapping.php',
-                ['id' => $id]
-            );
+            $nav_context['questionnaires_url'] = urls::questionnaires($organizationid);
         }
 
         if ($current_tab) {

@@ -28,6 +28,7 @@ use block_coursefeedback\local\course_organization_mapping\course_organization_m
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
 use context_system;
 use core\output\html_writer;
@@ -57,26 +58,22 @@ class evaluations_table extends no_pagination_table {
     /**
      * Constructs the table of evaluations.
      *
-     * @var evaluation_semester $semester Semester as described in course_semester_mapping to filter by.
+     * @var organization_semester $orgsem Semester to filter by.
      * @var organization $organization Organization to filter by.
      */
-    public function __construct(
-        public readonly evaluation_semester $semester,
-        private readonly organization $organization,
-    ) {
+    public function __construct(private readonly organization_semester $orgsem) {
         global $OUTPUT, $PAGE;
         parent::__construct('block_coursefeedback-evaluations');
         $this->define_baseurl($PAGE->url);
-        $semester_join = course_semester_mapping::get_instance()->get_filter_sql_for_semester($this->semester);
         // We intentionally don't use course_organization_mapping here, since that would make it impossible to delete the survey
-        // execution. TODO: Mark courses that don't belong to this organization anymore.
+        // execution.
+        // TODO: Warn about courses that don't belong to this organization or semester anymore.
         $this->set_sql(
             "c.id as courseid, c.fullname as name, se.starttime, se.endtime, se.status ",
             "{course} c
-            $semester_join->joins
-            JOIN {" . survey_execution::TABLE . "} se ON se.courseid = c.id AND se.organizationid = :organizationid",
-            $semester_join->wheres,
-            ['organizationid' => $this->organization->get('id'), ...$semester_join->params],
+            JOIN {" . survey_execution::TABLE . "} se ON se.courseid = c.id",
+            "se.orgsemid = :orgsemid",
+            ['orgsemid' => $orgsem->get('id')],
         );
         $this->column_nosort = ['checkbox', 'tools'];
         $this->define_columns(['checkbox', 'name', 'starttime', 'status', 'tools']);
@@ -150,8 +147,8 @@ class evaluations_table extends no_pagination_table {
      * @return string
      */
     public function col_starttime($row) {
-        $starttime = $row->starttime ?? $this->organization->get('evaluation_starttime');
-        $endtime = $row->endtime ?? $this->organization->get('evaluation_endtime');
+        $starttime = $row->starttime ?? $this->orgsem->get('evaluation_starttime');
+        $endtime = $row->endtime ?? $this->orgsem->get('evaluation_endtime');
         return html_writer::span(
             userdate($starttime, $this->strings->strftimedatetimeshort)
             . ' - ' . userdate($endtime, $this->strings->strftimedatetimeshort),

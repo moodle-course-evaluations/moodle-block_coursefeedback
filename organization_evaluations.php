@@ -26,6 +26,7 @@
 use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\manager\survey_execution_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
@@ -36,13 +37,24 @@ use core\di;
 require_once(__DIR__ . '/../../config.php');
 global $DB, $CFG, $OUTPUT, $PAGE;
 
-$id = required_param('id', PARAM_INT);
+$organizationid = required_param('id', PARAM_INT);
+$orgsemid = optional_param('orgsemid', null, PARAM_INT);
+
+$params = ['id' => $organizationid];
+if ($orgsemid) {
+    $params['orgsemid'] = $orgsemid;
+}
+
 $context = context_system::instance();
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]));
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/organization_evaluations.php', $params));
 $PAGE->set_context($context);
 
 require_login();
-[$organization, $organization_semester] = organization::get_for_current_semester($id);
+
+$semester_manager = di::get(semester_manager::class);
+[$organization, $semester, $orgsem] = $orgsemid
+    ? $semester_manager->get_triplet_by_orgsemid($organizationid, $orgsemid)
+    : $semester_manager->get_triplet_by_current_semester($organizationid);
 
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_evaluations($organization);
@@ -80,14 +92,14 @@ if ($action) {
     }
 }
 
-$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]);
+$returnurl = new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $organizationid]);
 
-$table = new evaluations_table(course_semester_mapping::get_instance()->get_current_semester(), $organization);
+$table = new evaluations_table($orgsem);
 
 echo $OUTPUT->header();
 
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
-$renderer->render_organization_page($organization, $organization_semester, 'evaluations', fn() => $table->out(0, false));
+$renderer->render_organization_page($organization, $semester, $orgsem, 'evaluations', fn() => $table->out(0, false));
 
 echo $OUTPUT->footer();

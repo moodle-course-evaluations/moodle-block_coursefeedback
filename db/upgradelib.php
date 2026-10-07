@@ -68,3 +68,72 @@ function block_coursefeedback_create_fallback_org(string $name): int {
         'timemodified' => time(),
     ]);
 }
+
+function block_coursefeedback_migrate_organizationid_to_orgsemid(
+    string $table_name,
+    array $orgsemids_by_organizationids,
+    bool $is_unique,
+    bool $drop_old
+) {
+    $table = new xmldb_table($table_name);
+
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    $transaction = $DB->start_delegated_transaction();
+
+    // Add the orgsemid column.
+    $field = new xmldb_field('orgsemid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'active');
+    if (!$dbman->field_exists($table, $field)) {
+        $dbman->add_field($table, $field);
+    }
+
+    // Populate the orgsemid column.
+    foreach ($DB->get_records($table_name) as $record) {
+        $orgsemid = $orgsemids_by_organizationids[$record->organizationid] ?? null;
+        if (!$orgsemid) {
+            throw new coding_exception(
+                "Organization $record->organizationid has no semester, but does have $table_name, which should not be possible."
+            );
+        }
+
+        $DB->update_record($table_name, [
+            'id' => $record->id,
+            'orgsemid' => $orgsemid,
+        ]);
+    }
+
+    // Make orgsemid not null.
+    $field->setNotNull(XMLDB_NOTNULL);
+    $dbman->change_field_notnull($table, $field);
+
+    // Add the foreign (or foreign-unique) key.
+    $key = new xmldb_key(
+        $is_unique ? 'fuk_orgsemid' : 'fk_orgsemid',
+        $is_unique ? XMLDB_KEY_FOREIGN_UNIQUE : XMLDB_KEY_FOREIGN,
+        ['orgsemid'],
+        'block_coursefeedback_organization_semester',
+        ['id']
+    );
+    $dbman->add_key($table, $key);
+
+    if ($drop_old) {
+        // Drop the old key.
+        $key = new xmldb_key(
+            $is_unique ? 'fu_organizationid' : 'fk_organizationid',
+            $is_unique ? XMLDB_KEY_FOREIGN_UNIQUE : XMLDB_KEY_FOREIGN,
+            ['organizationid'],
+            'block_coursefeedback_organization',
+            ['id']
+        );
+        $dbman->drop_key($table, $key);
+
+        // Drop the old organizationid column.
+        $field = new xmldb_field('organizationid');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+    }
+
+    $transaction->allow_commit();
+}

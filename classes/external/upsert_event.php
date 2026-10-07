@@ -17,6 +17,7 @@
 namespace block_coursefeedback\external;
 
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\survey_execution;
@@ -89,7 +90,9 @@ class upsert_event extends external_api {
         self::validate_context(\context_system::instance());
         $course = get_course($courseid);
 
-        permission_manager::require_edit_course_surveysettings($course, $survey_execution->get('organizationid'));
+        [$organization, $semester, $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($course);
+
+        permission_manager::require_edit_course_surveysettings($course, $organization);
 
         $freezer = di::get(survey_freezer::class);
 
@@ -98,7 +101,7 @@ class upsert_event extends external_api {
 
         $eventtype = eventtype::get_record([
             'id' => $eventtypeid,
-            'organizationid' => $survey_execution->get('organizationid'),
+            'orgsemid' => $orgsem->get('id'),
         ], MUST_EXIST);
 
         if ($eventid) {

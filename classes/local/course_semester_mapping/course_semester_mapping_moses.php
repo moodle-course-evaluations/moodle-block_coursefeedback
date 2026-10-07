@@ -83,7 +83,7 @@ class course_semester_mapping_moses extends course_semester_mapping {
     #[\Override]
     public function get_semesters(): array {
         // Only consider semesters since May 2026 just to declutter.
-        $min_considered_time = make_timestamp(1999, 05, 01);
+        $min_considered_time = make_timestamp(2025, 05, 01);
 
         $resources = $this->semester_res->get_all_since($min_considered_time);
         if (!$resources) {

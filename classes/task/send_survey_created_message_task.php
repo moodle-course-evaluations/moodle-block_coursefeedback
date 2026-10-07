@@ -71,7 +71,9 @@ class send_survey_created_message_task extends \core\task\adhoc_task {
 
         foreach ($surveyexecutions as $surveyexecution) {
             $organizationid = $surveyexecution->get('organizationid');
-            if (!isset($organization_texts_by_id[$organizationid])) {
+            $orgsemid = $surveyexecution->get('orgsemid');
+            // TODO
+            if (!isset($organization_texts_by_id[$orgsemid])) {
                 $organization_by_id[$organizationid] = organization::get_record(['id' => $organizationid]);
                 $organization_texts_by_id[$organizationid] = organization_texts::get_record(['organizationid' => $organizationid]);
             }

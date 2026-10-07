@@ -17,6 +17,7 @@
 namespace block_coursefeedback\task;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
@@ -63,14 +64,13 @@ class start_surveys_task extends scheduled_task {
      */
     public function execute() {
         global $DB;
-        $survey_execution_ids = $DB->get_fieldset_sql(
-            "SELECT se.id
+        $survey_execution_ids = $DB->get_fieldset_sql("
+            SELECT se.id
             FROM {" . survey_execution::TABLE . "} se
-            JOIN {" . organization::TABLE . "} o ON se.organizationid = o.id
+            JOIN {" . organization_semester::TABLE . "} os ON se.orgsemid = os.id
             WHERE se.status = " . survey_execution::STATUS_PLANNED . "
-                AND :time >= COALESCE(se.starttime, o.evaluation_starttime)",
-            ['time' => time() + self::CREATE_SURVEYS_IN_ADVANCE_SECONDS],
-        );
+                AND :time >= COALESCE(se.starttime, os.evaluation_starttime)
+        ", ['time' => time() + self::CREATE_SURVEYS_IN_ADVANCE_SECONDS]);
 
         $survey_execution_datas = survey_execution_data::load_from_survey_execution_ids($survey_execution_ids);
 
@@ -106,8 +106,8 @@ class start_surveys_task extends scheduled_task {
                 }
             }
 
-            $always_show_default_sp = $survey_execution_data->organization->get('always_show_default_sp');
-            $org_default_surveypartid = $survey_execution_data->organization->get('default_surveypartid');
+            $always_show_default_sp = $survey_execution_data->orgsem->get('always_show_default_sp');
+            $org_default_surveypartid = $survey_execution_data->orgsem->get('default_surveypartid');
             if ($org_default_surveypartid && (!$has_surveypart || $always_show_default_sp)) {
                 $teaching_event = new teaching_event(record: (object) [
                     'courseid' => $se->get('courseid'),
@@ -119,7 +119,7 @@ class start_surveys_task extends scheduled_task {
                 $teaching_event->create();
                 $spe = new survey_part_execution(record: (object) [
                     'surveyexecutionid' => $se->get('id'),
-                    'surveypartid' => $survey_execution_data->organization->get('default_surveypartid'),
+                    'surveypartid' => $survey_execution_data->orgsem->get('default_surveypartid'),
                     'eventid' => $teaching_event->get('id'),
                 ]);
                 $spe->create();
@@ -145,10 +145,10 @@ class start_surveys_task extends scheduled_task {
             }
 
             if (!$se->get('starttime')) {
-                $se->set('starttime', $survey_execution_data->organization->get('evaluation_starttime'));
+                $se->set('starttime', $survey_execution_data->orgsem->get('evaluation_starttime'));
             }
             if (!$se->get('endtime')) {
-                $se->set('endtime', $survey_execution_data->organization->get('evaluation_endtime'));
+                $se->set('endtime', $survey_execution_data->orgsem->get('evaluation_endtime'));
             }
             $se->set('status', survey_execution::STATUS_STARTED);
             $se->save();
