@@ -33,6 +33,14 @@ class course_semester_mapping_by_customfield extends course_semester_mapping {
     public const SELECTED_SEMESTER = 20260;
 
     /**
+     * Constructor.
+     */
+    public function __construct() {
+        // Check that the custom field exists. Prevents enabling this implementation when it doesn't.
+        $this->get_customfield_id();
+    }
+
+    /**
      * Gets the ids of the semester customfield.
      * @return int
      */
