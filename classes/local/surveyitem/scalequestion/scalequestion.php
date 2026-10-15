@@ -252,7 +252,7 @@ class scalequestion extends surveyitemtype_with_settings {
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
                 'scaleid' => $scale->get('id'),
-                'forceshowscale' => $data['forceshowscale'] ?? false,
+                'forceshowscale' => clean_param($data['forceshowscale'] ?? false, PARAM_BOOL),
             ];
         }
 

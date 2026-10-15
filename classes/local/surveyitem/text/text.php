@@ -198,9 +198,9 @@ class text extends surveyitemtype_with_settings {
         foreach ($backup_data as $surveyitemid => $data) {
             $records_to_insert[] = [
                 'surveyitemid' => $surveyitemid,
-                'initialrows' => $data['initialrows'] ?? 3,
-                'autoresize' => $data['autoresize'] ?? true,
-                'maxlength' => $data['maxlength'] ?? 500,
+                'initialrows' => clean_param($data['initialrows'] ?? 3, PARAM_INT),
+                'autoresize' => clean_param($data['autoresize'] ?? true, PARAM_BOOL),
+                'maxlength' => clean_param($data['maxlength'] ?? 500, PARAM_INT),
             ];
         }
 
