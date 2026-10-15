@@ -239,7 +239,7 @@ class scalequestion extends surveyitemtype_with_settings {
                 throw new backup_invalid_exception("missing or invalid 'scale_name'");
             }
 
-            $scales_with_name = array_filter($scales, fn($scale) => $scale->get('name') == $scale_name);
+            $scales_with_name = array_filter($scales, fn($scale) => $scale->get('name') === $scale_name);
             if (!$scales_with_name) {
                 throw new backup_invalid_exception("scale question references scale '$scale_name', which is missing");
             }
