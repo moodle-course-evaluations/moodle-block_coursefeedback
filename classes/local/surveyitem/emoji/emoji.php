@@ -16,6 +16,7 @@
 
 namespace block_coursefeedback\local\surveyitem\emoji;
 
+use block_coursefeedback\local\backup\backup_invalid_exception;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
@@ -280,5 +281,48 @@ class emoji extends surveyitemtype_with_settings {
         }
 
         return $template_data;
+    }
+
+    #[\Override]
+    public function backup_items(array $surveyitems): array {
+        $backup_data = parent::backup_items($surveyitems);
+
+        global $DB;
+        $records = $DB->get_records_list(
+            'block_coursefeedback_surveyitememojis',
+            'surveyitemid',
+            array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems),
+        );
+
+        foreach ($records as $record) {
+            $backup_data[$record->surveyitemid] += [
+                'variant' => $record->variant,
+            ];
+        }
+
+        return $backup_data;
+    }
+
+    #[\Override]
+    public function restore_from_backup(array $surveyitems, array $backup_data, array $scales): void {
+        parent::restore_from_backup($surveyitems, $backup_data, $scales);
+
+        $records_to_insert = [];
+        foreach ($backup_data as $surveyitemid => $data) {
+            if (!($variant = $data['variant'] ?? null)) {
+                throw new backup_invalid_exception("emoji question variant is missing from backup data");
+            }
+            if (empty(self::get_available_variants()[$variant])) {
+                throw new backup_invalid_exception("emoji question variant '$variant' is not supported");
+            }
+
+            $records_to_insert[] = [
+                'surveyitemid' => $surveyitemid,
+                'variant' => $variant,
+            ];
+        }
+
+        global $DB;
+        $DB->insert_records('block_coursefeedback_surveyitememojis', $records_to_insert);
     }
 }
