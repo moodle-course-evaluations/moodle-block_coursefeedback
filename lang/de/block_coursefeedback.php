@@ -209,6 +209,7 @@ $string['scale'] = 'Skala';
 $string['scale_delete_in_use'] = 'Kann Skala \'{$a}\' nicht löschen, da sie in mindestens einer Skalenfrage verwendet wird.';
 $string['scalequestion'] = 'Skalenfrage';
 $string['scales'] = 'Skalen';
+$string['results'] = 'Ergebnisse';
 $string['selected_semester'] = 'Ausgewähltes Semester';
 $string['semester_independent_settings'] = 'Semesterübergreifende Einstellungen';
 $string['semester_not_found'] = 'Das angegebene Semester existiert nicht.';

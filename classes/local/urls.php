@@ -16,6 +16,7 @@
 
 namespace block_coursefeedback\local;
 
+use core\exception\moodle_exception;
 use moodle_url;
 
 /**
@@ -97,6 +98,51 @@ class urls {
         return new moodle_url('/blocks/coursefeedback/semester_settings.php', [
             'organizationid' => $organizationid,
             'semesterid' => $semesterid,
+        ]);
+    }
+
+    /**
+     * Build a URL to the results page for the given orgsem.
+     *
+     * @param int $organizationid
+     * @param int $orgsemid
+     * @return moodle_url
+     */
+    public static function semester_results(int $organizationid, int $orgsemid): moodle_url {
+        return new moodle_url('/blocks/coursefeedback/semester_results.php', [
+            'organizationid' => $organizationid,
+            'orgsemid' => $orgsemid,
+        ]);
+    }
+
+    /**
+     * Build a URL to the direct download of the results for the given event type or the default questionnaire.
+     *
+     * @param int $organizationid
+     * @param int $orgsemid
+     * @param int|null $eventtypeid
+     * @return moodle_url
+     */
+    public static function semester_results_download(int $organizationid, int $orgsemid, ?int $eventtypeid): moodle_url {
+        return new moodle_url('/blocks/coursefeedback/semester_results.php', [
+            'organizationid' => $organizationid,
+            'orgsemid' => $orgsemid,
+            'download' => $eventtypeid ?? 'default',
+        ]);
+    }
+
+    /**
+     * Build a URL to the direct download of the results for the given event type.
+     *
+     * @param int $organizationid
+     * @param int $orgsemid
+     * @return moodle_url
+     */
+    public static function semester_results_download_overview(int $organizationid, int $orgsemid): moodle_url {
+        return new moodle_url('/blocks/coursefeedback/semester_results.php', [
+            'organizationid' => $organizationid,
+            'orgsemid' => $orgsemid,
+            'download' => 'overview',
         ]);
     }
 

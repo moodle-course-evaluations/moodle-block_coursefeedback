@@ -113,6 +113,7 @@ $string['emoji_choice_4_of_4'] = 'very bad';
 $string['emoji_choice_4_of_5'] = 'somewhat bad';
 $string['emoji_choice_4_of_6'] = 'sufficient';
 $string['emoji_choice_5_of_5'] = 'very bad';
+$string['results'] = 'Results';
 $string['emoji_choice_5_of_6'] = 'poor';
 $string['emoji_choice_6_of_6'] = 'insufficient';
 $string['emoji_surveyitem'] = 'Emojis (😀 to 😠)';
