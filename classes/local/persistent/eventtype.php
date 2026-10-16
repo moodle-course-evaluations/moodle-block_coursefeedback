@@ -26,7 +26,7 @@ use core\persistent;
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class eventtype extends persistent {
+class eventtype extends persistent_with_bulk_actions {
 
     /** Table name for the persistent. */
     public const TABLE = 'block_coursefeedback_eventtype';

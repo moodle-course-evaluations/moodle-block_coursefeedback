@@ -81,4 +81,9 @@ class slot_choice extends surveyitemtype {
         // TODO: Refactor this to not break the Liskov substitution principle.
         throw new coding_exception('Slot choice items cannot be rendered normally.');
     }
+
+    #[\Override]
+    public function should_appear_in_reports(): bool {
+        return false;
+    }
 }

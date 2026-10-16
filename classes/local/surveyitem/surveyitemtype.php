@@ -22,6 +22,7 @@
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\surveyitem;
 
 use block_coursefeedback\local\backup\backup_invalid_exception;
@@ -29,6 +30,7 @@ use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\surveyitemtype_answerdata;
+use core\exception\coding_exception;
 use core\lang_string;
 
 /**
@@ -45,12 +47,14 @@ abstract class surveyitemtype {
 
     /**
      * Return the name of the survey element type.
+     *
      * @return lang_string
      */
     abstract public function get_name(): lang_string;
 
     /**
      * Overridden to be false for item types that shouldn't be manually addable by the user.
+     *
      * @return bool
      */
     public function can_be_added(): bool {
@@ -104,6 +108,7 @@ abstract class surveyitemtype {
 
     /**
      * Return template data for rendering report for given $response_slot.
+     *
      * @param response_slot $response_slot
      * @param surveyitem[] $surveyitemsoftype
      * @param array<int, mixed> $additional_data
@@ -119,6 +124,7 @@ abstract class surveyitemtype {
 
     /**
      * Calculate the statistic properties mean, median and stddev for the given aggregated counts.
+     *
      * @param array $counts
      * @return array
      */
@@ -214,5 +220,30 @@ abstract class surveyitemtype {
     public function backup_items(array $surveyitems): array {
         // Return an empty array for all surveyitems.
         return array_fill_keys(array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems), []);
+    }
+
+    public function should_appear_in_reports(): bool {
+        return true;
+    }
+
+    /**
+     * @param surveyitem $surveyitem
+     * @param list<int|string> $values
+     * @return int|string|null
+     */
+    public function post_process_response_values(surveyitem $surveyitem, array $values): int|string|null {
+        if (!$values) {
+            return null;
+        }
+
+        if (count($values) > 1) {
+            $class = get_class($this);
+            throw new coding_exception(
+                "Survey item {$surveyitem->get('id')} has more than one response but $class doesn't " .
+                "override post_process_response_rows"
+            );
+        }
+
+        return reset($values);
     }
 }

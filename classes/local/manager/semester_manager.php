@@ -23,6 +23,7 @@ use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
 use core\exception\coding_exception;
 use core\exception\moodle_exception;
+use core\exception\not_found_exception;
 use function array_filter;
 use function array_map;
 use function array_reverse;
@@ -125,7 +126,10 @@ class semester_manager {
             FROM {block_coursefeedback_organization_semester} os
             INNER JOIN {block_coursefeedback_organization} o ON os.organizationid = o.id
             WHERE os.id = :orgsemid
-        ", ['orgsemid' => $orgsemid], MUST_EXIST);
+        ", ['orgsemid' => $orgsemid]);
+        if (!$record) {
+            throw new not_found_exception('orgsem', $orgsemid);
+        }
 
         $organization = organization::extract($record, 'o_');
         $orgsem = organization_semester::extract($record, 'os_');
@@ -186,7 +190,10 @@ class semester_manager {
             FROM {block_coursefeedback_organization} o
             LEFT JOIN {block_coursefeedback_organization_semester} os ON os.organizationid = o.id AND os.semesterid = :semesterid
             WHERE o.id = :organizationid
-        ", ['organizationid' => $organizationid, 'semesterid' => $semesterid], MUST_EXIST);
+        ", ['organizationid' => $organizationid, 'semesterid' => $semesterid]);
+        if (!$record) {
+            throw new not_found_exception('organization', $organizationid);
+        }
 
         $organization = organization::extract($record, 'o_');
         $orgsem = organization_semester::extract($record, 'os_');
@@ -262,7 +269,7 @@ class semester_manager {
             return [$organization, $semester, $orgsem];
         }
 
-        return [null, null];
+        return [null, null, null];
     }
 
     /**
