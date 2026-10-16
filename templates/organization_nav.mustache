@@ -135,5 +135,11 @@
                 {{#str}}list_of_evaluations, block_coursefeedback{{/str}}
             </a>
         {{/evaluations_url}}
+        {{#results_url}}
+            <a class="list-group-item list-group-item-action {{#current_tab_is_semester_results}}active{{/current_tab_is_semester_results}}"
+               href="{{{results_url}}}">
+                {{#str}}results, block_coursefeedback{{/str}}
+            </a>
+        {{/results_url}}
     </nav>
 </div>

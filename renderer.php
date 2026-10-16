@@ -150,7 +150,8 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
 
         $organizationid = $organization->get('id');
 
-        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations', 'semester_settings'];
+        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations', 'semester_settings',
+            'semester_results'];
         if (!in_array($current_tab, [null, ...$valid_tabs])) {
             throw new coding_exception("Invalid tab: $current_tab");
         }
@@ -179,6 +180,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
                 'eventtypes_url' => urls::event_types($organizationid, $orgsem->get('id'))->out(),
                 'courses_url' => urls::courses_without_evaluations($organizationid, $orgsem->get('id'))->out(),
                 'evaluations_url' => urls::evaluations($organizationid, $orgsem->get('id'))->out(),
+                'results_url' => urls::semester_results($organizationid, $orgsem->get('id'))->out(),
             ]);
         } else {
             // This is the same URL as for an existing semester, but we use a different label to make it clear why it's the only

@@ -71,4 +71,9 @@ class info extends surveyitemtype_with_settings {
             'questiontext' => $text,
         ];
     }
+
+    #[\Override]
+    public function should_appear_in_reports(): bool {
+        return false;
+    }
 }
