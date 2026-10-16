@@ -46,4 +46,9 @@ class pagebreak extends surveyitemtype {
     public function check_and_save_answers($answers): void {
         // Intentionally left blank.
     }
+
+    #[\Override]
+    public function should_appear_in_reports(): bool {
+        return false;
+    }
 }
