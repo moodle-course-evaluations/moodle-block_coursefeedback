@@ -167,4 +167,44 @@ class text extends surveyitemtype_with_settings {
         }
             return $template_data;
     }
+
+    #[\Override]
+    public function backup_items(array $surveyitems): array {
+        $backup_data = parent::backup_items($surveyitems);
+
+        global $DB;
+        $records = $DB->get_records_list(
+            'block_coursefeedback_surveyitemtext',
+            'surveyitemid',
+            array_map(fn($surveyitem) => $surveyitem->get('id'), $surveyitems),
+        );
+
+        foreach ($records as $record) {
+            $backup_data[$record->surveyitemid] += [
+                'initialrows' => intval($record->initialrows),
+                'autoresize' => boolval($record->autoresize),
+                'maxlength' => intval($record->maxlength),
+            ];
+        }
+
+        return $backup_data;
+    }
+
+    #[\Override]
+    public function restore_from_backup(array $surveyitems, array $backup_data, array $scales): void {
+        parent::restore_from_backup($surveyitems, $backup_data, $scales);
+
+        $records_to_insert = [];
+        foreach ($backup_data as $surveyitemid => $data) {
+            $records_to_insert[] = [
+                'surveyitemid' => $surveyitemid,
+                'initialrows' => clean_param($data['initialrows'] ?? 3, PARAM_INT),
+                'autoresize' => clean_param($data['autoresize'] ?? true, PARAM_BOOL),
+                'maxlength' => clean_param($data['maxlength'] ?? 500, PARAM_INT),
+            ];
+        }
+
+        global $DB;
+        $DB->insert_records('block_coursefeedback_surveyitemtext', $records_to_insert);
+    }
 }
