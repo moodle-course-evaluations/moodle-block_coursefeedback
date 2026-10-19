@@ -77,7 +77,7 @@ class slot_choice extends surveyitemtype {
     }
 
     #[\Override]
-    public function export_for_template(array $surveyitems, array $additional_data): array {
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
         // TODO: Refactor this to not break the Liskov substitution principle.
         throw new coding_exception('Slot choice items cannot be rendered normally.');
     }

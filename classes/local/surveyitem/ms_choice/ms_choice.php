@@ -134,12 +134,12 @@ abstract class ms_choice extends surveyitemtype_with_settings {
     }
 
     #[\Override]
-    public function export_for_template(array $surveyitems, array $additional_data): array {
-        $template_data = parent::export_for_template($surveyitems, $additional_data);
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
+        $template_data = parent::export_for_template($surveyitems, $additional_data, $lang);
         foreach ($surveyitems as $surveyitem) {
             $template_data[$surveyitem->get('id')]['options'] = array_values(array_map(
                 fn($option) => [
-                    'optiontext' => $option->text->translate(),
+                    'optiontext' => $option->text->translate($lang),
                     'optionid' => $option->id,
                 ],
                 $additional_data[$surveyitem->get('id')] ?? []

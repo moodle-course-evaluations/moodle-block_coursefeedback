@@ -87,7 +87,7 @@ abstract class surveyitemtype {
      * @param array $additional_data Array from {@see self::load_additional_data_for}.
      * @return array associative array of surveyitemid => templatedata for surveyitemid.
      */
-    public function export_for_template(array $surveyitems, array $additional_data): array {
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
         $template_data = [];
         foreach ($surveyitems as $surveyitem) {
             $surveyitemid = $surveyitem->get('id');
