@@ -14,9 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
+use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\survey;
+use block_coursefeedback\local\urls;
+use block_coursefeedback\output\semester_dropdown;
+use core\di;
 use core\output\notification;
 use core\output\plugin_renderer_base;
 
@@ -117,47 +122,72 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
      * Renders the prologue and epilogue of an organization page, including the navigation.
      *
      * @param organization $organization
+     * @param evaluation_semester|null $semester
+     * @param organization_semester|null $orgsem
      * @param string|null $current_tab
      * @param string|callable $content
      * @return void
      */
-    public function render_organization_page(organization $organization, ?string $current_tab, string|callable $content): void {
-        if (!$organization->get('default_evaluation_starttime') || !$organization->get('default_evaluation_endtime')) {
+    public function render_organization_page(
+        organization $organization,
+        ?evaluation_semester $semester,
+        ?organization_semester $orgsem,
+        ?string $current_tab,
+        string|callable $content
+    ): void {
+        $semester_manager = di::get(semester_manager::class);
+
+        if (!$semester && !$orgsem) {
+            [$_, $semester, $orgsem] = $semester_manager->get_triplet_by_current_semester($organization->get('id'));
+        }
+
+        if ($orgsem && (!$orgsem->get('evaluation_starttime') || !$orgsem->get('evaluation_endtime'))) {
             echo $this->render(new notification(
                 get_string('no_default_survey_period_set', 'block_coursefeedback'),
                 notification::NOTIFY_WARNING
             ));
         }
 
-        $id = $organization->get('id');
+        $organizationid = $organization->get('id');
 
-        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations'];
+        $valid_tabs = ['settings', 'questionnaires', 'eventtypes', 'courses', 'evaluations', 'semester_settings'];
         if (!in_array($current_tab, [null, ...$valid_tabs])) {
             throw new coding_exception("Invalid tab: $current_tab");
         }
 
         echo html_writer::start_tag('div', ['class' => 'row']);
-        echo html_writer::start_tag('div', ['class' => 'col-lg-3 mb-2']);
+        echo html_writer::start_tag('div', ['class' => 'col-lg-4 mb-2']);
+
+        $semester_dropdown = new semester_dropdown(
+            $semester_manager->get_all_semesters($organizationid),
+            fn($link_semester, $link_orgsem) => $link_orgsem
+                ? urls::semester_settings($organizationid, $link_orgsem->get('semesterid'))->out()
+                : urls::semester_settings($organizationid, $link_semester->id)->out(),
+            selected_semester_id: $semester?->id,
+            selected_orgsem_id: $orgsem?->get('id'),
+        );
 
         $nav_context = [
-            'organization_settings_url' => new moodle_url('/blocks/coursefeedback/organization_settings.php', ['id' => $id]),
-            'eventtypes_url' => new moodle_url('/blocks/coursefeedback/organization_default_surveypart.php', ['id' => $id]),
-            'courses_url' => new moodle_url('/blocks/coursefeedback/organization_courses_without_evaluation.php', ['id' => $id]),
-            'evaluations_url' => new moodle_url('/blocks/coursefeedback/organization_evaluations.php', ['id' => $id]),
+            'semester_dropdown_context' => $semester_dropdown->export_for_template($this),
+            'organization_settings_url' => urls::organization_settings($organizationid)->out(),
         ];
 
-        if ($organization->get('has_local_questionnaires')) {
-            $nav_context['questionnaires_url'] = new moodle_url(
-                '/blocks/coursefeedback/surveyparts.php',
-                ['organizationid' => $id]
-            );
+        if ($orgsem) {
+            $nav_context = array_merge($nav_context, [
+                'semester_settings_url' => urls::semester_settings($organizationid, $semester?->id ?? $orgsem->get('semesterid'))
+                    ->out(),
+                'eventtypes_url' => urls::event_types($organizationid, $orgsem->get('id'))->out(),
+                'courses_url' => urls::courses_without_evaluations($organizationid, $orgsem->get('id'))->out(),
+                'evaluations_url' => urls::evaluations($organizationid, $orgsem->get('id'))->out(),
+            ]);
+        } else {
+            // This is the same URL as for an existing semester, but we use a different label to make it clear why it's the only
+            // option.
+            $nav_context['setup_new_semester_url'] = urls::semester_settings($organizationid, $semester->id)->out();
         }
 
-        if (get_config('block_coursefeedback', 'default_survey_creation_method') === default_survey_creation_method::METHOD_RUB) {
-            $nav_context['rub_eventtype_mapping_url'] = new moodle_url(
-                '/blocks/coursefeedback/organization_rub_eventtype_mapping.php',
-                ['id' => $id]
-            );
+        if ($organization->get('has_local_questionnaires')) {
+            $nav_context['questionnaires_url'] = urls::questionnaires($organizationid)->out();
         }
 
         if ($current_tab) {
@@ -168,7 +198,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
         echo $this->render_from_template('block_coursefeedback/organization_nav', $nav_context);
 
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', ['class' => 'col-lg-9']);
+        echo html_writer::start_tag('div', ['class' => 'col-lg-8']);
 
         if (is_callable($content)) {
             $content();

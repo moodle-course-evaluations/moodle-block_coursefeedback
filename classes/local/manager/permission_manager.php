@@ -27,6 +27,8 @@ namespace block_coursefeedback\local\manager;
 use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
+use context_course;
+use core\di;
 use core\exception\coding_exception;
 use stdClass;
 
@@ -107,29 +109,24 @@ class permission_manager {
     /**
      * Checks whether the user can do something, a teacher in the given course can
      * do depending on the $organization->$organization_property.
+     *
      * @param stdClass $course
      * @param int|organization|null $organization_or_id
      * @param string $organization_property
+     * @return bool
      */
     private static function check_teacher_organization_capability(
         stdClass $course,
         int|organization|null $organization_or_id,
         string $organization_property
     ): bool {
-        if (!$organization_or_id) {
-            $organization = course_organization_mapping::get_instance()->get_organization_for_course($course);
-        } else if (is_int($organization_or_id)) {
-            $organization = organization::get_record(['id' => $organization_or_id], MUST_EXIST);
-        } else {
-            $organization = $organization_or_id;
-        }
-        if (!$organization instanceof organization) {
+        [$organization, , $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($course, $organization_or_id);
+        if (!$orgsem) {
             return false;
         }
 
-        $context = \context_course::instance($course->id);
-
-        if ($organization->get($organization_property) && has_capability('block/coursefeedback:isevaluationteacher', $context)) {
+        $context = context_course::instance($course->id);
+        if ($orgsem->get($organization_property) && has_capability('block/coursefeedback:isevaluationteacher', $context)) {
             return true;
         }
 
@@ -186,7 +183,7 @@ class permission_manager {
      * @return bool
      */
     public static function can_view_course_settings(stdClass $course, organization $organization): bool {
-        $context = \context_course::instance($course->id);
+        $context = context_course::instance($course->id);
         return has_capability('block/coursefeedback:viewcoursesettings', $context)
             || self::can_manage_organization($organization);
     }
