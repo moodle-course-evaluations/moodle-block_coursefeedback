@@ -17,6 +17,7 @@
 namespace block_coursefeedback\local\default_survey_creation_method;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
@@ -33,7 +34,11 @@ use block_coursefeedback\local\persistent\teaching_event;
 class rub_survey_creation_method extends default_survey_creation_method {
 
     #[\Override]
-    public static function create_survey_execution(array $courseids, organization $organization, int $semester): array {
+    public static function create_survey_execution(
+        array $courseids,
+        organization $organization,
+        organization_semester $orgsem
+    ): array {
         global $DB;
 
         [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
@@ -46,14 +51,14 @@ class rub_survey_creation_method extends default_survey_creation_method {
             LEFT JOIN {block_coursefeedback_rub_eventtype_mapping} rem
                 ON rem.organizationid = :organizationid AND rem.rub_coursetype = ce.coursetype
             WHERE c.id $insql
-         ", array_merge(['organizationid' => $organization->get('id'), 'semester' => $semester], $inparams));
+         ", array_merge(['organizationid' => $organization->get('id'), 'semester' => $orgsem->get('semesterid')], $inparams));
 
         $ses = [];
 
         foreach ($courseids as $courseid) {
             $se = new survey_execution(0, (object) [
                 'courseid' => $courseid,
-                'organizationid' => $organization->get('id'),
+                'orgsemid' => $orgsem->get('id'),
                 'starttime' => null,
                 'endtime' => null,
                 'status' => 0,
