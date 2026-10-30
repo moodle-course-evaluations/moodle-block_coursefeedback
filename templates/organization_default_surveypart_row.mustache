@@ -39,7 +39,8 @@
             "name": "Survey #2",
             "selected": true
           }
-        ]
+        ],
+        "disabled": false
       }
     }
 }}
@@ -57,12 +58,14 @@
         <label class="sr-only" for="block_coursefeedback-surveypart-{{id}}-{{uniqid}}">
             {{#str}}questionnaire, block_coursefeedback{{/str}}
         </label>
-        {{#surveypart_chooser_context}}
-            {{< block_coursefeedback/surveypart_chooser }}
-                {{$id}}block_coursefeedback-surveypart-{{id}}-{{uniqid}}{{/id}}
-                {{$name}}surveypart-{{id}}{{/name}}
-            {{/ block_coursefeedback/surveypart_chooser }}
-        {{/surveypart_chooser_context}}
+        <div class="d-flex align-items-center">
+            {{#surveypart_chooser_context}}
+                {{< block_coursefeedback/surveypart_chooser }}
+                    {{$id}}block_coursefeedback-surveypart-{{id}}-{{uniqid}}{{/id}}
+                    {{$name}}surveypart-{{id}}{{/name}}
+                {{/ block_coursefeedback/surveypart_chooser }}
+            {{/surveypart_chooser_context}}
+        </div>
     </td>
     <td>
     </td>
