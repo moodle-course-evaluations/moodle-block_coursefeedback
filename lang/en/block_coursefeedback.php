@@ -25,6 +25,8 @@
  */
 
 $string['add_block'] = 'Add global block, which is shown in every course with a survey';
+$string['eventtype_frozen'] = 'This event type\'s questionnaire cannot be changed because it is used in ongoing and/or past surveys in the following courses: {$a}';
+$string['default_questionnaire_frozen'] = 'The default questionnaire cannot be changed because it is used in ongoing and/or past surveys in the following courses: {$a}';
 $string['add_eventtype'] = 'Add new event type';
 $string['add_more_blanks'] = 'Add more blanks';
 $string['add_new_event_to'] = 'Add a new event to course <q>{$a}</q>';

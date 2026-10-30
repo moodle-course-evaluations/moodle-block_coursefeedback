@@ -28,8 +28,10 @@ use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\surveypart;
+use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\output\surveypart_chooser;
 use core\di;
+use core\exception\not_found_exception;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
@@ -68,6 +70,8 @@ if (!$orgsem) {
 $surveyparts = surveypart::get_surveyparts_available_for_organization($organization);
 $eventtypes = eventtype::get_eventtypes_for_orgsem($orgsem->get('id'));
 
+$freezer = di::get(survey_freezer::class);
+
 if (optional_param('submit', null, PARAM_ALPHA)) {
     require_sesskey();
 
@@ -101,6 +105,10 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
             continue;
         }
 
+        if ($eventtype->get('surveypartid') !== $surveypartid) {
+            $freezer->check_eventtype_questionnaire_change($eventtype);
+        }
+
         $eventtype->set('name', $eventtypename);
         $eventtype->set('surveypartid', $surveypartid);
         $eventtype->update();
@@ -111,6 +119,8 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
         $default_surveypartid = null;
     }
     if ($default_surveypartid !== $orgsem->get('default_surveypartid')) {
+        $freezer->check_default_questionnaire_change($orgsem);
+
         $orgsem->set('default_surveypartid', $default_surveypartid);
         $orgsem->update();
     }
@@ -131,7 +141,8 @@ $template_eventtypes = array_map(fn ($eventtype) => [
     'surveypart_chooser_context' => (new surveypart_chooser(
         $surveyparts,
         $eventtype->get('surveypartid'),
-        $organization
+        $organization,
+        readonly_because: $freezer->get_eventtype_frozen_explanation($eventtype)
     ))->export_for_template($OUTPUT),
 ], array_values($eventtypes));
 
@@ -152,7 +163,8 @@ $renderer->render_organization_page(
         'default_surveypart_chooser_context' => (new surveypart_chooser(
             $surveyparts,
             $orgsem->get('default_surveypartid'),
-            $organization
+            $organization,
+            readonly_because: $freezer->get_default_questionnaire_frozen_explanation($orgsem)
         ))->export_for_template($OUTPUT),
         'eventtypes' => $template_eventtypes,
     ])

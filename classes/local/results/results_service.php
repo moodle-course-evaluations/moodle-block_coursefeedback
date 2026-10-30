@@ -177,8 +177,6 @@ class results_service {
      * @return array[]
      */
     public function get_by_semester_and_eventtype(organization_semester $orgsem, eventtype $eventtype): array {
-        // TODO: Gracefully handle or forbid changed eventtype-sp mapping.
-
         $surveypart_fields = surveypart::get_sql_fields('sp', 'sp_');
         global $DB;
         $surveypart_record = $DB->get_record_sql("

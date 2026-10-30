@@ -18,6 +18,7 @@ namespace block_coursefeedback\output;
 
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveypart;
+use core\lang_string;
 use core\output\bootstrap_renderer;
 use core\output\named_templatable;
 use core\output\renderable;
@@ -39,6 +40,7 @@ class surveypart_chooser implements named_templatable, renderable {
      * @param array $surveyparts
      * @param int|null $selectedid
      * @param organization $organization
+     * @param bool $readonly_because
      */
     public function __construct(
         /** @var surveypart[] */
@@ -46,7 +48,9 @@ class surveypart_chooser implements named_templatable, renderable {
         /** @var int|null */
         private readonly ?int $selectedid,
         /** @var organization */
-        private readonly organization $organization
+        private readonly organization $organization,
+        /** @var lang_string|null */
+        private readonly ?lang_string $readonly_because = null,
     ) {
     }
 
@@ -61,6 +65,9 @@ class surveypart_chooser implements named_templatable, renderable {
         $result = [
             'org_name' => $this->organization->get('name'),
             'sitename' => $SITE->shortname,
+            'readonly' => $this->readonly_because !== null,
+            'tooltip' => $this->readonly_because,
+            'selectedid' => $this->selectedid,
         ];
 
         foreach ($this->surveyparts as $surveypart) {

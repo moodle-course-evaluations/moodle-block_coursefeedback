@@ -16,10 +16,15 @@
 
 namespace block_coursefeedback\local;
 
+use block_coursefeedback\local\persistent\eventtype;
+use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\persistent\surveypart;
+use block_coursefeedback\local\persistent\teaching_event;
+use core\exception\coding_exception;
 use core\exception\moodle_exception;
+use lang_string;
 
 /**
  * Checks if a resource is frozen, i.e., can't be modified significantly due to active surveys.
@@ -106,6 +111,83 @@ class survey_freezer {
                 debuginfo: "cannot $action_debug_info in survey part '{$surveypart_or_id}' due to started survey executions: "
                 . $se_ids
             );
+        }
+    }
+
+    /** @var array<int, array<int, object{id: int, shortname: string, fullname: string}[]>> */
+    private array $eventtype_usages_by_orgsemid = [];
+
+    /**
+     * @param int $orgsemid
+     * @param int $eventtypeid
+     * @return object{id: int, shortname: string, fullname: string}[]
+     */
+    private function get_eventtype_usages(int $orgsemid, int $eventtypeid): array {
+        if (!isset($this->eventtype_usages_by_orgsemid[$orgsemid])) {
+            global $DB;
+            $recordset = $DB->get_recordset_sql("
+                SELECT te.eventtypeid, c.id, c.shortname, c.fullname
+                FROM {" . survey_execution::TABLE . "} se
+                JOIN {course} c ON c.id = se.courseid
+                JOIN {" . survey_part_execution::TABLE . "} spe ON se.id = spe.surveyexecutionid
+                JOIN {" . teaching_event::TABLE . "} te ON spe.eventid = te.id
+                WHERE se.orgsemid = :orgsemid AND se.status = :status
+            ", ['orgsemid' => $orgsemid, 'status' => survey_execution::STATUS_STARTED]);
+
+            foreach ($recordset as $record) {
+                if ($record->eventtypeid === null) {
+                    // This TE / SPE uses the default questionnaire, which we denote with 0.
+                    $this->eventtype_usages_by_orgsemid[$orgsemid][0][] = $record;
+                } else {
+                    $this->eventtype_usages_by_orgsemid[$orgsemid][$record->eventtypeid][] = $record;
+                }
+            }
+        }
+
+        return $this->eventtype_usages_by_orgsemid[$orgsemid][$eventtypeid] ?? [];
+    }
+
+    /**
+     * @param eventtype $eventtype
+     * @return lang_string|null
+     */
+    public function get_eventtype_frozen_explanation(eventtype $eventtype): ?lang_string {
+        $usages = $this->get_eventtype_usages($eventtype->get('orgsemid'), $eventtype->get('id'));
+        if (!$usages) {
+            return null;
+        }
+
+        $courses_text = implode(", ", array_map(fn($course) => "'$course->fullname'", $usages));
+        return new lang_string('eventtype_frozen', 'block_coursefeedback', $courses_text);
+    }
+
+    /**
+     * @param organization_semester $orgsem
+     * @return lang_string|null
+     */
+    public function get_default_questionnaire_frozen_explanation(organization_semester $orgsem): ?lang_string {
+        $usages = $this->get_eventtype_usages($orgsem->get('id'), 0);
+        if (!$usages) {
+            return null;
+        }
+
+        $courses_text = implode(", ", array_map(fn($course) => "'$course->fullname'", $usages));
+        return new lang_string('default_questionnaire_frozen', 'block_coursefeedback', $courses_text);
+    }
+
+    public function check_eventtype_questionnaire_change(eventtype $eventtype): void {
+        $usages = $this->get_eventtype_usages($eventtype->get('orgsemid'), $eventtype->get('id'));
+        if ($usages) {
+            $courses_text = implode(", ", array_map(fn($course) => "'$course->fullname'", $usages));
+            throw new moodle_exception('eventtype_frozen', 'block_coursefeedback', a: $courses_text);
+        }
+    }
+
+    public function check_default_questionnaire_change(organization_semester $orgsem): void {
+        $usages = $this->get_eventtype_usages($orgsem->get('id'), 0);
+        if ($usages) {
+            $courses_text = implode(", ", array_map(fn($course) => "'$course->fullname'", $usages));
+            throw new moodle_exception('default_questionnaire_frozen', 'block_coursefeedback', a: $courses_text);
         }
     }
 }

@@ -39,11 +39,17 @@
           "selected": true
         }
       ],
-      "sitename": "ISIS"
+      "sitename": "ISIS",
+      "readonly": false,
+      "selectedid": 2
     }
 }}
 
-<select class="form-control form-select w-100" name="{{$name}}{{name}}{{/name}}" id="{{$id}}{{id}}{{/id}}">
+<select class="form-control form-select w-100"
+        name="{{$name}}{{name}}{{/name}}"
+        id="{{$id}}{{id}}{{/id}}"
+        {{#readonly}}disabled{{/readonly}}
+        {{#tooltip}}title="{{tooltip}}"{{/tooltip}}>
     <option value="">-</option>
     {{#has_global_surveyparts}}
         <optgroup label="{{#str}} global_questionnaires, block_coursefeedback, {{sitename}} {{/str}}">
@@ -60,3 +66,7 @@
         </optgroup>
     {{/has_organization_surveyparts}}
 </select>
+{{#readonly}}
+    {{! We still want to send the currently selected ID. }}
+    <input type="hidden" name="{{$name}}{{name}}{{/name}}" value="{{#selectedid}}{{selectedid}}{{/selectedid}}">
+{{/readonly}}
