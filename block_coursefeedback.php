@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\survey_execution_data;
+use core\di;
 
 /**
  * Block coursefeedback is defined here.
@@ -119,16 +120,15 @@ class block_coursefeedback extends block_base {
     private function generate_content(): string {
         global $OUTPUT;
         try {
-            $mapper = course_organization_mapping::get_instance();
-            $organization = $mapper->get_organization_for_course($this->page->course);
-            if (!$organization) {
+            [$organization, , $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($this->page->course);
+            if (!$organization || !$orgsem) {
                 return '';
             }
 
             $can_view_course_settings = permission_manager::can_view_course_settings($this->page->course, $organization);
 
             $survey_execution = survey_execution::get_record([
-                'organizationid' => $organization->get('id'),
+                'orgsemid' => $orgsem->get('id'),
                 'courseid' => $this->page->course->id,
             ]);
             if (!$survey_execution) {
@@ -151,8 +151,8 @@ class block_coursefeedback extends block_base {
 
             $context = [
                 'organization_name' => $organization->get('name'),
-                'starttime' => $survey_execution->get('starttime') ?? $organization->get('default_evaluation_starttime'),
-                'endtime' => $survey_execution->get('endtime') ?? $organization->get('default_evaluation_endtime'),
+                'starttime' => $survey_execution->get('starttime') ?? $orgsem->get('evaluation_starttime'),
+                'endtime' => $survey_execution->get('endtime') ?? $orgsem->get('evaluation_endtime'),
             ];
 
             if ($can_view_course_settings) {
