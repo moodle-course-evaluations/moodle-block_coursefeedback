@@ -92,7 +92,7 @@ function block_coursefeedback_migrate_organizationid_to_orgsemid(
     $transaction = $DB->start_delegated_transaction();
 
     // Add the orgsemid column.
-    $field = new xmldb_field('orgsemid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'active');
+    $field = new xmldb_field('orgsemid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'organizationid');
     if (!$dbman->field_exists($table, $field)) {
         $dbman->add_field($table, $field);
     }
