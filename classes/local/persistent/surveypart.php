@@ -157,7 +157,7 @@ class surveypart extends persistent_with_bulk_actions {
     /**
      * Returns the surveypart available in the given organization.
      * @param organization $organization
-     * @return surveypart[]
+     * @return array<int, surveypart>
      */
     public static function get_surveyparts_available_for_organization(organization $organization): array {
         $use_org_surveyparts = $organization->get('has_local_questionnaires');

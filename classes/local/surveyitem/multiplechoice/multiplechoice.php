@@ -25,6 +25,7 @@
 namespace block_coursefeedback\local\surveyitem\multiplechoice;
 
 use block_coursefeedback\local\persistent\response_slot;
+use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\surveyitem\ms_choice\ms_choice;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use core\lang_string;
@@ -142,5 +143,10 @@ class multiplechoice extends ms_choice {
         }
 
         return $template_data;
+    }
+
+    #[\Override]
+    public function post_process_response_values(surveyitem $surveyitem, array $values): int|string|null {
+        return implode(',', $values);
     }
 }

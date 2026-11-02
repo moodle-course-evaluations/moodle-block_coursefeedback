@@ -75,12 +75,15 @@ class surveyitem_manager {
     }
 
     /**
-     * Returns one surveyitemtype for a identifier.
+     * Returns one surveyitemtype for an identifier.
      *
-     * @param string $type
+     * @param string|surveyitem $type
      * @return surveyitemtype
      */
-    public static function get_surveyitemtype(string $type): surveyitemtype {
+    public static function get_surveyitemtype(string|surveyitem $type): surveyitemtype {
+        if ($type instanceof surveyitem) {
+            $type = $type->get('surveyitemtype');
+        }
         if (!isset(self::get_all_surveyitemtypes()[$type])) {
             throw new coding_exception('Survey element type ' . $type . ' not found.');
         }
