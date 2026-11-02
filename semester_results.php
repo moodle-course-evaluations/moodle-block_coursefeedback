@@ -69,6 +69,12 @@ $results_service = di::get(results_service::class);
 
 [$organization, $semester, $orgsem] = $semester_manager->get_triplet_by_orgsemid($organizationid, $orgsemid);
 
+permission_manager::require_manage_organization($organization);
+breadcrumbs_manager::setup_organization($organization);
+
+$PAGE->set_heading($organization->get('name'));
+$PAGE->set_title($semester?->name ?? $orgsem->get('semestername') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
+
 if ($download) {
     $string_params = [
         'orgname' => $organization->get('name'),
@@ -101,12 +107,6 @@ if ($download) {
 
     die;
 }
-
-permission_manager::require_manage_organization($organization);
-breadcrumbs_manager::setup_organization($organization);
-
-$PAGE->set_heading($organization->get('name'));
-$PAGE->set_title($semester?->name ?? $orgsem->get('semestername') . $PAGE::TITLE_SEPARATOR . $organization->get('name'));
 
 echo $OUTPUT->header();
 
