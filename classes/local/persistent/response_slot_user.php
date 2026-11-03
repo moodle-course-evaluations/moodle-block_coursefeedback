@@ -16,6 +16,8 @@
 
 namespace block_coursefeedback\local\persistent;
 
+use core_user\fields;
+
 /**
  * Maps response slots to users who are allowed to see the results.
  *
@@ -39,5 +41,26 @@ class response_slot_user extends persistent_with_bulk_actions {
                 'type' => PARAM_INT,
             ],
         ];
+    }
+
+    /**
+     * Uses this table just for joining and returns the user objects.
+     *
+     * @param int $slot_id
+     * @param fields $user_fields
+     * @return array<int, object>
+     */
+    public static function get_users(int $slot_id, \core_user\fields $user_fields): array {
+        $user_fields_sql = $user_fields
+            ->get_sql('u', namedparams: true, leadingcomma: false);
+
+        global $DB;
+        return $DB->get_records_sql("
+               SELECT u.id, $user_fields_sql->selects
+               FROM {" . self::TABLE . "} ru
+               JOIN {user} u ON ru.userid = u.id
+               $user_fields_sql->joins
+               WHERE ru.surveypartexecutionoptionid = :slot_id
+        ", ['slot_id' => $slot_id, ...$user_fields_sql->params]);
     }
 }
