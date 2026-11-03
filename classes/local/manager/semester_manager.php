@@ -114,7 +114,7 @@ class semester_manager {
      *
      * @param int $organizationid
      * @param int $orgsemid
-     * @return array{0: organization, 1: evaluation_semester|null, 2: organization_semester|null}
+     * @return array{0: organization, 1: evaluation_semester|null, 2: organization_semester}
      */
     public function get_triplet_by_orgsemid(int $organizationid, int $orgsemid): array {
         $org_fields = organization::get_sql_fields('o', 'o_');

@@ -428,3 +428,45 @@
 .block_coursefeedback-text-blue {
     color: #003a93;
 }
+
+.block_coursefeedback-report {
+    .card-body > p:last-of-type {
+        margin-bottom: 0;
+    }
+}
+
+@media print {
+    html:has(.block_coursefeedback-report) {
+        /* Prevent 'height: 100%' from producing a blank page at the end. */
+        height: auto;
+        /* Reduce the root font size so that sizes measured in REM are affected. */
+        font-size: 12px;
+
+        body {
+            /* Prevent 'height: 100%' from producing a blank page at the end. */
+            height: auto;
+
+            .toast-wrapper {
+                display: none;
+            }
+
+            #page-footer {
+                display: none;
+            }
+
+            #page {
+                margin: .5cm .75cm;
+                padding: 0;
+            }
+
+            .main-inner {
+                /* stylelint-disable declaration-no-important */
+                margin: 0 !important;
+            }
+
+            abbr {
+                text-decoration: none;
+            }
+        }
+    }
+}
