@@ -55,9 +55,12 @@ class survey_cache {
     public function evict_by_courseid(int $courseid): void {
         $data = $this->cache->get($courseid);
         if ($data instanceof survey_languages) {
-            foreach ($data->languages as $lang) {
-                $this->cache->delete($courseid . '_' . $lang->id);
-            }
+            $this->cache->delete_many(
+                array_map(
+                    fn($lang) => $courseid . '_' . $lang,
+                    $data->languages
+                )
+            );
         }
         $this->cache->delete($courseid);
     }
@@ -166,7 +169,7 @@ class survey_cache {
     private function get_translated_survey(survey_execution $survey_execution, string $lang): survey {
         $key = $survey_execution->get('courseid') . '_' . $lang;
         $survey = $this->cache->get($key);
-        if (!$survey || !$survey instanceof survey) {
+        if (!$survey || !($survey instanceof survey)) {
             $survey_execution_data = survey_execution_data::load_from_survey_execution_id_required($survey_execution->get('id'));
             $survey = survey::for_course($survey_execution_data, $lang);
             $this->cache->set($key, $survey);
