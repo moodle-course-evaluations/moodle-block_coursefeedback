@@ -26,6 +26,7 @@ namespace block_coursefeedback\local\manager;
 
 use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\surveypart;
 use core\exception\coding_exception;
 use stdClass;
@@ -182,10 +183,10 @@ class permission_manager {
     /**
      * Whether the user can view the course settings.
      * @param stdClass $course
-     * @param organization $organization
+     * @param organization|int $organization
      * @return bool
      */
-    public static function can_view_course_settings(stdClass $course, organization $organization): bool {
+    public static function can_view_course_settings(stdClass $course, organization|int $organization): bool {
         $context = \context_course::instance($course->id);
         return has_capability('block/coursefeedback:viewcoursesettings', $context)
             || self::can_manage_organization($organization);

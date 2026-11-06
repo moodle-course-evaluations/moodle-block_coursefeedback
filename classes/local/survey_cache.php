@@ -67,9 +67,9 @@ class survey_cache {
      *
      * @param object $course
      * @param bool $force_refresh
-     * @return survey|null
+     * @return survey|survey_execution|null
      */
-    public function get_by_course(object $course, bool $force_refresh = false): ?survey {
+    public function get_by_course(object $course, bool $force_refresh = false): survey|survey_execution|null {
         $data = $force_refresh ? false : $this->cache->get($course->id);
 
         if ($data === false) {
@@ -86,9 +86,9 @@ class survey_cache {
      * Fetch and cache the ongoing survey, if any. Otherwise, cache the fact that there is no ongoing survey.
      *
      * @param object $course
-     * @return survey|null
+     * @return survey|survey_execution|null
      */
-    private function handle_cache_miss(object $course): ?survey {
+    private function handle_cache_miss(object $course): survey|survey_execution|null {
         $survey_execution = survey_execution::get_record(['courseid' => $course->id]);
         if (!$survey_execution) {
             // Cache the fact that there isn't an SE.
@@ -102,7 +102,7 @@ class survey_cache {
         ) {
             // Cache the fact that there is an SE that isn't ongoing.
             $this->cache->set($course->id, $survey_execution);
-            return null;
+            return $survey_execution;
         }
 
         // Cache that there is an ongoing survey.
@@ -114,7 +114,7 @@ class survey_cache {
         // The SE is ongoing or about to be. Fetch the entire survey.
         $survey = $this->get_translated_survey($survey_execution, $lang);
 
-        return $survey_execution->is_ongoing() ? $survey : null;
+        return $survey_execution->is_ongoing() ? $survey : $survey_execution;
     }
 
     /**
@@ -125,9 +125,12 @@ class survey_cache {
      *
      * @param object $course
      * @param survey_execution|survey_languages|null $cached_data
-     * @return survey|null
+     * @return survey|survey_execution|null
      */
-    private function handle_cache_hit(object $course, null|survey_execution|survey_languages $cached_data): ?survey {
+    private function handle_cache_hit(
+        object $course,
+        null|survey_execution|survey_languages $cached_data
+    ): survey|survey_execution|null {
         if ($cached_data === null) {
             // Cache hit, but no survey execution.
             return null;
@@ -138,10 +141,10 @@ class survey_cache {
 
             if ($cached_data->survey_execution->has_ended()) {
                 // If the survey has ended, we only cache the SE to limit cache size.
-                // We don't only evict because that would have us making DB calls again next time.
+                // Just evicting would have us making DB calls again next time.
                 $this->evict_by_courseid($course->id);
                 $this->cache->set($course->id, $cached_data->survey_execution);
-                return null;
+                return $cached_data->survey_execution;
             }
 
             $lang = language_manager::find_preferred_language($cached_data->languages);
@@ -149,11 +152,16 @@ class survey_cache {
             // The SE is ongoing or about to be. Fetch the entire survey.
             $survey = $this->get_translated_survey($cached_data->survey_execution, $lang);
 
-            return $cached_data->survey_execution->is_ongoing() ? $survey : null;
+            return $cached_data->survey_execution->is_ongoing() ? $survey : $cached_data->survey_execution;
         }
 
-        // If there's a cache hit with survey_execution, there cannot be a running survey.
-        // (If a SE switches from planned to ongoing, the cache is evicted).
+        if ($cached_data instanceof survey_execution) {
+            // This should be the only remaining option: There is a survey, but it isn't ongoing.
+            // (If a SE switches from planned to ongoing, the cache is evicted, so we don't need to check here if that has
+            // happened).
+            return $cached_data;
+        }
+
         return null;
     }
 

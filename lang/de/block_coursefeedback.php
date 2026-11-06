@@ -182,6 +182,10 @@ $string['no_survey_execution'] = 'Der Kurs {$a->fullname} ist nicht Teil einer v
 $string['not_enough_answers'] = 'Der Bericht kann nicht angezeigt werden, da es nicht genug Antworten gibt.';
 $string['not_on_allowed_list'] = 'Sie sind nicht auf der Liste der Nutzer/innen, die berechtigt sind, den Bericht zu sehen.';
 $string['not_translated'] = 'nicht übersetzt';
+$string['notification_ended'] = 'Die <b>Lehrevaluation</b> in diesem Kurs ist beendet.';
+$string['notification_link_to_block'] = 'Weitere Informationen sowie Ergebnisberichte finden Sie in der <a href="{$a}">Blockleiste</a>.';
+$string['notification_ongoing'] = 'In diesem Kurs findet aktuell und noch bis zum {$a->endtime}, die <b>Lehrevaluation</b> über {$a->sitename} statt. Schon während der Evaluation können Sie die Ergebnisse live einsehen.';
+$string['notification_upcoming'] = 'In diesem Kurs findet demnächst die <b>Lehrevaluation</b> über {$a} statt. Schon während der Evaluation können Sie die Ergebnisse live einsehen.';
 $string['num_responses'] = 'Anzahl von Antworten';
 $string['number_of_answers'] = 'Anzahl der Antworten';
 $string['ongoing'] = 'Laufend';
