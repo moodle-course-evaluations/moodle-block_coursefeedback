@@ -15,96 +15,216 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template block_coursefeedback/survey/page
+    @template block_coursefeedback/report/report
 
-    Render a survey page. The context should be an instance of survey_page.
+    A report of a single course/event/slot.
 
     Example context (json):
-    {
-      "questions": []
-    }
+    {}
 }}
 
-<h3>
-    {{#str}}report_for, block_coursefeedback, {{coursename}}{{/str}}
-</h3>
-{{#semester}}
-    <p>
-        {{semester}}
-    </p>
-{{/semester}}
-{{#usernames}}
-    <p>
-        {{usernames}}
-    </p>
-{{/usernames}}
-{{#not_enough_responses}}
-    <p class="text-muted">{{#str}}not_enough_answers, block_coursefeedback{{/str}}</p>
-{{/not_enough_responses}}
-{{^not_enough_responses}}
-    {{#questions}}
-        <div class="card-body" style="border-bottom: 1px solid #ddd">
-            <h6 class="coursefeedback-questiontext mb-3">{{{questiontext}}}</h6>
-            {{#not_enough_responses}}
-                <p class="text-muted">{{#str}}not_enough_answers, block_coursefeedback{{/str}}</p>
-            {{/not_enough_responses}}
-            {{^not_enough_responses}}
-                {{#type_scalequestion}}
-                    <div class="row no-gutters align-items-center justify-content-center">
-                        <div class="d-flex align-items-center">
-                            <span class="small flex-shrink-1">{{min_pole}}</span>
-                            <div class="" style="width: 350px" {{#chartdata}}data-coursefeedback-chartdata='{{{chartdata}}}'{{/chartdata}}></div>
-                            <span class="small flex-shrink-1">{{max_pole}}</span>
+<main class="block_coursefeedback-report container-fluid">
+    <h4>{{{subtitle}}}</h4>
+    <a href="javascript:window.print()" class="d-print-none">{{#str}}
+        report_print_or_save, block_coursefeedback {{/str}}</a>
+    <div class="row gx-2">
+        <div class="col-md-8 my-1">
+            <div class="card h-100">
+                <section class="card-body">
+                    <h5 class="card-title">{{#str}} evaluation_info, block_coursefeedback {{/str}}</h5>
+
+                    {{#semester}}
+                        <p>
+                            <strong>{{#str}} semester, block_coursefeedback {{/str}}</strong>
+                            <br>
+                            {{semester}}
+                        </p>
+                    {{/semester}}
+                    <p>
+                        <strong>{{#str}} survey_execution_period, block_coursefeedback {{/str}}</strong>
+                        <br>
+                        {{< block_coursefeedback/datetime_from_to}}
+                            {{$from}}
+                                {{#userdate}}
+                                    {{evaluation_starttime}},
+                                    {{#str}} strftimedatetime, core_langconfig {{/str}}
+                                {{/userdate}}
+                            {{/from}}
+                            {{$to}}
+                                {{#userdate}}
+                                    {{evaluation_endtime}},
+                                    {{#str}} strftimedatetime, core_langconfig {{/str}}
+                                {{/userdate}}
+                            {{/to}}
+                        {{/block_coursefeedback/datetime_from_to}}
+                    </p>
+                    <div class="row">
+                        <div class="col-sm">
+                            {{#event_name}}
+                                <p>
+                                    <strong>{{#str}} teaching_event, block_coursefeedback {{/str}}</strong>
+                                    <br>
+                                    {{event_name}}
+                                </p>
+                            {{/event_name}}
+                            <p>
+                                <strong>{{#str}} questionnaire_used, block_coursefeedback {{/str}}</strong>
+                                <br>
+                                {{questionnaire_name}}
+                            </p>
                         </div>
-                        <div class="p-3 small">
-                            {{#response_stats}}
-                                <p class="mb-0"><abbr title="{{#str}}number_of_answers, block_coursefeedback{{/str}}">n</abbr>=<strong>{{n}}</strong></p>
-                                <p class="mb-0 text-danger"><abbr title="{{#str}}mean, block_coursefeedback{{/str}}">mw</abbr>=<strong>{{mean_rounded}}</strong></p>
-                                <p class="mb-0"><abbr title="{{#str}}standard_deviation, block_coursefeedback{{/str}}">s</abbr>=<strong>{{stddev_rounded}}</strong></p>
-                                <p class="mb-0 block_coursefeedback-text-blue"><abbr title="{{#str}}median, block_coursefeedback{{/str}}">md</abbr>=<strong>{{median_rounded}}</strong></p>
-                            {{/response_stats}}
-                        </div>
+                        {{#show_slot_info}}
+                            <div class="col-sm">
+                                <p>
+                                    <strong>{{#str}} slot, block_coursefeedback {{/str}}</strong>
+                                    <br>
+                                    {{{slot_name}}}
+                                    {{#slot_users}}
+                                        <br> {{#str}} slot_users, block_coursefeedback {{/str}}: {{.}}
+                                    {{/slot_users}}
+                                </p>
+                            </div>
+                        {{/show_slot_info}}
                     </div>
-                {{/type_scalequestion}}
-                {{#type_emoji}}
-                    <div class="row no-gutters align-items-center justify-content-center">
-                        <div class="d-flex align-items-center">
-                            <div class="" style="width: 350px" {{#chartdata}}data-coursefeedback-chartdata='{{{chartdata}}}'{{/chartdata}}></div>
-                        </div>
-                        <div class="p-3 small">
-                            {{#response_stats}}
-                                <p class="mb-0"><abbr title="{{#str}}number_of_answers, block_coursefeedback{{/str}}">n</abbr>=<strong>{{n}}</strong></p>
-                                <p class="mb-0 text-danger"><abbr title="{{#str}}mean, block_coursefeedback{{/str}}">mw</abbr>=<strong>{{mean_rounded}}</strong></p>
-                                <p class="mb-0"><abbr title="{{#str}}standard_deviation, block_coursefeedback{{/str}}">s</abbr>=<strong>{{stddev_rounded}}</strong></p>
-                                <p class="mb-0 block_coursefeedback-text-blue"><abbr title="{{#str}}median, block_coursefeedback{{/str}}">md</abbr>=<strong>{{median_rounded}}</strong></p>
-                            {{/response_stats}}
-                        </div>
-                    </div>
-                {{/type_emoji}}
-                {{#type_multiplechoice}}
-                    {{>block_coursefeedback/report/horizontal_bar_chart}}
-                {{/type_multiplechoice}}
-                {{#type_singlechoice}}
-                    {{>block_coursefeedback/report/horizontal_bar_chart}}
-                {{/type_singlechoice}}
-                {{#type_dropdown}}
-                    {{>block_coursefeedback/report/horizontal_bar_chart}}
-                {{/type_dropdown}}
-                {{#type_text}}
-                    {{^has_responses}}
-                        <i class="text-muted small ms-3">
-                            {{#str}}no_answers, block_coursefeedback{{/str}}
-                        </i>
-                    {{/has_responses}}
-                    {{#has_responses}}
-                        <ul>
-                            {{#responses}}
-                                <li style="font-size: 0.9rem;">{{.}}</li>
-                            {{/responses}}
-                        </ul>
-                    {{/has_responses}}
-                {{/type_text}}
-            {{/not_enough_responses}}
+
+                    <p>
+                        <strong>{{#str}} responses, block_coursefeedback {{/str}}</strong>
+                        <br>
+                        {{primary_response_count}}
+                        {{#secondary_response_counts}}
+                            <br> <small>{{.}}</small>
+                        {{/secondary_response_counts}}
+                    </p>
+                </section>
+            </div>
         </div>
-    {{/questions}}
-{{/not_enough_responses}}
+        <div class="col-md-4 my-1">
+            <div class="card h-100">
+                <section class="card-body">
+                    <h5 class="card-title">{{#str}} course_info, block_coursefeedback {{/str}}</h5>
+
+                    <p>
+                        <strong>{{#str}}teachers{{/str}}</strong>
+                        {{#teachers}}
+                            <br> {{name}} (<em>{{roles}}</em>)
+                        {{/teachers}}
+                    </p>
+
+                    <p>
+                        <strong>{{#str}}students{{/str}}</strong>
+                        <br>
+                        {{#str}}enrolled, block_coursefeedback{{/str}}: {{enrolled_student_count}} <br>
+                        {{#str}}active, block_coursefeedback{{/str}}: {{active_student_count}} <br>
+                        <small><em>{{#str}}as_of, block_coursefeedback, {{#userdate}}
+                            {{active_student_time}},
+                            {{#str}} strftimedatetimeshort, core_langconfig {{/str}}
+                        {{/userdate}}{{/str}}</em></small>
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+    {{#show_notes}}
+        <div class="card my-1">
+            <section class="card-body">
+                <h5 class="card-title">{{#str}} notes, block_coursefeedback {{/str}}</h5>
+
+                <ul class="mb-0">
+                    {{#notes}}
+                        <li>{{{.}}}</li>
+                    {{/notes}}
+                </ul>
+            </section>
+        </div>
+    {{/show_notes}}
+    <section class="mt-2">
+        {{#not_enough_responses}}
+            <p class="text-muted">{{#str}}not_enough_survey_answers, block_coursefeedback{{/str}}</p>
+        {{/not_enough_responses}}
+        {{^not_enough_responses}}
+            {{#questions}}
+                <div class="card-body py-3" style="border-bottom: 1px solid #ddd">
+                    <h6 class="coursefeedback-questiontext mb-3">{{{questiontext}}}</h6>
+                    {{#not_enough_responses}}
+                        <p class="text-muted">{{#str}}not_enough_item_answers, block_coursefeedback{{/str}}</p>
+                    {{/not_enough_responses}}
+                    {{^not_enough_responses}}
+                        {{#type_scalequestion}}
+                            <div class="row no-gutters align-items-center justify-content-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="small flex-shrink-1">{{min_pole}}</span>
+                                    <div class="" style="width: 350px"
+                                         {{#chartdata}}data-coursefeedback-chartdata='{{{chartdata}}}'{{/chartdata}}></div>
+                                    <span class="small flex-shrink-1">{{max_pole}}</span>
+                                </div>
+                                <div class="p-3 small">
+                                    {{#response_stats}}
+                                        <p class="mb-0"><abbr
+                                                title="{{#str}}number_of_answers, block_coursefeedback{{/str}}">n</abbr>=<strong>{{n}}</strong>
+                                        </p>
+                                        <p class="mb-0 text-danger"><abbr
+                                                title="{{#str}}mean, block_coursefeedback{{/str}}">mw</abbr>=<strong>{{mean_rounded}}</strong>
+                                        </p>
+                                        <p class="mb-0"><abbr
+                                                title="{{#str}}standard_deviation, block_coursefeedback{{/str}}">s</abbr>=<strong>{{stddev_rounded}}</strong>
+                                        </p>
+                                        <p class="mb-0 block_coursefeedback-text-blue"><abbr
+                                                title="{{#str}}median, block_coursefeedback{{/str}}">md</abbr>=<strong>{{median_rounded}}</strong>
+                                        </p>
+                                    {{/response_stats}}
+                                </div>
+                            </div>
+                        {{/type_scalequestion}}
+                        {{#type_emoji}}
+                            <div class="row no-gutters align-items-center justify-content-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="" style="width: 350px"
+                                         {{#chartdata}}data-coursefeedback-chartdata='{{{chartdata}}}'{{/chartdata}}></div>
+                                </div>
+                                <div class="p-3 small">
+                                    {{#response_stats}}
+                                        <p class="mb-0"><abbr
+                                                title="{{#str}}number_of_answers, block_coursefeedback{{/str}}">n</abbr>=<strong>{{n}}</strong>
+                                        </p>
+                                        <p class="mb-0 text-danger"><abbr
+                                                title="{{#str}}mean, block_coursefeedback{{/str}}">mw</abbr>=<strong>{{mean_rounded}}</strong>
+                                        </p>
+                                        <p class="mb-0"><abbr
+                                                title="{{#str}}standard_deviation, block_coursefeedback{{/str}}">s</abbr>=<strong>{{stddev_rounded}}</strong>
+                                        </p>
+                                        <p class="mb-0 block_coursefeedback-text-blue"><abbr
+                                                title="{{#str}}median, block_coursefeedback{{/str}}">md</abbr>=<strong>{{median_rounded}}</strong>
+                                        </p>
+                                    {{/response_stats}}
+                                </div>
+                            </div>
+                        {{/type_emoji}}
+                        {{#type_multiplechoice}}
+                            {{>block_coursefeedback/report/horizontal_bar_chart}}
+                        {{/type_multiplechoice}}
+                        {{#type_singlechoice}}
+                            {{>block_coursefeedback/report/horizontal_bar_chart}}
+                        {{/type_singlechoice}}
+                        {{#type_dropdown}}
+                            {{>block_coursefeedback/report/horizontal_bar_chart}}
+                        {{/type_dropdown}}
+                        {{#type_text}}
+                            {{^has_responses}}
+                                <i class="text-muted small ms-3">
+                                    {{#str}}no_answers, block_coursefeedback{{/str}}
+                                </i>
+                            {{/has_responses}}
+                            {{#has_responses}}
+                                <ul>
+                                    {{#responses}}
+                                        <li style="font-size: 0.9rem;">{{.}}</li>
+                                    {{/responses}}
+                                </ul>
+                            {{/has_responses}}
+                        {{/type_text}}
+                    {{/not_enough_responses}}
+                </div>
+            {{/questions}}
+        {{/not_enough_responses}}
+    </section>
+</main>
