@@ -55,7 +55,7 @@ class survey {
      * @param survey_execution_data $course_data
      * @return self
      */
-    public static function for_course(survey_execution_data $course_data): self {
+    public static function for_course(survey_execution_data $course_data, string $language): self {
         $events_by_spe_id = [];
         foreach ($course_data->spes_by_event_id as $event_id => $spe) {
             $events_by_spe_id[$spe->get('id')] = $course_data->events_by_id[$event_id];
@@ -73,7 +73,8 @@ class survey {
             surveyparts: array_values($course_data->survey_parts_by_spe_id),
             spes: array_values($course_data->spes_by_event_id),
             events_by_spe_id: $events_by_spe_id,
-            slots_by_spe_id: $course_data->slots_by_spe_id
+            slots_by_spe_id: $course_data->slots_by_spe_id,
+            language: $language,
         );
 
         return new self(

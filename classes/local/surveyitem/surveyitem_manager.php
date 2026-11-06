@@ -42,6 +42,7 @@ use block_coursefeedback\local\surveyitem\slot_choice\slot_choice;
 use block_coursefeedback\local\surveyitem\text\text;
 use core\di;
 use core\exception\coding_exception;
+use core\lang_string;
 use html_writer;
 
 /**
@@ -144,6 +145,7 @@ class surveyitem_manager {
         array $surveyitems,
         array $template_data_by_item_id,
         ?teaching_event $event = null,
+        ?string $language = null,
     ): array {
         /** @var survey_page[] $pages */
         $pages = [];
@@ -153,12 +155,12 @@ class surveyitem_manager {
             // If the SPE belongs to an event that isn't auto-created and has a name, we show it in a small heading.
             $heading = html_writer::tag(
                 'h6',
-                get_string('event_intro', 'block_coursefeedback', s($event->get('name')))
+                (new lang_string('event_intro', 'block_coursefeedback', s($event->get('name')), $language))->out(),
             );
         } else {
             $heading = html_writer::tag(
                 'h6',
-                get_string('event_intro_without_name', 'block_coursefeedback')
+                (new lang_string('event_intro_without_name', 'block_coursefeedback', lang: $language))->out(),
             );
         }
 
@@ -210,7 +212,8 @@ class surveyitem_manager {
         array $surveyparts,
         array $spes,
         array $events_by_spe_id,
-        array $slots_by_spe_id
+        array $slots_by_spe_id,
+        ?string $language = null,
     ): array {
         $surveyitems_by_partid = self::get_surveyitems_for_surveyparts($surveyparts);
         $surveyitems_by_type = self::group_surveyitems_by_type($surveyitems_by_partid);
@@ -221,7 +224,7 @@ class surveyitem_manager {
 
             $additionaldata = $surveyitemtype->load_additional_data_for($surveyitemsoftype);
 
-            $template_data_by_item_id += $surveyitemtype->export_for_template($surveyitemsoftype, $additionaldata);
+            $template_data_by_item_id += $surveyitemtype->export_for_template($surveyitemsoftype, $additionaldata, $language);
         }
 
         $pages = [];
@@ -231,7 +234,7 @@ class surveyitem_manager {
             $event = $events_by_spe_id[$spe->get('id')] ?? null;
             $pages = array_merge(
                 $pages,
-                static::get_pages_for_surveypart($spe, $slots, $surveyitems, $template_data_by_item_id, $event)
+                static::get_pages_for_surveypart($spe, $slots, $surveyitems, $template_data_by_item_id, $event, $language)
             );
         }
 
