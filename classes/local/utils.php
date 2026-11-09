@@ -139,15 +139,18 @@ class utils {
 
         return $DB->get_records_sql("
             SELECT ctx.instanceid,
-                   COUNT(DISTINCT ra.userid) AS enrolled_count,
+                   COUNT(DISTINCT rar.userid) AS enrolled_count,
                    COUNT(DISTINCT ul.userid) AS recently_active_count
             FROM {context} ctx
-                 JOIN {role_assignments} ra ON ra.contextid = ctx.id
-                 JOIN {role} r ON r.id = ra.roleid AND r.archetype = 'student'
-                 LEFT JOIN {user_lastaccess} ul
-                           ON ul.courseid = ctx.instanceid
-                               AND ul.userid = ra.userid
-                               AND ul.timeaccess >= :active_user_cutoff
+                LEFT JOIN (
+                    SELECT ra.userid, ra.contextid
+                    FROM {role_assignments} ra
+                    JOIN {role} r ON r.id = ra.roleid AND r.archetype = 'student'
+                ) rar ON rar.contextid = ctx.id
+                LEFT JOIN {user_lastaccess} ul
+                       ON ul.courseid = ctx.instanceid
+                           AND ul.userid = rar.userid
+                           AND ul.timeaccess >= :active_user_cutoff
             WHERE ctx.instanceid $in_courseids_sql AND ctx.contextlevel = :context_level_course
             GROUP BY ctx.instanceid
         ", [
