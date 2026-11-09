@@ -141,8 +141,8 @@ class results_service {
                 $row[] = $course['default_questionnaire_responses'];
             }
 
-            foreach ($eventtypes as $event_type_id => $_) {
-                $row[] = $course['responses_by_eventtypeid'][$event_type_id] ?? null;
+            foreach ($eventtypes as $eventtype) {
+                $row[] = $course['responses_by_eventtypeid'][$eventtype->get('id')] ?? null;
             }
 
             $rows[] = $row;
