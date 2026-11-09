@@ -102,7 +102,7 @@ if ($download) {
     $stream = fopen('php://output', 'w');
 
     foreach ($rows as $row) {
-        fputcsv($stream, $row);
+        fputcsv($stream, $row, escape: '');
     }
 
     die;
