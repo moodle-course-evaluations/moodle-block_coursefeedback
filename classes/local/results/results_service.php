@@ -19,10 +19,8 @@ namespace block_coursefeedback\local\results;
 use block_coursefeedback\local\multilang_string;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization_semester;
-use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
-use block_coursefeedback\local\surveyitem\surveyitemtype;
 use core\clock;
 use core\exception\coding_exception;
 use DateInterval;
@@ -217,19 +215,24 @@ class results_service {
 
         global $DB;
         $response_recordset = $DB->get_recordset_sql("
+            WITH all_responses AS (
+                SELECT id, surveypartexecutionoptionresponseid, surveyitemid, 'text' AS type, value
+                FROM {block_coursefeedback_surveyitemtextresponse}
+                UNION ALL
+                SELECT id, surveypartexecutionoptionresponseid, surveyitemid, 'int' AS type, CAST(value AS VARCHAR(20)) AS value
+                FROM {block_coursefeedback_surveyitemintresponse}
+            )
             SELECT rs.id AS response_set_id, c.id AS course_id, c.fullname AS course_fullname,
                    te.id AS event_id, te.name AS event_name,
                    speo.id AS slot_id, speo.name AS slot_name,
-                   COALESCE(textresp.surveyitemid, intresp.surveyitemid) AS surveyitemid,
-                   textresp.value AS text_value, intresp.value AS int_value
+                   resp.surveyitemid, resp.type, resp.value
             FROM {course} c
             INNER JOIN {block_coursefeedback_surveyexecution} se ON c.id = se.courseid AND se.orgsemid = :orgsemid
             INNER JOIN {block_coursefeedback_surveypartexecution} spe ON spe.surveyexecutionid = se.id
             INNER JOIN {block_coursefeedback_course_eventtype} te ON te.id = spe.eventid AND $eventtype_filter
             INNER JOIN {block_coursefeedback_surveypartexecutionoption} speo ON speo.surveypartexecutionid = spe.id
             INNER JOIN {block_coursefeedback_surveypartexecutionoptionresp} rs ON rs.surveypartexecutionoptionid = speo.id
-            LEFT JOIN {block_coursefeedback_surveyitemtextresponse} textresp ON textresp.surveypartexecutionoptionresponseid = rs.id
-            LEFT JOIN {block_coursefeedback_surveyitemintresponse} intresp ON intresp.surveypartexecutionoptionresponseid = rs.id
+            LEFT JOIN all_responses resp ON resp.surveypartexecutionoptionresponseid = rs.id
             ORDER BY te.courseid, rs.id
         ", [...$params, 'orgsemid' => $orgsem->get('id')]);
 
@@ -245,13 +248,9 @@ class results_service {
                 'values_by_surveyitemid' => [],
             ];
 
-            if ($record->text_value !== null) {
-                $response_sets[$record->response_set_id]['values_by_surveyitemid'][$record->surveyitemid][] =
-                    $record->text_value;
-            }
-            if ($record->int_value !== null) {
-                $response_sets[$record->response_set_id]['values_by_surveyitemid'][$record->surveyitemid][] =
-                    intval($record->int_value);
+            if ($record->value !== null) {
+                $value = $record->type === 'int' ? intval($record->value) : $record->value;
+                $response_sets[$record->response_set_id]['values_by_surveyitemid'][$record->surveyitemid][] = $value;
             }
         }
 
