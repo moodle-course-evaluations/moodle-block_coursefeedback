@@ -102,8 +102,8 @@ class scalequestion extends surveyitemtype_with_settings {
     }
 
     #[\Override]
-    public function export_for_template(array $surveyitems, array $additional_data): array {
-        $structure = parent::export_for_template($surveyitems, $additional_data);
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
+        $structure = parent::export_for_template($surveyitems, $additional_data, $lang);
 
         $lastsurveyitem = null;
 
@@ -117,10 +117,10 @@ class scalequestion extends surveyitemtype_with_settings {
                 $lastsurveyitem->get('sortindex') !== $surveyitem->get('sortindex') - 1;
 
             $structure[$surveyitem->get('id')] += [
-                'max_pole' => $record->scale->get('maxoptiontext')->translate(),
-                'min_pole' => $record->scale->get('minoptiontext')->translate(),
+                'max_pole' => $record->scale->get('maxoptiontext')->translate($lang),
+                'min_pole' => $record->scale->get('minoptiontext')->translate($lang),
                 'has_na_option' => $hasnaoption,
-                'na_option' => $hasnaoption ? $record->scale->get('noansweroptiontext')->translate() : null,
+                'na_option' => $hasnaoption ? $record->scale->get('noansweroptiontext')->translate($lang) : null,
                 'optionamount' => $optionamount,
                 'options' => [],
                 'show_scale' => $show_scale,
@@ -129,7 +129,7 @@ class scalequestion extends surveyitemtype_with_settings {
             for ($i = 1; $i <= $optionamount; $i++) {
                 $text = null;
                 if ($i == 1 || $i == $optionamount) {
-                    $text = $record->scale->get($i == 1 ? 'minoptiontext' : 'maxoptiontext')->translate();
+                    $text = $record->scale->get($i == 1 ? 'minoptiontext' : 'maxoptiontext')->translate($lang);
                 }
 
                 $structure[$surveyitem->get('id')]['options'][] = [
@@ -141,7 +141,8 @@ class scalequestion extends surveyitemtype_with_settings {
             $centeroptiontext = $record->scale->get('centeroptiontext');
             if ($centeroptiontext && $optionamount > 2 && $optionamount % 2 === 1) {
                 // The center option is ignored when the number of options is even.
-                $structure[$surveyitem->get('id')]['options'][($optionamount - 1) / 2]['text'] = $centeroptiontext->translate();
+                $structure[$surveyitem->get('id')]['options'][($optionamount - 1) / 2]['text']
+                    = $centeroptiontext->translate($lang);
             }
 
             $lastsurveyitem = $surveyitem;

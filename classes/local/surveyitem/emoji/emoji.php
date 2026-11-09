@@ -42,118 +42,119 @@ class emoji extends surveyitemtype_with_settings {
      *
      * @return array<string, array{name: string, choices: array{emoji: string, text: string, value: int}[]}>
      */
-    public static function get_available_variants(): array {
+    public static function get_available_variants(?string $lang = null): array {
+        $string_manager = get_string_manager();
         return [
             // 1 through 3: Good, neutral, bad.
             '1_through_3' => [
-                'name' => get_string('emoji_variant_1_through_3', 'block_coursefeedback'),
+                'name' => $string_manager->get_string('emoji_variant_1_through_3', 'block_coursefeedback', lang: $lang),
                 'choices' => [
                     [
                         'emoji' => '😀',
-                        'text' => get_string('emoji_choice_1_of_3', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_1_of_3', 'block_coursefeedback', lang: $lang),
                         'value' => 1,
                     ],
                     [
                         'emoji' => '😐',
-                        'text' => get_string('emoji_choice_2_of_3', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_2_of_3', 'block_coursefeedback', lang: $lang),
                         'value' => 2,
                     ],
                     [
                         'emoji' => '☹️',
-                        'text' => get_string('emoji_choice_3_of_3', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_3_of_3', 'block_coursefeedback', lang: $lang),
                         'value' => 3,
                     ],
                 ],
             ],
             // 1 through 4: Very good, somewhat good, somewhat bad, bad.
             '1_through_4' => [
-                'name' => get_string('emoji_variant_1_through_4', 'block_coursefeedback'),
+                'name' => $string_manager->get_string('emoji_variant_1_through_4', 'block_coursefeedback', lang: $lang),
                 'choices' => [
                     [
                         'emoji' => '😀',
-                        'text' => get_string('emoji_choice_1_of_4', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_1_of_4', 'block_coursefeedback', lang: $lang),
                         'value' => 1,
                     ],
                     [
                         'emoji' => '🙂',
-                        'text' => get_string('emoji_choice_2_of_4', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_2_of_4', 'block_coursefeedback', lang: $lang),
                         'value' => 2,
                     ],
                     [
                         'emoji' => '😕',
-                        'text' => get_string('emoji_choice_3_of_4', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_3_of_4', 'block_coursefeedback', lang: $lang),
                         'value' => 3,
                     ],
                     [
                         'emoji' => '😠',
-                        'text' => get_string('emoji_choice_4_of_4', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_4_of_4', 'block_coursefeedback', lang: $lang),
                         'value' => 4,
                     ],
                 ],
             ],
             // 1 through 5: Very good, somewhat good, neutral, somewhat bad, bad.
             '1_through_5' => [
-                'name' => get_string('emoji_variant_1_through_5', 'block_coursefeedback'),
+                'name' => $string_manager->get_string('emoji_variant_1_through_5', 'block_coursefeedback', lang: $lang),
                 'choices' => [
                     [
                         'emoji' => '😀',
-                        'text' => get_string('emoji_choice_1_of_5', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_1_of_5', 'block_coursefeedback', lang: $lang),
                         'value' => 1,
                     ],
                     [
                         'emoji' => '🙂',
-                        'text' => get_string('emoji_choice_2_of_5', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_2_of_5', 'block_coursefeedback', lang: $lang),
                         'value' => 2,
                     ],
                     [
                         'emoji' => '😐',
-                        'text' => get_string('emoji_choice_3_of_5', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_3_of_5', 'block_coursefeedback', lang: $lang),
                         'value' => 3,
                     ],
                     [
                         'emoji' => '😕',
-                        'text' => get_string('emoji_choice_4_of_5', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_4_of_5', 'block_coursefeedback', lang: $lang),
                         'value' => 4,
                     ],
                     [
                         'emoji' => '😠',
-                        'text' => get_string('emoji_choice_5_of_5', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_5_of_5', 'block_coursefeedback', lang: $lang),
                         'value' => 5,
                     ],
                 ],
             ],
             // 1 through six scale with labels from German school grades.
             'grades_1_through_6' => [
-                'name' => get_string('emoji_variant_grades_1_through_6', 'block_coursefeedback'),
+                'name' => $string_manager->get_string('emoji_variant_grades_1_through_6', 'block_coursefeedback', lang: $lang),
                 'choices' => [
                     [
                         'emoji' => '😀',
-                        'text' => get_string('emoji_choice_1_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_1_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 1,
                     ],
                     [
                         'emoji' => '😊',
-                        'text' => get_string('emoji_choice_2_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_2_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 2,
                     ],
                     [
                         'emoji' => '🙂',
-                        'text' => get_string('emoji_choice_3_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_3_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 3,
                     ],
                     [
                         'emoji' => '😐',
-                        'text' => get_string('emoji_choice_4_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_4_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 4,
                     ],
                     [
                         'emoji' => '😕',
-                        'text' => get_string('emoji_choice_5_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_5_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 5,
                     ],
                     [
                         'emoji' => '😠',
-                        'text' => get_string('emoji_choice_6_of_6', 'block_coursefeedback'),
+                        'text' => $string_manager->get_string('emoji_choice_6_of_6', 'block_coursefeedback', lang: $lang),
                         'value' => 6,
                     ],
                 ],
@@ -222,9 +223,9 @@ class emoji extends surveyitemtype_with_settings {
     }
 
     #[\Override]
-    public function export_for_template(array $surveyitems, array $additional_data): array {
-        $available_variants = self::get_available_variants();
-        $template_data = parent::export_for_template($surveyitems, $additional_data);
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
+        $available_variants = self::get_available_variants($lang);
+        $template_data = parent::export_for_template($surveyitems, $additional_data, $lang);
         foreach ($surveyitems as $surveyitem) {
             $data = $additional_data[$surveyitem->get('id')];
             $template_data[$surveyitem->get('id')]['choices'] = $available_variants[$data->variant]['choices'];

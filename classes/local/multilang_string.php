@@ -16,6 +16,7 @@
 
 namespace block_coursefeedback\local;
 
+use block_coursefeedback\local\manager\language_manager;
 use coding_exception;
 use core\exception\moodle_exception;
 use Generator;
@@ -131,46 +132,20 @@ class multilang_string implements JsonSerializable {
      *
      * If the current language is not available, languages will be tried in this order:
      * 1. The parent languages of the current language.
-     * 2. The site-wide default language.
-     * 3. English.
+     * 2. English.
+     * 3. The site-wide default language.
      * 4. The first translation we have.
      *
      * @return string
      */
-    public function translate(): string {
-        foreach ($this->iterate_preferred_languages() as $lang) {
-            if (isset($this->translations[$lang])) {
-                return $this->translations[$lang];
+    public function translate(?string $lang = null): string {
+        foreach (language_manager::iterate_preferred_languages($lang) as $try_lang) {
+            if (isset($this->translations[$try_lang])) {
+                return $this->translations[$try_lang];
             }
         }
 
         // Fall back on the first translation we have.
         return $this->translations[array_key_first($this->translations)];
-    }
-
-    /**
-     * Returns a generator that yields the preferred languages in order of preference.
-     *
-     * @return Generator<string>
-     */
-    private function iterate_preferred_languages(): Generator {
-        // First, we try the current language.
-        $lang = current_language();
-        yield $lang;
-
-        // Then, the parent languages of the current language.
-        $parent_languages = get_string_manager()->get_language_dependencies($lang);
-        foreach (array_reverse($parent_languages) as $parent_language) {
-            if ($parent_language !== $lang) {
-                yield $parent_language;
-            }
-        }
-
-        // English.
-        yield 'en';
-
-        // Site-wide default language.
-        global $CFG;
-        yield $CFG->lang;
     }
 }

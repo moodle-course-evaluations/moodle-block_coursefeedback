@@ -160,8 +160,8 @@ class text extends surveyitemtype_with_settings {
     }
 
     #[\Override]
-    public function export_for_template(array $surveyitems, array $additional_data): array {
-        $template_data = parent::export_for_template($surveyitems, $additional_data);
+    public function export_for_template(array $surveyitems, array $additional_data, ?string $lang = null): array {
+        $template_data = parent::export_for_template($surveyitems, $additional_data, $lang);
         foreach ($surveyitems as $surveyitem) {
             $template_data[$surveyitem->get('id')] += $additional_data[$surveyitem->get('id')];
         }

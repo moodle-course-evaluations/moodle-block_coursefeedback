@@ -160,7 +160,6 @@ class start_surveys_task extends scheduled_task {
             foreach ($additional_survey_part_ids as $spe_id => $surveypart_id) {
                 $survey_execution_data->survey_parts_by_spe_id[$spe_id] = $additional_survey_parts[$surveypart_id];
             }
-            $this->survey_cache->warm($survey_execution_data);
         }
     }
 }

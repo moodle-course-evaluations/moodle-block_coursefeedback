@@ -91,10 +91,10 @@ class surveyitem extends persistent_with_bulk_actions {
      *
      * @return string|null
      */
-    public function maybe_format_text(): ?string {
+    public function maybe_format_text(?string $lang = null): ?string {
         if ($text = $this->get('text')) {
             return format_text(
-                $text->translate(),
+                $text->translate($lang),
                 $this->get('textformat') ?? FORMAT_PLAIN
             );
         }
