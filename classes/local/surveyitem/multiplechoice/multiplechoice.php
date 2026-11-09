@@ -22,6 +22,7 @@
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\surveyitem\multiplechoice;
 
 use block_coursefeedback\local\persistent\response_slot;
@@ -146,7 +147,14 @@ class multiplechoice extends ms_choice {
     }
 
     #[\Override]
-    public function post_process_response_values(surveyitem $surveyitem, array $values): int|string|null {
-        return implode(',', $values);
+    public function post_process_response_values(surveyitem $surveyitem, mixed $additional_data, array $values): int|string|null {
+        // We let ms_choice map the value to text and then implode it.
+        return implode(
+            ',',
+            array_map(
+                fn($value) => parent::post_process_response_values($surveyitem, $additional_data, [$value]),
+                $values
+            )
+        );
     }
 }

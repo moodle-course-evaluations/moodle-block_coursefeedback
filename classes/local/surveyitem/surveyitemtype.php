@@ -238,10 +238,11 @@ abstract class surveyitemtype {
      * This method _must_ be overriden by survey item types allowing more than one response per user per survey item.
      *
      * @param surveyitem $surveyitem
+     * @param mixed $additional_data The additional data for this item as returned by {@see load_additional_data_for}.
      * @param list<int|string> $values The (0 or more) responses that were left by a user as part of a single response set.
      * @return int|string|null A single representation of the response(s).
      */
-    public function post_process_response_values(surveyitem $surveyitem, array $values): int|string|null {
+    public function post_process_response_values(surveyitem $surveyitem, mixed $additional_data, array $values): int|string|null {
         if (!$values) {
             return null;
         }

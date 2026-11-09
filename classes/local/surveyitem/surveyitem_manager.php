@@ -40,6 +40,7 @@ use block_coursefeedback\local\surveyitem\scalequestion\scalequestion;
 use block_coursefeedback\local\surveyitem\singlechoice\singlechoice;
 use block_coursefeedback\local\surveyitem\slot_choice\slot_choice;
 use block_coursefeedback\local\surveyitem\text\text;
+use block_coursefeedback\local\utils;
 use core\di;
 use core\exception\coding_exception;
 use core\lang_string;
@@ -113,21 +114,17 @@ class surveyitem_manager {
     }
 
     /**
-     * Groups the sets of surveyitems by surveyitemtype.
+     * Groups the surveyitems by surveyitemtype.
      *
-     * @param surveyitem[][] $surveyitemsets
+     * @param surveyitem[] $surveyitems
      * @return array<string, surveyitem[]> [string $surveyitemtype => [surveyitem $surveyitem]]
      */
-    public static function group_surveyitems_by_type(array $surveyitemsets): array {
+    public static function group_surveyitems_by_type(array $surveyitems): array {
         $surveyitems_by_type = [];
-        foreach ($surveyitemsets as $surveyitemset) {
-            foreach ($surveyitemset as $surveyitem) {
-                $surveyitemtype = $surveyitem->get('surveyitemtype');
-                if (!isset($surveyitems_by_type[$surveyitemtype])) {
-                    $surveyitems_by_type[$surveyitemtype] = [];
-                }
-                $surveyitems_by_type[$surveyitemtype][] = $surveyitem;
-            }
+        foreach ($surveyitems as $surveyitem) {
+            $surveyitemtype = $surveyitem->get('surveyitemtype');
+            $surveyitems_by_type[$surveyitemtype] ??= [];
+            $surveyitems_by_type[$surveyitemtype][] = $surveyitem;
         }
         return $surveyitems_by_type;
     }
@@ -219,7 +216,7 @@ class surveyitem_manager {
         ?string $language = null,
     ): array {
         $surveyitems_by_partid = self::get_surveyitems_for_surveyparts($surveyparts);
-        $surveyitems_by_type = self::group_surveyitems_by_type($surveyitems_by_partid);
+        $surveyitems_by_type = self::group_surveyitems_by_type(utils::array_flatten($surveyitems_by_partid));
 
         $template_data_by_item_id = [];
         foreach ($surveyitems_by_type as $surveyitemtype => $surveyitemsoftype) {
@@ -249,17 +246,25 @@ class surveyitem_manager {
      *
      * @param surveypart[] $surveyparts
      * @return array<string, array<int, mixed>> [string $surveyitemtype => [int $surveyitemid => mixed $data]]
-     * @throws coding_exception
      */
     public static function get_questiondata_for_surveyparts(array $surveyparts): array {
         $surveyitems = self::get_surveyitems_for_surveyparts($surveyparts);
+        return self::get_questiondata_for_surveyitems(utils::array_flatten($surveyitems));
+    }
+
+    /**
+     * Gets the questiondata ('additionaldata') for the given survey items.
+     *
+     * @param surveyitem[] $surveyitems
+     * @return array<string, array<int, mixed>> [string $surveyitemtype => [int $surveyitemid => mixed $data]]
+     */
+    public static function get_questiondata_for_surveyitems(array $surveyitems): array {
         $surveyitems_by_type = self::group_surveyitems_by_type($surveyitems);
         $alladditionaldata = [];
 
         foreach ($surveyitems_by_type as $surveyitemtype => $surveyitemsoftype) {
-            $additionaldata = self::get_surveyitemtype($surveyitemtype)
+            $alladditionaldata[$surveyitemtype] = self::get_surveyitemtype($surveyitemtype)
                 ->load_additional_data_for($surveyitemsoftype);
-            $alladditionaldata[$surveyitemtype] = $additionaldata;
         }
 
         return $alladditionaldata;
@@ -289,7 +294,7 @@ class surveyitem_manager {
         $surveypart = surveypart::get_record(['id' => $surveypartexecution->get('surveypartid')], MUST_EXIST);
         $surveyitems = $surveypart->get_surveyitems();
 
-        $surveyitems_by_type = self::group_surveyitems_by_type([$surveyitems]);
+        $surveyitems_by_type = self::group_surveyitems_by_type($surveyitems);
         $allresponsedata = [];
         foreach ($surveyitems_by_type as $surveyitemtype => $surveyitemsoftype) {
             $additionaldata = self::get_surveyitemtype($surveyitemtype)
