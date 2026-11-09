@@ -22,6 +22,7 @@
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\surveyitem\ms_choice;
 
 use block_coursefeedback\local\backup\backup_invalid_exception;
@@ -29,6 +30,7 @@ use block_coursefeedback\local\multilang_string;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitemtype_with_settings;
+use core\exception\coding_exception;
 use core\exception\moodle_exception;
 use moodle_url;
 use moodleform;
@@ -195,5 +197,25 @@ abstract class ms_choice extends surveyitemtype_with_settings {
 
         global $DB;
         $DB->insert_records('block_coursefeedback_surveyitemansweroption', $options_to_insert);
+    }
+
+    #[\Override]
+    public function post_process_response_values(surveyitem $surveyitem, mixed $additional_data, array $values): int|string|null {
+        $value = parent::post_process_response_values($surveyitem, $additional_data, $values);
+
+        if ($value === null) {
+            return null;
+        } else if (!is_int($value)) {
+            throw new coding_exception("Unexpected non-int response to ms_choice question with ID {$surveyitem->get('id')}");
+        }
+
+        $option = $additional_data[$value] ?? null;
+        if ($option === null) {
+            throw new coding_exception(
+                "Nonexistent option ID $value is saved for ms_choice question with ID {$surveyitem->get('id')}"
+            );
+        }
+
+        return $option->text->translate();
     }
 }

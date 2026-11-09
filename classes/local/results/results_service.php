@@ -21,6 +21,7 @@ use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
+use block_coursefeedback\local\utils;
 use core\clock;
 use core\exception\coding_exception;
 use DateInterval;
@@ -212,6 +213,10 @@ class results_service {
             $questionnaire->get_surveyitems(),
             fn($surveyitem) => surveyitem_manager::get_surveyitemtype($surveyitem)->should_appear_in_reports()
         );
+        $additionaldata_by_surveyitemid = utils::array_flatten(
+            surveyitem_manager::get_questiondata_for_surveyitems($surveyitems),
+            preserve_keys: true
+        );
 
         global $DB;
         $response_recordset = $DB->get_recordset_sql("
@@ -279,7 +284,11 @@ class results_service {
             foreach ($surveyitems as $surveyitem) {
                 $values = $response_set['values_by_surveyitemid'][$surveyitem->get('id')] ?? [];
                 $surveyitemtype = surveyitem_manager::get_surveyitemtype($surveyitem);
-                $row[] = $surveyitemtype->post_process_response_values($surveyitem, $values);
+                $row[] = $surveyitemtype->post_process_response_values(
+                    $surveyitem,
+                    $additionaldata_by_surveyitemid[$surveyitem->get('id')] ?? [],
+                    $values,
+                );
             }
 
             $rows[] = $row;
