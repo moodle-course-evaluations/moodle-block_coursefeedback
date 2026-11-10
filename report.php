@@ -155,14 +155,6 @@ if (!$surveyexecution->has_ended()) {
     $notes[] = html_writer::tag('span', get_string('report_note_ongoing', 'block_coursefeedback'), ['class' => 'text-warning']);
 }
 
-$user_counts = utils::get_course_student_counts([$course->id]);
-if (!$user_counts) {
-    // TODO: Showing the current participant counts on a report from 2 months ago is less than ideal.
-    // We should probably save the participant counts somewhere when the evaluation (starts and?) ends.
-    throw new coding_exception("Could not get user counts for course with ID '$course->id'");
-}
-['enrolled_count' => $enrolled_student_count, 'recently_active_count' => $active_student_count] = (array) reset($user_counts);
-
 [$se_responses, $spe_responses, $slot_responses] = utils::get_response_count_subtotals(
     $surveyexecution->get('id'),
     $spe->get('id'),
@@ -188,9 +180,7 @@ $template = [
     'event_name' => $event->get('name'),
     'questionnaire_name' => $questionnaire->get('name'),
     'teachers' => $teachers,
-    'enrolled_student_count' => $enrolled_student_count,
-    'active_student_count' => $active_student_count,
-    'active_student_time' => di::get(clock::class)->time(),
+    'show_student_counts' => false,
     'semester' => $semester_name,
     'show_slot_info' => $number_of_slots > 1 || $slot_users,
     'slot_name' => $slot_name,
