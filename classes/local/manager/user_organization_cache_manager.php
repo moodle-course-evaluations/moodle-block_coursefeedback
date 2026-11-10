@@ -16,8 +16,6 @@
 
 namespace block_coursefeedback\local\manager;
 
-
-
 use block_coursefeedback\local\persistent\organization_user;
 
 /**
