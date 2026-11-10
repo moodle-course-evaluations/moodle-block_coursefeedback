@@ -18,11 +18,15 @@ namespace block_coursefeedback\external;
 
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
+use block_coursefeedback\local\manager\student_count_manager;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\survey_freezer;
+use block_coursefeedback\local\utils;
 use block_coursefeedback\output\survey_execution_period;
+use block_coursefeedback\task\save_student_counts_task;
 use coding_exception;
 use context_system;
+use core\clock;
 use core\di;
 use core\exception\moodle_exception;
 use core_date;
@@ -124,8 +128,9 @@ class update_survey_execution extends external_api {
             );
         }
 
-        $min = time() - 10 * $one_year;
-        $max = time() + 10 * $one_year;
+        $now = di::get(clock::class)->time();
+        $min = $now - 10 * $one_year;
+        $max = $now + 10 * $one_year;
         if ($starttime < $min || $endtime >= $max) {
             throw new moodle_exception(
                 "end_must_be_within_10_years",
@@ -157,6 +162,11 @@ class update_survey_execution extends external_api {
         $survey_execution->set('starttime', $starttime);
         $survey_execution->set('endtime', $endtime);
         $survey_execution->update();
+
+        if ($survey_execution->get('status') === survey_execution::STATUS_STARTED) {
+            // If the SE is still PLANNED, the start_surveys_task will handle this, but if it's STARTED, we may need to requeue.
+            di::get(student_count_manager::class)->queue_saving_for_se($survey_execution);
+        }
 
         $transaction->allow_commit();
 

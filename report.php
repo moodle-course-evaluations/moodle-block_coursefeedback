@@ -29,6 +29,7 @@ global $CFG, $DB, $OUTPUT, $PAGE, $USER, $SITE;
 use block_coursefeedback\local\js_util;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
+use block_coursefeedback\local\manager\student_count_manager;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\response_slot_user;
 use block_coursefeedback\local\persistent\survey_execution;
@@ -37,7 +38,6 @@ use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\persistent\teaching_event;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\utils;
-use core\clock;
 use core\di;
 use core\exception\not_found_exception;
 
@@ -144,7 +144,7 @@ if ($number_of_valid_spes > 1) {
         $notes[] = get_string('report_note_default_questionnaire', 'block_coursefeedback', $string_params);
     }
 } else if ($number_of_slots <= 1) {
-    $notes[] = get_string('report_note_all_results', 'block_coursefeedback', $string_params);
+    $notes[] = get_string('report_note_monolith', 'block_coursefeedback', $string_params);
 }
 
 if ($number_of_slots > 1) {
@@ -153,6 +153,15 @@ if ($number_of_slots > 1) {
 
 if (!$surveyexecution->has_ended()) {
     $notes[] = html_writer::tag('span', get_string('report_note_ongoing', 'block_coursefeedback'), ['class' => 'text-warning']);
+}
+
+$student_counts = di::get(student_count_manager::class)->get_saved_or_current_for_se($surveyexecution);
+if ($student_counts->as_of_timestamp > $surveyexecution->get('endtime') + 2 * 24 * 60 * 60) {
+    // This shouldn't really happen, but if the student counts we have saved for this course were collected much after the survey
+    // ended, they aren't useful and we hide them.
+    debugging("Student count timestamp $student_counts->as_of_timestamp differs far from evaluation end time " .
+        "{$surveyexecution->get('endtime')}.");
+    $student_counts = null;
 }
 
 [$se_responses, $spe_responses, $slot_responses] = utils::get_response_count_subtotals(
@@ -180,7 +189,10 @@ $template = [
     'event_name' => $event->get('name'),
     'questionnaire_name' => $questionnaire->get('name'),
     'teachers' => $teachers,
-    'show_student_counts' => false,
+    'show_student_counts' => $student_counts !== null,
+    'enrolled_student_count' => $student_counts?->enrolled,
+    'active_student_count' => $student_counts?->active,
+    'active_student_time' => $student_counts?->as_of_timestamp,
     'semester' => $semester_name,
     'show_slot_info' => $number_of_slots > 1 || $slot_users,
     'slot_name' => $slot_name,
