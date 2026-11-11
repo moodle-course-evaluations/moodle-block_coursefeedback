@@ -20,6 +20,7 @@ use context_course;
 use core\clock;
 use core\di;
 use DateInterval;
+use mysqli_native_moodle_database;
 
 /**
  * A utility class with methods that don't have a better place yet.
@@ -161,6 +162,23 @@ class utils {
     }
 
     /**
+     * Generates ROLLUP SQL compatible with the current DBMS.
+     *
+     * @param string ...$columns
+     * @return string
+     */
+    private static function sql_rollup(string ...$columns): string {
+        global $DB;
+        if ($DB instanceof mysqli_native_moodle_database) {
+            // MySQL and MariaDB (which subclasses mysqli_...) use non-standard ROLLUP syntax :(.
+            return implode(', ', $columns) . ' WITH ROLLUP';
+        } else {
+            // SQL:1999 standard syntax for all other DBMS.
+            return 'ROLLUP(' . implode(', ', $columns) . ')';
+        }
+    }
+
+    /**
      * Gets hierarchical subtotal response counts for an SE, SPE and a slot.
      *
      * The given slot must be part of the SPE, which must be part of the SE, for the results to make sense.
@@ -172,18 +190,36 @@ class utils {
      */
     public static function get_response_count_subtotals(int $se_id, int $spe_id, int $slot_id): array {
         global $DB;
+
+        // TODO: block_coursefeedback_surveyexecution_user entries will eventually be deleted, but we'd still like response rates.
+        // We can't simply count response sets because each user produces up to one response set per event.
+        // We may need to track response statistics separately.
+        $seu_count = $DB->count_records_sql("
+            SELECT COUNT(DISTINCT seu.userid)
+            FROM {block_coursefeedback_surveyexecution_user} seu
+            WHERE seu.surveyexecutionid = :se_id
+        ", ['se_id' => $se_id]);
+
+        $rollup = self::sql_rollup('spe.id', 'speo.id');
         $records = $DB->get_records_sql_menu("
-            SELECT GROUPING(spe.id) + GROUPING(speo.id), COUNT(rs.id)
+            -- Poor person's GROUPING(), which isn't supported by MariaDB.
+            SELECT (CASE WHEN spe.id IS NULL THEN 1 ELSE 0 END) + (CASE WHEN speo.id IS NULL THEN 1 ELSE 0 END), COUNT(rs.id)
             FROM {block_coursefeedback_surveyexecution} se
             JOIN {block_coursefeedback_surveypartexecution} spe ON se.id = spe.surveyexecutionid
             JOIN {block_coursefeedback_surveypartexecutionoption} speo ON spe.id = speo.surveypartexecutionid
             JOIN {block_coursefeedback_surveypartexecutionoptionresp} rs ON speo.id = rs.surveypartexecutionoptionid
             WHERE se.id = :se_id
-            GROUP BY ROLLUP (spe.id, speo.id)
-            HAVING (GROUPING(spe.id) = 1  OR spe.id = :spe_id)
-               AND (GROUPING(speo.id) = 1 OR speo.id = :slot_id)
+            GROUP BY $rollup
+            HAVING (spe.id IS NULL OR spe.id = :spe_id)
+               AND (speo.id IS NULL OR speo.id = :slot_id)
         ", ['se_id' => $se_id, 'spe_id' => $spe_id, 'slot_id' => $slot_id]);
 
-        return array_map(intval(...), [$records[2] ?? 0, $records[1] ?? 0, $records[0] ?? 0]);
+        [$se_response_sets, $spe_response_sets, $slot_response_sets] =
+            array_map(intval(...), [$records[2] ?? 0, $records[1] ?? 0, $records[0] ?? 0]);
+
+        // When students "click through" the survey without answering anything, they participation gets tracked, but no response
+        // set created. To avoid situations where the SPE response counts don't add up to the course response count, we cap the
+        // course response count at the total number of response sets.
+        return [min($seu_count, $se_response_sets), $spe_response_sets, $slot_response_sets];
     }
 }
