@@ -168,7 +168,7 @@ class block_coursefeedback extends block_base {
             }
 
             return $OUTPUT->render_from_template('block_coursefeedback/block_content', $context);
-        } catch (Exception $e) {
+        } catch (Exception | Error $e) {
             debugging($e);
         }
         return '';

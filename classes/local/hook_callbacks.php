@@ -25,6 +25,8 @@ use core\di;
 use core\hook\navigation\primary_extend;
 use core\hook\output\after_standard_main_region_html_generation;
 use core\notification;
+use Error;
+use Exception;
 use moodle_url;
 
 /**
@@ -136,7 +138,7 @@ class hook_callbacks {
             if (permission_manager::can_view_course_settings($PAGE->course, $survey_execution->get('organizationid'))) {
                 self::notify_teacher_of_survey($survey_execution);
             }
-        } catch (\Exception $e) {
+        } catch (Exception | Error $e) {
             debugging($e);
         }
     }
@@ -164,7 +166,7 @@ class hook_callbacks {
                     key: 'evaluation_administration'
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception | Error $e) {
             debugging($e);
         }
     }
