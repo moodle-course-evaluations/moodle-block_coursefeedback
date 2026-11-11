@@ -71,7 +71,7 @@ function block_coursefeedback_extend_navigation_course(
             $url = new moodle_url('/blocks/coursefeedback/course.php', ['id' => $course->id]);
             $parentnode->add(get_string("course_settings", "block_coursefeedback"), $url, key: "coursefeedback");
         }
-    } catch (\Exception $e) {
+    } catch (Exception | Error $e) {
         debugging($e);
     }
 }
