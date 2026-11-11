@@ -24,13 +24,9 @@
  */
 namespace block_coursefeedback\local\table;
 
-use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
-use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
-use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
-use context_system;
 use core\output\html_writer;
 
 defined('MOODLE_INTERNAL') || die;
@@ -106,7 +102,8 @@ class evaluations_table extends no_pagination_table {
             ])
         );
 
-        $this->candelete = has_capability('block/coursefeedback:manageorganizations', context_system::instance());
+        // Everyone that can see this table, can delete.
+        $this->candelete = true;
 
         $PAGE->requires->js_call_amd('block_coursefeedback/bulkactions_post', 'init');
     }
@@ -210,7 +207,13 @@ class evaluations_table extends no_pagination_table {
                     'class' => 'text-danger',
                     'data-confirmation' => 'modal',
                     'data-confirmation-title-str' => json_encode(['delete', 'core']),
-                    'data-confirmation-content-str' => json_encode(['areyousure']),
+                    'data-confirmation-content-str' => json_encode([
+                        $row->status === survey_execution::STATUS_PLANNED ?
+                            'are_you_sure_delete_pending_evaluation' :
+                            'are_you_sure_delete_running_evaluation',
+                        'block_coursefeedback',
+                        $row->name,
+                    ]),
                     'data-confirmation-yes-button-str' => json_encode(['delete', 'core']),
                 ],
             );

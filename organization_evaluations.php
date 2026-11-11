@@ -23,13 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\manager\survey_execution_manager;
-use block_coursefeedback\local\persistent\organization;
-use block_coursefeedback\local\persistent\organization_category;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\table\evaluations_table;
 use core\di;
@@ -67,7 +64,7 @@ if ($action) {
     require_sesskey();
     switch ($action) {
         case 'delete':
-            require_capability('block/coursefeedback:manageorganizations', $context);
+            // Permission to manage organization is already required.
             $courseids = required_param_array('selected', PARAM_INT);
 
             [$insql, $inparams] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
