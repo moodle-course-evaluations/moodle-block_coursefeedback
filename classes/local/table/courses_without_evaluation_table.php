@@ -63,7 +63,7 @@ class courses_without_evaluation_table extends no_pagination_table {
         $semester_join = course_semester_mapping::get_instance()->get_filter_sql_for_semester($semester);
         $organization_join = course_organization_mapping::get_instance()->get_filter_sql_for_organization($organization);
         $this->set_sql(
-            "c.id, fullname as name, shortname",
+            "c.id, fullname as name, shortname, idnumber",
             "{course} c
             $semester_join->joins
             $organization_join->joins
@@ -72,7 +72,7 @@ class courses_without_evaluation_table extends no_pagination_table {
             ['orgsemid' => $orgsem->get('id'), ...$semester_join->params, ...$organization_join->params],
         );
         $this->column_nosort = ['checkbox', 'tools'];
-        $this->define_columns(['checkbox', 'name', 'tools']);
+        $this->define_columns(['checkbox', 'name', 'idnumber', 'tools']);
         $this->define_headers([
             $OUTPUT->render(new \core\output\checkbox_toggleall('coursefeedback-courses_without_evaluation', true, [
                 'name' => 'select-all-courses_without_evaluation',
@@ -82,6 +82,7 @@ class courses_without_evaluation_table extends no_pagination_table {
                 'checked' => false,
             ])),
             get_string('name', 'block_coursefeedback'),
+            get_string('idnumber'),
             get_string('tools', 'block_coursefeedback'),
         ]);
 

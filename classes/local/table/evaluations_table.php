@@ -69,14 +69,14 @@ class evaluations_table extends no_pagination_table {
         // execution.
         // TODO: Warn about courses that don't belong to this organization or semester anymore.
         $this->set_sql(
-            "c.id as courseid, c.fullname as name, se.starttime, se.endtime, se.status ",
+            "c.id as courseid, c.fullname as name, c.idnumber, se.starttime, se.endtime, se.status ",
             "{course} c
             JOIN {" . survey_execution::TABLE . "} se ON se.courseid = c.id",
             "se.orgsemid = :orgsemid",
             ['orgsemid' => $orgsem->get('id')],
         );
         $this->column_nosort = ['checkbox', 'tools'];
-        $this->define_columns(['checkbox', 'name', 'starttime', 'status', 'tools']);
+        $this->define_columns(['checkbox', 'name', 'idnumber', 'starttime', 'status', 'tools']);
         $this->define_headers([
             $OUTPUT->render(new \core\output\checkbox_toggleall('coursefeedback-courses_with_evaluation', true, [
                 'name' => 'select-all-courses_with_evaluation',
@@ -86,6 +86,7 @@ class evaluations_table extends no_pagination_table {
                 'checked' => false,
             ])),
             get_string('name', 'block_coursefeedback'),
+            get_string('idnumber'),
             get_string('evaluation_period', 'block_coursefeedback'),
             get_string('status'),
             get_string('tools', 'block_coursefeedback'),
