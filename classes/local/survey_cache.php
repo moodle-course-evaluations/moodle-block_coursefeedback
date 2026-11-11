@@ -111,6 +111,10 @@ class survey_cache {
         // Cache that there is an ongoing survey.
         $survey_languages = survey_languages::from_survey_execution($survey_execution);
         $this->cache->set($course->id, $survey_languages);
+        if (!$survey_languages->languages) {
+            debugging("Survey has no languages.");
+            return null;
+        }
 
         $lang = language_manager::find_preferred_language($survey_languages->languages);
 
@@ -148,6 +152,11 @@ class survey_cache {
                 $this->evict_by_courseid($course->id);
                 $this->cache->set($course->id, $cached_data->survey_execution);
                 return $cached_data->survey_execution;
+            }
+
+            if (!$cached_data->languages) {
+                debugging('Survey has no languages');
+                return null;
             }
 
             $lang = language_manager::find_preferred_language($cached_data->languages);
