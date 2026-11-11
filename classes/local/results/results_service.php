@@ -16,6 +16,7 @@
 
 namespace block_coursefeedback\local\results;
 
+use block_coursefeedback\local\manager\student_count_manager;
 use block_coursefeedback\local\multilang_string;
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\organization_semester;
@@ -23,15 +24,28 @@ use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\utils;
 use core\exception\coding_exception;
+use DateTimeImmutable;
 
 /**
- * block_coursefeedback results_service.php description here.
+ * Collects org-wide results.
  *
- * @package    block_coursefeedback
- * @copyright  2026  <>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     block_coursefeedback
+ * @copyright   2026 innoCampus, Technische Universität Berlin
+ * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class results_service {
+
+    /**
+     * Constructor.
+     *
+     * @param student_count_manager $student_count_manager
+     */
+    public function __construct(
+        /** @var student_count_manager */
+        private readonly student_count_manager $student_count_manager,
+    ) {
+    }
 
     /**
      * Gets CSV rows for the organization overview.
@@ -46,7 +60,7 @@ class results_service {
 
         $eventtypes = eventtype::get_records(['orgsemid' => $orgsem->get('id')]);
 
-        $header = ['course_id', 'course_fullname', 'enrolled_users', 'active_users'];
+        $header = ['course_id', 'course_fullname', 'enrolled_users', 'active_users', 'active_as_of_utc'];
         if ($has_default_questionnaire) {
             $header[] = 'default_questionnaire_responses';
         }
@@ -97,14 +111,19 @@ class results_service {
             }
         }
 
-        $course_user_counts = utils::get_course_student_counts(array_keys($courses));
+        $course_user_counts = $this->student_count_manager->get_only_saved_for_many_courses(array_keys($courses));
 
         $rows = [$header];
         foreach ($courses as $courseid => $course) {
+            $active_user_timestamp_iso8601 = isset($course_user_counts[$courseid])
+                ? DateTimeImmutable::createFromFormat('U', $course_user_counts[$courseid]->as_of_timestamp)->format("Y-m-d H:i:s")
+                : null;
+
             $row = [
                 $courseid, $course['fullname'],
-                $course_user_counts[$courseid]?->enrolled_count ?? 0,
-                $course_user_counts[$courseid]?->recently_active_count ?? 0,
+                ($course_user_counts[$courseid] ?? null)?->enrolled,
+                ($course_user_counts[$courseid] ?? null)?->active,
+                $active_user_timestamp_iso8601,
             ];
 
             if ($has_default_questionnaire) {

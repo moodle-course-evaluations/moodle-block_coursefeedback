@@ -111,16 +111,16 @@
                     </p>
 
                     {{#show_student_counts}}
-                        <p>
-                            <strong>{{#str}}students{{/str}}</strong>
-                            <br>
-                            {{#str}}enrolled, block_coursefeedback{{/str}}: {{enrolled_student_count}} <br>
-                            {{#str}}active, block_coursefeedback{{/str}}: {{active_student_count}} <br>
-                            <small><em>{{#str}}as_of, block_coursefeedback, {{#userdate}}
-                                {{active_student_time}},
-                                {{#str}} strftimedatetimeshort, core_langconfig {{/str}}
-                            {{/userdate}}{{/str}}</em></small>
-                        </p>
+                    <p>
+                        <strong>{{#str}}students{{/str}}</strong>
+                        <br>
+                        {{#str}}enrolled, block_coursefeedback{{/str}}: {{enrolled_student_count}} <br>
+                        {{#str}}active, block_coursefeedback{{/str}}: {{active_student_count}} <br>
+                        <small><em>{{#str}}as_of, block_coursefeedback, {{#userdate}}
+                            {{active_student_time}},
+                            {{#str}} strftimedatetimeshort, core_langconfig {{/str}}
+                        {{/userdate}}{{/str}}</em></small>
+                    </p>
                     {{/show_student_counts}}
                 </section>
             </div>
