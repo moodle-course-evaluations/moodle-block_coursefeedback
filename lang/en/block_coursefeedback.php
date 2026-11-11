@@ -92,6 +92,7 @@ $string['default_event_type'] = 'Default for organization';
 $string['default_questionnaire_frozen'] = 'The default questionnaire cannot be changed because it is used in ongoing and/or past surveys in the following courses: {$a}';
 $string['default_questionnaire_parens'] = '(Default questionnaire)';
 $string['default_survey_period'] = 'Default survey period';
+$string['default_surveypart_always_shown'] = 'Default questionnaire shown before configured teaching event questionnaires';
 $string['default_surveypart_for_courses_without_eventtype'] = 'Default questionnaire for courses with no event type';
 $string['define_evaluation_period_before'] = 'Please define the evaluation period before defining any surveys';
 $string['define_rub_eventtype_mapping'] = 'Map Campus course types to event types';

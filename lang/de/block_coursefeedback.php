@@ -91,6 +91,7 @@ $string['default_event_type'] = 'Organisations-Standard';
 $string['default_questionnaire_frozen'] = 'Der Standard-Fragebogen wird in laufenden oder vergangenen Evaluationen in den folgenden Kursen verwendet und kann daher nicht verändert werden: {$a}';
 $string['default_questionnaire_parens'] = '(Standard-Fragebogen)';
 $string['default_survey_period'] = 'Standard-Evaluationszeitraum';
+$string['default_surveypart_always_shown'] = 'Standard-Fragebogen, der veranstaltungsspezifischen Fragebögen vorangestellt wird';
 $string['default_surveypart_for_courses_without_eventtype'] = 'Standard-Fragebogen für Kurse ohne konfigurierte Veranstaltungen';
 $string['define_evaluation_period_before'] = 'Bitte setzen Sie zuerst den Evaluationszeitraum, bevor Sie Kurse hinzufügen';
 $string['define_rub_eventtype_mapping'] = 'Verknüpfung von RUB-Campus-Veranstaltungsarten und Veranstaltungsarten für die Evaluation';

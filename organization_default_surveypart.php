@@ -160,6 +160,7 @@ $renderer->render_organization_page(
         'formurl' => $PAGE->url->out(false),
         'sesskey' => sesskey(),
         'returnurl' => $PAGE->url->out(false),
+        'always_show_default_sp' => $orgsem->get('always_show_default_sp'),
         'default_surveypart_chooser_context' => (new surveypart_chooser(
             $surveyparts,
             $orgsem->get('default_surveypartid'),
