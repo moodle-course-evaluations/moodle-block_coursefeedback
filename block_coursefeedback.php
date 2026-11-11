@@ -57,12 +57,12 @@ class block_coursefeedback extends block_base {
      * Get template context for the report section.
      *
      * @param survey_execution_data $survey_execution_data
-     * @param bool $can_view_course_settings
+     * @param bool $is_evaluation_teacher
      * @return array
      */
     private function get_report_template_context(
         survey_execution_data $survey_execution_data,
-        bool $can_view_course_settings
+        bool $is_evaluation_teacher
     ): array {
         global $USER;
 
@@ -87,7 +87,7 @@ class block_coursefeedback extends block_base {
                         }
                     }
                 } else {
-                    $canseeslot = $can_view_course_settings;
+                    $canseeslot = $is_evaluation_teacher;
                 }
 
                 if ($canseeslot) {
@@ -140,7 +140,11 @@ class block_coursefeedback extends block_base {
             );
 
             if ($survey_execution->get('status') == survey_execution::STATUS_STARTED) {
-                $template_events = $this->get_report_template_context($survey_execution_data, $can_view_course_settings);
+                $is_evaluation_teacher = has_capability(
+                    'block/coursefeedback:viewcourseresults',
+                    context_course::instance($this->page->course->id)
+                );
+                $template_events = $this->get_report_template_context($survey_execution_data, $is_evaluation_teacher);
             } else {
                 $template_events = [];
             }
