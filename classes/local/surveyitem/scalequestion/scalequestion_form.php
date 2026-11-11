@@ -22,11 +22,13 @@
  * @copyright   2025 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\surveyitem\scalequestion;
 
 use block_coursefeedback\local\surveyitem\surveyitem_form;
 use coding_exception;
 use dml_exception;
+
 use function get_string;
 
 /**

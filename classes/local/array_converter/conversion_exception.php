@@ -18,7 +18,6 @@ namespace block_coursefeedback\local\array_converter;
 
 use core\exception\moodle_exception;
 
-
 /**
  * Exception class for {@see array_converter}.
  *

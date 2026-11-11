@@ -38,6 +38,17 @@ use core\exception\coding_exception;
 class survey_execution_manager {
 
     /**
+     * Constructor.
+     *
+     * @param student_count_manager $student_count_manager
+     */
+    public function __construct(
+        /** @var student_count_manager */
+        private readonly student_count_manager $student_count_manager,
+    ) {
+    }
+
+    /**
      * Deletes all responses for the given $responseslotids.
      * @param int[] $responseslotids
      * @return void
@@ -101,6 +112,8 @@ class survey_execution_manager {
         $DB->delete_records_list(survey_part_execution::TABLE, 'id', array_column($records, 'spe_id'));
         $DB->delete_records_list(teaching_event::TABLE, 'id', array_column($records, 'spe_eventid'));
         $survey_execution->delete();
+
+        $this->student_count_manager->dequeue_by_courseid($survey_execution->get('courseid'));
 
         $transaction->allow_commit();
     }

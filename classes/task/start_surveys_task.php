@@ -16,6 +16,7 @@
 
 namespace block_coursefeedback\task;
 
+use block_coursefeedback\local\manager\student_count_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\response_slot;
@@ -25,6 +26,7 @@ use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\persistent\teaching_event;
 use block_coursefeedback\local\survey_cache;
 use block_coursefeedback\local\survey_execution_data;
+use block_coursefeedback\local\utils;
 use core\di;
 use core\task\scheduled_task;
 
@@ -152,6 +154,8 @@ class start_surveys_task extends scheduled_task {
             }
             $se->set('status', survey_execution::STATUS_STARTED);
             $se->save();
+
+            di::get(student_count_manager::class)->queue_saving_for_se($se);
 
             $transaction->allow_commit();
 

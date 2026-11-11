@@ -16,11 +16,16 @@
 
 namespace block_coursefeedback\local;
 
+use block_coursefeedback\local\persistent\survey_execution;
 use context_course;
 use core\clock;
 use core\di;
+use core\exception\coding_exception;
 use DateInterval;
 use mysqli_native_moodle_database;
+use DateInvalidOperationException;
+use DateTime;
+use DateTimeImmutable;
 
 /**
  * A utility class with methods that don't have a better place yet.
@@ -51,16 +56,6 @@ class utils {
             }
         }
         return $result;
-    }
-
-    /**
-     * Returns the interval in which a user must have visited a course in order to be considered an active user of it.
-     *
-     * @return DateInterval
-     */
-    public static function get_active_user_interval(): DateInterval {
-        // TODO: Probably make this configurable, but at what level?
-        return new DateInterval('P2W');
     }
 
     /**
@@ -120,45 +115,6 @@ class utils {
         }
 
         return array_values($users);
-    }
-
-    /**
-     * Gets the number of enrolled and the number of active students for the given course IDs.
-     *
-     * @param array $courseids
-     * @return array<int, object{enrolled_count: int, recently_active_count: int}>
-     */
-    public static function get_course_student_counts(array $courseids): array {
-        if (!$courseids) {
-            return [];
-        }
-
-        global $DB;
-        [$in_courseids_sql, $in_courseids_params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-
-        $active_user_cutoff = di::get(clock::class)->now()->sub(self::get_active_user_interval())->getTimestamp();
-
-        return $DB->get_records_sql("
-            SELECT ctx.instanceid,
-                   COUNT(DISTINCT rar.userid) AS enrolled_count,
-                   COUNT(DISTINCT ul.userid) AS recently_active_count
-            FROM {context} ctx
-                LEFT JOIN (
-                    SELECT ra.userid, ra.contextid
-                    FROM {role_assignments} ra
-                    JOIN {role} r ON r.id = ra.roleid AND r.archetype = 'student'
-                ) rar ON rar.contextid = ctx.id
-                LEFT JOIN {user_lastaccess} ul
-                       ON ul.courseid = ctx.instanceid
-                           AND ul.userid = rar.userid
-                           AND ul.timeaccess >= :active_user_cutoff
-            WHERE ctx.instanceid $in_courseids_sql AND ctx.contextlevel = :context_level_course
-            GROUP BY ctx.instanceid
-        ", [
-            ...$in_courseids_params,
-            'context_level_course' => CONTEXT_COURSE,
-            'active_user_cutoff' => $active_user_cutoff,
-        ]);
     }
 
     /**

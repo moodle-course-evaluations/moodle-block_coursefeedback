@@ -24,6 +24,7 @@ use block_coursefeedback\local\persistent\organization_semester;
 use core\exception\coding_exception;
 use core\exception\moodle_exception;
 use core\exception\not_found_exception;
+
 use function array_filter;
 use function array_map;
 use function array_reverse;

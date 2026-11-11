@@ -22,6 +22,7 @@
  * @copyright   2026 Moodle.NRW, Ruhr-Universität Bochum
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_coursefeedback\local\table;
 
 use block_coursefeedback\local\persistent\organization;
