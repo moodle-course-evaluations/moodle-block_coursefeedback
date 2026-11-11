@@ -30,6 +30,7 @@ use block_coursefeedback\local\course_semester_mapping\evaluation_semester;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\survey_execution;
+use core\dml\sql_join;
 use core\output\html_writer;
 
 defined('MOODLE_INTERNAL') || die;
@@ -54,13 +55,20 @@ class courses_without_evaluation_table extends no_pagination_table {
      *
      * @param organization $organization
      * @param organization_semester $orgsem
-     * @param evaluation_semester $semester
+     * @param evaluation_semester|null $semester
      */
-    public function __construct(organization $organization, organization_semester $orgsem, evaluation_semester $semester) {
+    public function __construct(organization $organization, organization_semester $orgsem, ?evaluation_semester $semester) {
         global $OUTPUT, $PAGE;
         parent::__construct('block_coursefeedback-courses_without_evaluation');
         $this->define_baseurl($PAGE->url);
-        $semester_join = course_semester_mapping::get_instance()->get_filter_sql_for_semester($semester);
+        if ($semester) {
+            $semester_join = course_semester_mapping::get_instance()->get_filter_sql_for_semester($semester);
+        } else {
+            // There's an orphaned orgsem, but the semester isn't known by the implementation. We support this just to allow
+            // existing SEs to continue, so we pretend there are no courses without evaluations in this semester.
+            $semester_join = new sql_join(wheres: '1 = 0', cannotmatchanyrows: true);
+        }
+
         $organization_join = course_organization_mapping::get_instance()->get_filter_sql_for_organization($organization);
         $this->set_sql(
             "c.id, fullname as name, shortname, idnumber",
