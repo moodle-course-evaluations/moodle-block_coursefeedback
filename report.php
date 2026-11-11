@@ -24,46 +24,78 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-global $CFG, $DB, $OUTPUT, $PAGE, $USER;
+global $CFG, $DB, $OUTPUT, $PAGE, $USER, $SITE;
 
-use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\js_util;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\response_slot_user;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
+use block_coursefeedback\local\persistent\surveypart;
+use block_coursefeedback\local\persistent\teaching_event;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
+use block_coursefeedback\local\utils;
+use core\clock;
+use core\di;
+use core\exception\not_found_exception;
 
 require_login();
 
-$surveypartexecutionoptionid = required_param('id', PARAM_INT);
-$slot = response_slot::get_record(['id' => $surveypartexecutionoptionid], MUST_EXIST);
-$surveypartexecution = survey_part_execution::get_record(['id' => $slot->get('surveypartexecutionid')], MUST_EXIST);
-$surveyexecution = survey_execution::get_record(['id' => $surveypartexecution->get('surveyexecutionid')], MUST_EXIST);
+$slot_id = required_param('id', PARAM_INT);
 
-$slot_users = response_slot_user::get_records(['surveypartexecutionoptionid' => $slot->get('id')]);
-$slot_user_ids = array_map(fn ($slot_user) => $slot_user->get('userid'), $slot_users);
-$number_of_slots = response_slot::count_records(['surveypartexecutionid' => $surveypartexecution->get('id')]);
+$PAGE->set_url(new moodle_url('/blocks/coursefeedback/report.php'), ['id' => $slot_id]);
+
+$slot_fields = response_slot::get_sql_fields('slot', 'slot_');
+$spe_fields = survey_part_execution::get_sql_fields('spe', 'spe_');
+$se_fields = survey_execution::get_sql_fields('se', 'se_');
+$te_fields = teaching_event::get_sql_fields('te', 'te_');
+$sp_fields = surveypart::get_sql_fields('sp', 'sp_');
+
+$record = $DB->get_record_sql("
+    SELECT $slot_fields, $spe_fields, $sp_fields, $se_fields, $te_fields
+    FROM {" . response_slot::TABLE . "} slot
+    JOIN {" . survey_part_execution::TABLE . "} spe ON spe.id = slot.surveypartexecutionid
+    JOIN {" . surveypart::TABLE . "} sp ON sp.id = spe.surveypartid
+    JOIN {" . survey_execution::TABLE . "} se ON se.id = spe.surveyexecutionid
+    JOIN {" . teaching_event::TABLE . "} te ON te.id = spe.eventid
+    WHERE slot.id = :slot_id
+", ['slot_id' => $slot_id]);
+if (!$record) {
+    throw new not_found_exception('response slot', $slot_id);
+}
+
+$slot = response_slot::extract($record, 'slot_');
+$spe = survey_part_execution::extract($record, 'spe_');
+$questionnaire = surveypart::extract($record, 'sp_');
+$surveyexecution = survey_execution::extract($record, 'se_');
+$event = teaching_event::extract($record, 'te_');
 
 $context = context_course::instance($surveyexecution->get('courseid'));
-$organization = organization::get_record(['id' => $surveyexecution->get('organizationid')], MUST_EXIST);
+$PAGE->set_context($context);
+
+$slot_users = response_slot_user::get_users($slot->get('id'), \core_user\fields::for_name());
+
+$number_of_slots = response_slot::count_records(['surveypartexecutionid' => $spe->get('id')]);
+$number_of_valid_spes = survey_part_execution::count_records_select(
+    'surveyexecutionid = :se_id AND surveypartid IS NOT NULL',
+    ['se_id' => $surveyexecution->get('id')]
+);
+
+[$organization, $semester, $orgsem] = di::get(semester_manager::class)
+    ->get_triplet_by_orgsemid($surveyexecution->get('organizationid'), $surveyexecution->get('orgsemid'));
 
 if (!permission_manager::can_manage_organization($organization)) {
     if ($slot_users || $number_of_slots >= 2) {
         // Require user to be in $slot_users.
-        if (
-            !in_array($USER->id, $slot_user_ids)
-        ) {
-            throw new \core\exception\moodle_exception('not_on_allowed_list', 'block_coursefeedback');
+        if (!isset($slot_users[$USER->id])) {
+            throw new moodle_exception('not_on_allowed_list', 'block_coursefeedback');
         }
     } else {
         require_capability('block/coursefeedback:viewcourseresults', $context);
     }
 }
-
-$PAGE->set_context($context);
 
 $course = get_course($surveyexecution->get('courseid'));
 // We've checked that the user is allowed to see the report, but they might not be allowed to see the course.
@@ -74,7 +106,6 @@ if (can_access_course($course, onlyactive: true)) {
 
 $title = get_string('report', 'block_coursefeedback');
 
-$PAGE->set_url(new moodle_url('/blocks/coursefeedback/report.php'), ['id' => $surveypartexecutionoptionid]);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_heading($title);
 $PAGE->set_title($title);
@@ -85,19 +116,79 @@ if ($data !== null) {
     js_util::js_call_amd('block_coursefeedback/report', 'init', [$data]);
 }
 
-if ($slot_users) {
-    $users = $DB->get_records_list('user', 'id', $slot_user_ids);
-    $usernames = array_map(fn ($user) => fullname($user), $users);
-} else if (has_capability('block/coursefeedback:viewcourseresults', $context)) {
-    $usernames = [fullname($USER)];
+$teachers = utils::get_evaluation_teachers_and_roles_in_course($course->id);
+
+$semester_name = $semester?->name ?? $orgsem->get('semestername');
+if ($slot->get('name') && $slot->get('name') !== '-') {
+    $slot_name = s($slot->get('name'));
 } else {
-    $usernames = [];
+    $slot_name = html_writer::tag('em', get_string('unnamed_slot', 'block_coursefeedback'));
+}
+
+$string_params = [
+    'sitename' => s($SITE->shortname),
+    'coursename' => s($course->fullname),
+    'eventname' => s($event->get('name')),
+    'slotname' => $slot_name,
+];
+
+$subtitle = $event->get('eventtypeid')
+    ? get_string('report_subtitle_event', 'block_coursefeedback', $string_params)
+    : get_string('report_subtitle_default', 'block_coursefeedback', $string_params);
+
+$notes = [];
+if ($number_of_valid_spes > 1) {
+    if ($event->get('eventtypeid')) {
+        $notes[] = get_string('report_note_event_questionnaire', 'block_coursefeedback', $string_params);
+    } else {
+        $notes[] = get_string('report_note_default_questionnaire', 'block_coursefeedback', $string_params);
+    }
+} else if ($number_of_slots <= 1) {
+    $notes[] = get_string('report_note_all_results', 'block_coursefeedback', $string_params);
+}
+
+if ($number_of_slots > 1) {
+    $notes[] = get_string('report_note_slot', 'block_coursefeedback', $string_params);
+}
+
+if (!$surveyexecution->has_ended()) {
+    $notes[] = html_writer::tag('span', get_string('report_note_ongoing', 'block_coursefeedback'), ['class' => 'text-warning']);
+}
+
+[$se_responses, $spe_responses, $slot_responses] = utils::get_response_count_subtotals(
+    $surveyexecution->get('id'),
+    $spe->get('id'),
+    $slot->get('id'),
+);
+
+// We're always primarily interested in the number of responses included in this report, i.e. are the slot responses.
+$primary_response_count = $slot_responses;
+$secondary_response_counts = [];
+if ($number_of_slots > 1) {
+    // If there are more slots in this SPE, also show the SPE subtotal.
+    $secondary_response_counts[] = get_string('of_responses_in_this_event', 'block_coursefeedback', $spe_responses);
+}
+if ($number_of_slots > 1 || $number_of_valid_spes > 1) {
+    // If there are more slots in this course, also show the course total.
+    $secondary_response_counts[] = get_string('of_responses_in_this_course', 'block_coursefeedback', $se_responses);
 }
 
 $template = [
-    'coursename' => get_course($surveyexecution->get('courseid'))->fullname,
-    'usernames' => join(", ", $usernames),
-    'semester' => course_semester_mapping::get_instance()->get_current_semester()->name,
+    'subtitle' => $subtitle,
+    'evaluation_starttime' => $surveyexecution->get('starttime'),
+    'evaluation_endtime' => $surveyexecution->get('endtime'),
+    'event_name' => $event->get('name'),
+    'questionnaire_name' => $questionnaire->get('name'),
+    'teachers' => $teachers,
+    'show_student_counts' => false,
+    'semester' => $semester_name,
+    'show_slot_info' => $number_of_slots > 1 || $slot_users,
+    'slot_name' => $slot_name,
+    'slot_users' => implode(', ', array_map(fullname(...), array_values($slot_users))),
+    'show_notes' => count($notes) > 0,
+    'notes' => $notes,
+    'primary_response_count' => $primary_response_count,
+    'secondary_response_counts' => $secondary_response_counts,
 ];
 
 if ($data === null) {

@@ -22,9 +22,7 @@ use block_coursefeedback\local\persistent\organization_semester;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\utils;
-use core\clock;
 use core\exception\coding_exception;
-use DateInterval;
 
 /**
  * block_coursefeedback results_service.php description here.
@@ -34,16 +32,6 @@ use DateInterval;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class results_service {
-
-    /**
-     * Constructor.
-     * @param clock $clock
-     */
-    public function __construct(
-        /** @var clock $clock */
-        private readonly clock $clock
-    ) {
-    }
 
     /**
      * Gets CSV rows for the organization overview.
@@ -109,33 +97,14 @@ class results_service {
             }
         }
 
-        [$in_courseids_sql, $in_courseids_params] = $DB->get_in_or_equal(array_keys($courses), SQL_PARAMS_NAMED);
-
-        $course_user_records = $DB->get_records_sql("
-            SELECT c.id,
-                   COUNT(DISTINCT ra.userid) AS enrolled_count,
-                   COUNT(DISTINCT ul.userid) AS recently_active_count
-            FROM {course} c
-                 JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = 50
-                 JOIN {role_assignments} ra ON ra.contextid = ctx.id
-                 JOIN {role} r ON r.id = ra.roleid AND r.archetype = 'student'
-                 LEFT JOIN {user_lastaccess} ul
-                           ON ul.courseid = c.id
-                               AND ul.userid = ra.userid
-                               AND ul.timeaccess >= :active_user_cutoff
-            WHERE c.id $in_courseids_sql
-            GROUP BY c.id
-        ", [
-            ...$in_courseids_params,
-            'active_user_cutoff' => $this->clock->now()->sub(new DateInterval('P2W'))->getTimestamp(),
-        ]);
+        $course_user_counts = utils::get_course_student_counts(array_keys($courses));
 
         $rows = [$header];
         foreach ($courses as $courseid => $course) {
             $row = [
                 $courseid, $course['fullname'],
-                $course_user_records[$courseid]?->enrolled_count ?? 0,
-                $course_user_records[$courseid]?->recently_active_count ?? 0,
+                $course_user_counts[$courseid]?->enrolled_count ?? 0,
+                $course_user_counts[$courseid]?->recently_active_count ?? 0,
             ];
 
             if ($has_default_questionnaire) {
