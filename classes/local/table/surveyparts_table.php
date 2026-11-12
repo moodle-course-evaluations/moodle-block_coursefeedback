@@ -73,6 +73,7 @@ class surveyparts_table extends \table_sql {
     public function col_name($row) {
         return \html_writer::link(
             new moodle_url('/blocks/coursefeedback/surveypart.php', ['id' => $row->id]),
+            // TODO: This _should_ be safe, but it would be prudent to clean anyway.
             $row->name
         );
     }
