@@ -25,6 +25,7 @@
 namespace block_coursefeedback\local\manager;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_user;
 use block_coursefeedback\local\persistent\surveypart;
 use context_course;
 use context_system;
@@ -83,7 +84,9 @@ class permission_manager {
         }
 
         $organization_id = is_int($organization) ? $organization : $organization->get('id');
-        return user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_for($organization_id);
+
+        global $DB, $USER;
+        return $DB->record_exists(organization_user::TABLE, ['userid' => $USER->id, 'organizationid' => $organization_id]);
     }
 
     /**
@@ -186,5 +189,15 @@ class permission_manager {
         $context = context_course::instance($course->id);
         return has_capability('block/coursefeedback:viewcoursesettings', $context)
             || self::can_manage_organization($organization);
+    }
+
+    /**
+     * Returns if the user is evaluation coordinator for any organization.
+     *
+     * @return bool
+     */
+    public static function is_user_evaluation_coordinator_anywhere(): bool {
+        global $DB, $USER;
+        return $DB->record_exists(organization_user::TABLE, ['userid' => $USER->id]);
     }
 }

@@ -24,7 +24,6 @@
  */
 
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\user_organization_cache_manager;
 use core\exception\moodle_exception;
 
 require_once(__DIR__ . '/../../config.php');
@@ -47,7 +46,7 @@ echo $OUTPUT->header();
 
 if (
     has_capability('block/coursefeedback:manageorganizations', $context)
-    || user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_anywhere()
+    || permission_manager::is_user_evaluation_coordinator_anywhere()
 ) {
     echo \core\output\html_writer::link(
         new moodle_url('/blocks/coursefeedback/organizations.php'),
