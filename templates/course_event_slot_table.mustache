@@ -198,6 +198,9 @@
             <th scope="col">{{! Slot delete button. }}</th>
         </tr>
         </thead>
+        {{#default_sp_placeholder_text}}
+            <tr><td colspan="6">{{{.}}}</td></tr>
+        {{/default_sp_placeholder_text}}
         {{#events}}
             <tbody x-data='event({{id}})' data-eventname="{{name}}">
             <tr x-data='slot({{survey_part_execution.first_slot.id}})' data-slotname="{{survey_part_execution.first_slot.name}}">
