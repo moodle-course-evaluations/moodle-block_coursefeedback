@@ -31,7 +31,6 @@ use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\output\surveypart_chooser;
 use core\di;
-use core\exception\not_found_exception;
 
 require_once(__DIR__ . '/../../config.php');
 global $CFG, $OUTPUT, $PAGE;
@@ -83,12 +82,13 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     foreach ($addedids as $addedid) {
         $eventtypename = required_param("name-new-$addedid", PARAM_TEXT);
         $surveypartid = required_param("surveypart-new-$addedid", PARAM_INT);
+        $active = required_param("active-new-$addedid", PARAM_BOOL);
         if (!isset($surveyparts[$surveypartid])) {
             $surveypartid = null;
         }
         $neweventtype = new eventtype(0, (object) [
             'name' => $eventtypename,
-            'active' => true,
+            'active' => $active,
             'surveypartid' => $surveypartid,
             'orgsemid' => $orgsem->get('id'),
         ]);
@@ -97,11 +97,16 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     foreach ($eventtypes as $eventtype) {
         $eventtypename = required_param("name-" . $eventtype->get('id'), PARAM_TEXT);
         $surveypartid = required_param("surveypart-" . $eventtype->get('id'), PARAM_INT);
+        $active = required_param("active-" . $eventtype->get('id'), PARAM_BOOL);
         if (!isset($surveyparts[$surveypartid])) {
             $surveypartid = null;
         }
 
-        if ($eventtype->get('name') === $eventtypename && $eventtype->get('surveypartid') === $surveypartid) {
+        if (
+            $eventtype->get('name') === $eventtypename
+            && $eventtype->get('surveypartid') === $surveypartid
+            && $eventtype->get('active') === $active
+        ) {
             continue;
         }
 
@@ -111,6 +116,7 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
 
         $eventtype->set('name', $eventtypename);
         $eventtype->set('surveypartid', $surveypartid);
+        $eventtype->set('active', $active);
         $eventtype->update();
     }
 
@@ -129,6 +135,9 @@ if (optional_param('submit', null, PARAM_ALPHA)) {
     redirect($PAGE->url);
 }
 
+/** @var block_coursefeedback_renderer $renderer */
+$renderer = $PAGE->get_renderer('block_coursefeedback');
+
 $PAGE->requires->js_call_amd(
     'block_coursefeedback/organization_default_surveypart',
     'init',
@@ -138,6 +147,7 @@ $PAGE->requires->js_call_amd(
 $template_eventtypes = array_map(fn ($eventtype) => [
     'id' => $eventtype->get('id'),
     'name' => $eventtype->get('name'),
+    'active' => $eventtype->get('active'),
     'surveypart_chooser_context' => (new surveypart_chooser(
         $surveyparts,
         $eventtype->get('surveypartid'),
@@ -148,15 +158,12 @@ $template_eventtypes = array_map(fn ($eventtype) => [
 
 echo $OUTPUT->header();
 
-/** @var block_coursefeedback_renderer $renderer */
-$renderer = $PAGE->get_renderer('block_coursefeedback');
-
 $renderer->render_organization_page(
     $organization,
     $semester,
     $orgsem,
     'eventtypes',
-    $OUTPUT->render_from_template('block_coursefeedback/organization_default_surveypart', [
+    $renderer->render_from_template('block_coursefeedback/organization_default_surveypart', [
         'formurl' => $PAGE->url->out(false),
         'sesskey' => sesskey(),
         'returnurl' => $PAGE->url->out(false),

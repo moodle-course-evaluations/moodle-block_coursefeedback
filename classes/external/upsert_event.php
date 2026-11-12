@@ -29,6 +29,7 @@ use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\output\course_event_slot_table;
 use coding_exception;
 use core\di;
+use core\exception\moodle_exception;
 use core_external\external_api;
 use core_external\external_description;
 use core_external\external_function_parameters;
@@ -90,9 +91,10 @@ class upsert_event extends external_api {
         self::validate_context(\context_system::instance());
         $course = get_course($courseid);
 
-        [$organization, $semester, $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($course);
+        [$organization, , $orgsem] = di::get(semester_manager::class)->get_triplet_by_course($course);
 
         permission_manager::require_edit_course_surveysettings($course, $organization);
+        $can_manage_organization = permission_manager::can_manage_organization($organization);
 
         $freezer = di::get(survey_freezer::class);
 
@@ -105,16 +107,21 @@ class upsert_event extends external_api {
         ], MUST_EXIST);
 
         if ($eventid) {
-            self::update_event($courseid, $survey_execution, $eventtype, $name, $eventid);
+            self::update_event($courseid, $survey_execution, $eventtype, $name, $can_manage_organization, $eventid);
         } else {
-            self::create_event($courseid, $survey_execution, $eventtype, $name);
+            self::create_event($courseid, $survey_execution, $eventtype, $name, $can_manage_organization);
         }
 
         $transaction->allow_commit();
 
         di::get(survey_cache::class)->evict_by_courseid($course->id);
         $data = survey_execution_data::load_from_course_required($course);
-        $table = new course_event_slot_table($data, $course, is_frozen: $freezer->is_se_frozen($data->survey_execution));
+        $table = new course_event_slot_table(
+            $data,
+            $course,
+            is_frozen: $freezer->is_se_frozen($data->survey_execution),
+            include_inactive_event_types: $can_manage_organization
+        );
 
         return [
             'new_table_html' => $OUTPUT->render($table),
@@ -128,16 +135,19 @@ class upsert_event extends external_api {
      * @param survey_execution $survey_execution
      * @param eventtype $eventtype
      * @param string $name
+     * @param bool $can_manage_organization
      * @return void
      */
     private static function create_event(
         int $courseid,
         survey_execution $survey_execution,
         eventtype $eventtype,
-        string $name
+        string $name,
+        bool $can_manage_organization
     ): void {
         di::get(survey_freezer::class)
             ->check_se_action($survey_execution, "create event in course '$courseid'");
+        self::check_allowed_eventtype($eventtype, $can_manage_organization);
 
         $event = new teaching_event();
         $event->set_many([
@@ -169,6 +179,7 @@ class upsert_event extends external_api {
      * @param survey_execution $survey_execution
      * @param eventtype $eventtype
      * @param string $name
+     * @param bool $can_manage_organization
      * @param int $eventid
      * @return void
      */
@@ -177,6 +188,7 @@ class upsert_event extends external_api {
         survey_execution $survey_execution,
         eventtype $eventtype,
         string $name,
+        bool $can_manage_organization,
         int $eventid
     ): void {
         $event = teaching_event::get_record(['id' => $eventid], MUST_EXIST);
@@ -189,7 +201,7 @@ class upsert_event extends external_api {
         if ($event->get('eventtypeid') !== $eventtype->get('id')) {
             di::get(survey_freezer::class)
                 ->check_se_action($survey_execution, "update type of event '$eventid'");
-
+            self::check_allowed_eventtype($eventtype, $can_manage_organization);
             $event->set('eventtypeid', $eventtype->get('id'));
         }
 
@@ -205,5 +217,22 @@ class upsert_event extends external_api {
             $spe->set('surveypartid', $eventtype->get('surveypartid'));
             $spe->save();
         }
+    }
+
+    /**
+     * Throws if the new event type may not be selected by the user.
+     *
+     * @param eventtype $new_event_type
+     * @param bool $can_manage_organization
+     * @return void
+     */
+    private static function check_allowed_eventtype(
+        eventtype $new_event_type,
+        bool $can_manage_organization
+    ): void {
+        if ($can_manage_organization || $new_event_type->get('active')) {
+            return;
+        }
+        throw new moodle_exception('error_eventtype_inactive', 'block_coursefeedback', a: $new_event_type->get('name'));
     }
 }

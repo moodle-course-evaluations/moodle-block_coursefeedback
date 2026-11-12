@@ -226,7 +226,9 @@
                                 form="block_coursefeedback-event-form-{{uniqid}}-{{id}}"
                                 required>
                             {{#available_event_types}}
-                                <option value="{{id}}" {{#selected}} selected {{/selected}}>{{name}}</option>
+                                <option value="{{id}}" {{#selected}} selected {{/selected}}>
+                                    {{name}} {{^active}}({{#str}}eventtype_inactive, block_coursefeedback{{/str}}){{/active}}
+                                </option>
                             {{/available_event_types}}
                         </select>
                     </div>
@@ -356,7 +358,9 @@
                             name="eventtypeid"
                             required>
                         {{#available_event_types}}
-                            <option value="{{id}}">{{name}}</option>
+                            <option value="{{id}}">
+                                {{name}} {{^active}}({{#str}}eventtype_inactive, block_coursefeedback{{/str}}){{/active}}
+                            </option>
                         {{/available_event_types}}
                     </select>
                 </div>

@@ -60,6 +60,7 @@ export async function init(new_surveypart_chooser_context) {
         const {html} = await Templates.renderForPromise('block_coursefeedback/organization_default_surveypart_row', {
             id: 'new-' + newId,
             name: '',
+            active: false,
             surveypart_chooser_context: new_surveypart_chooser_context,
         });
         const row = document.createElement('tr');
