@@ -219,12 +219,13 @@ class results_service {
         );
 
         global $DB;
+        $value_to_varchar_sql = $DB->sql_cast_to_char('value');
         $response_recordset = $DB->get_recordset_sql("
             WITH all_responses AS (
                 SELECT id, surveypartexecutionoptionresponseid, surveyitemid, 'text' AS type, value
                 FROM {block_coursefeedback_surveyitemtextresponse}
                 UNION ALL
-                SELECT id, surveypartexecutionoptionresponseid, surveyitemid, 'int' AS type, CAST(value AS VARCHAR(20)) AS value
+                SELECT id, surveypartexecutionoptionresponseid, surveyitemid, 'int' AS type, $value_to_varchar_sql AS value
                 FROM {block_coursefeedback_surveyitemintresponse}
             )
             SELECT rs.id AS response_set_id, c.id AS course_id, c.fullname AS course_fullname,
