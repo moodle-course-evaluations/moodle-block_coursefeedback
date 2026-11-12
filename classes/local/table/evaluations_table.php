@@ -135,7 +135,7 @@ class evaluations_table extends no_pagination_table {
     public function col_name($row) {
         return html_writer::link(
             course_get_url($row->courseid),
-            $row->name,
+            format_string($row->name, options: ['context' => \context_course::instance($row->courseid)]),
         );
     }
 

@@ -18,7 +18,6 @@ namespace block_coursefeedback\local;
 
 use block_coursefeedback;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\user_organization_cache_manager;
 use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback_renderer;
 use core\di;
@@ -159,7 +158,7 @@ class hook_callbacks {
                     new moodle_url('/blocks/coursefeedback/overview.php'),
                     key: 'evaluation_administration'
                 );
-            } else if (user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_anywhere()) {
+            } else if (permission_manager::is_user_evaluation_coordinator_anywhere()) {
                 $hook->primaryview->add(
                     get_string('evaluationadministration', 'block_coursefeedback'),
                     new moodle_url('/blocks/coursefeedback/organizations.php'),

@@ -58,7 +58,7 @@ class slot_users_editable extends inplace_editable {
         $available_user_names = array_map(user::get_fullname(...), $availableusers);
 
         if ($assignedusers) {
-            $displayvalue = implode(', ', array_intersect_key($available_user_names, $assignedusers));
+            $displayvalue = s(implode(', ', array_intersect_key($available_user_names, $assignedusers)));
         } else {
             $displayvalue = html_writer::tag('em', get_string('none'), ['class' => 'text-secondary']);
         }

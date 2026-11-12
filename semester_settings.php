@@ -75,8 +75,8 @@ if ($texts) {
 
 $base_orgsem = null;
 if ($baseid) {
-    $base_orgsem = organization_semester::get_record(['id' => $baseid], MUST_EXIST);
-    $base_texts = organization_texts::get_record(['orgsemid' => $baseid]);
+    $base_orgsem = organization_semester::get_record(['id' => $baseid, 'organizationid' => $organization->get('id')], MUST_EXIST);
+    $base_texts = organization_texts::get_record(['orgsemid' => $base_orgsem->get('id')]);
 
     $mform->set_data($base_orgsem->to_record());
     if ($base_texts) {

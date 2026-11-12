@@ -1,0 +1,16 @@
+<libraries>
+    <library>
+        <location>amd/src/d3-lazy.js</location>
+        <name>D3</name>
+        <version>7.9.0</version>
+        <license>ISC</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>amd/src/alpinejs-lazy.js</location>
+        <name>Alpine.js</name>
+        <version>3.15.8</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+</libraries>
