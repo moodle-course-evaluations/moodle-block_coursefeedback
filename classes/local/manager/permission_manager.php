@@ -49,7 +49,7 @@ class permission_manager {
      */
     public static function require_permission_for_editing_surveypart(surveypart $surveypart): void {
         if ($surveypart->get('organizationid')) {
-            self::can_manage_organization($surveypart->get('organizationid'));
+            self::require_manage_organization($surveypart->get('organizationid'));
         } else {
             require_capability('block/coursefeedback:managesurveysglobally', context_system::instance());
         }
@@ -97,10 +97,10 @@ class permission_manager {
 
     /**
      * Throws an error if the current user is not an organization manager for the given organization.
-     * @param ?organization $organization
+     * @param organization|int|null $organization
      * @return void
      */
-    public static function require_manage_organization(?organization $organization) {
+    public static function require_manage_organization(organization|int|null $organization): void {
         if (!self::can_manage_organization($organization)) {
             throw new coding_exception('You do not have permission to do this.');
         }
