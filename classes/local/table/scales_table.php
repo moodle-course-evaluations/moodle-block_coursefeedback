@@ -88,6 +88,7 @@ class scales_table extends \table_sql {
      * @return string action buttons for workflows
      */
     public function col_name($row) {
+        // TODO: This _should_ be safe, but it would be prudent to clean anyway.
         return $row->name;
     }
 

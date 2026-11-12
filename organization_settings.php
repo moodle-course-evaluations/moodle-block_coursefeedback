@@ -27,7 +27,6 @@ use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\form\organization_settings_form;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
-use block_coursefeedback\local\manager\user_organization_cache_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
 use block_coursefeedback\local\persistent\organization_user;
@@ -88,7 +87,6 @@ if ($mform->is_cancelled()) {
 
     organization_user::set_organization_userids($organization->get('id'), $submitted_data->userids);
     organization_category::set_organization_coursecatids($organization->get('id'), $submitted_data->coursecatids);
-    user_organization_cache_manager::get_instance()->purge();
 
     $transaction->allow_commit();
 

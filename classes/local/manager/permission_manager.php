@@ -26,6 +26,7 @@
 namespace block_coursefeedback\local\manager;
 
 use block_coursefeedback\local\persistent\organization;
+use block_coursefeedback\local\persistent\organization_user;
 use block_coursefeedback\local\persistent\surveypart;
 use context_course;
 use context_system;
@@ -50,7 +51,7 @@ class permission_manager {
      */
     public static function require_permission_for_editing_surveypart(surveypart $surveypart): void {
         if ($surveypart->get('organizationid')) {
-            self::can_manage_organization($surveypart->get('organizationid'));
+            self::require_manage_organization($surveypart->get('organizationid'));
         } else {
             require_capability('block/coursefeedback:managesurveysglobally', context_system::instance());
         }
@@ -84,7 +85,9 @@ class permission_manager {
         }
 
         $organization_id = is_int($organization) ? $organization : $organization->get('id');
-        return user_organization_cache_manager::get_instance()->is_user_evaluation_coordinator_for($organization_id);
+
+        global $DB, $USER;
+        return $DB->record_exists(organization_user::TABLE, ['userid' => $USER->id, 'organizationid' => $organization_id]);
     }
 
     /**
@@ -98,10 +101,10 @@ class permission_manager {
 
     /**
      * Throws an error if the current user is not an organization manager for the given organization.
-     * @param ?organization $organization
+     * @param organization|int|null $organization
      * @return void
      */
-    public static function require_manage_organization(?organization $organization) {
+    public static function require_manage_organization(organization|int|null $organization): void {
         if (!self::can_manage_organization($organization)) {
             throw new coding_exception('You do not have permission to do this.');
         }
@@ -186,5 +189,15 @@ class permission_manager {
         $context = context_course::instance($course->id);
         return has_capability('block/coursefeedback:viewcoursesettings', $context)
             || self::can_manage_organization($organization);
+    }
+
+    /**
+     * Returns if the user is evaluation coordinator for any organization.
+     *
+     * @return bool
+     */
+    public static function is_user_evaluation_coordinator_anywhere(): bool {
+        global $DB, $USER;
+        return $DB->record_exists(organization_user::TABLE, ['userid' => $USER->id]);
     }
 }

@@ -15,20 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Cache Definition for block_evasys_sync
+ * Cache definitions for block_coursefeedback.
  *
  * @package    block_coursefeedback
- * @copyright  2022 Justus Dieckmann WWU
+ * @copyright  2026 innoCampus, Technische Universität Berlin
+ * @copyright  2026 IT.Services, Ruhr-Universität Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $definitions = [
-    'user' => [
-        'mode' => cache_store::MODE_SESSION,
-        'simplekeys' => true,
-    ],
     'survey' => [
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,

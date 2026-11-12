@@ -29,6 +29,7 @@ use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\results\results_service;
 use block_coursefeedback\local\urls;
+use core\dataformat;
 use core\di;
 
 require_once(__DIR__ . '/../../config.php');
@@ -82,29 +83,20 @@ if ($download) {
     ];
     if ($download === 'overview') {
         $string_id = 'csv_filename_overview';
-        $rows = $results_service->get_overview($orgsem);
+        [$header, $rows] = $results_service->get_overview($orgsem);
     } else if ($download === 'default') {
         $string_id = 'csv_filename_default_questionnaire';
-        $rows = $results_service->get_for_default_questionnaire($orgsem);
+        [$header, $rows] = $results_service->get_for_default_questionnaire($orgsem);
     } else {
         $string_id = 'csv_filename_eventtype';
         $eventtype = eventtype::get_record(['id' => $download]);
-        $rows = $results_service->get_by_semester_and_eventtype($orgsem, $eventtype);
+        [$header, $rows] = $results_service->get_by_semester_and_eventtype($orgsem, $eventtype);
         $string_params['eventtypename'] = $eventtype->get('name');
     }
 
-    $filename_base = get_string($string_id, 'block_coursefeedback', $string_params);
-    $filename = preg_replace('/[^[:alnum:]äöüÄÖÜß]/', '_', $filename_base) . '.csv';
+    $filename = preg_replace('/[^[:alnum:]äöüÄÖÜß]/', '_', get_string($string_id, 'block_coursefeedback', $string_params));
 
-    header('Content-Type: text/csv');
-    header("Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode($filename));
-
-    $stream = fopen('php://output', 'w');
-
-    foreach ($rows as $row) {
-        fputcsv($stream, $row, escape: '');
-    }
-
+    dataformat::download_data($filename, 'csv', $header, $rows);
     die;
 }
 
