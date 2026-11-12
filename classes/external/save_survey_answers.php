@@ -21,12 +21,12 @@ use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\surveyitemtype_answerdata;
 use core\context\course;
 use core\exception\coding_exception;
+use core\exception\moodle_exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-use core\exception\moodle_exception;
 
 /**
  * External api to save survey responses.
@@ -135,7 +135,14 @@ class save_survey_answers extends external_api {
                 'surveypartexecutionoptionid' => $slotid,
             ]);
 
+            $processed_item_ids_in_this_set = [];
+
             foreach ($answers as ['surveyitemid' => $surveyitemid, 'value' => $value]) {
+                if (in_array($surveyitemid, $processed_item_ids_in_this_set)) {
+                    throw new coding_exception("Duplicate answer for survey item '$surveyitemid' in same slot '$slotid'");
+                }
+                $processed_item_ids_in_this_set[] = $surveyitemid;
+
                 $surveyitemtype = null;
                 $question_data = null;
                 foreach ($all_question_data as $type => $data_by_itemid) {
