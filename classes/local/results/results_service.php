@@ -46,10 +46,10 @@ class results_service {
     }
 
     /**
-     * Gets CSV rows for the organization overview.
+     * Gets CSV header and rows for the organization overview.
      *
      * @param organization_semester $orgsem
-     * @return array[]
+     * @return array{0: array, 1: array[]}
      */
     public function get_overview(organization_semester $orgsem): array {
         global $DB;
@@ -91,7 +91,7 @@ class results_service {
 
         if (!$courses_recordset || !$courses_recordset->valid()) {
             // This orgsem has no surveys planned, in progress, or finished.
-            return [$header];
+            return [$header, []];
         }
 
         $courses = [];
@@ -130,7 +130,7 @@ class results_service {
             'active_user_cutoff' => $this->clock->now()->sub(new DateInterval('P2W'))->getTimestamp(),
         ]);
 
-        $rows = [$header];
+        $rows = [];
         foreach ($courses as $courseid => $course) {
             $row = [
                 $courseid, $course['fullname'],
@@ -149,14 +149,14 @@ class results_service {
             $rows[] = $row;
         }
 
-        return $rows;
+        return [$header, $rows];
     }
 
     /**
-     * Gets response sets CSV rows for the default questionnaire across the orgsem.
+     * Gets response set CSV header and rows for the default questionnaire across the orgsem.
      *
      * @param organization_semester $orgsem
-     * @return array[]
+     * @return array{0: array, 1: array[]}
      */
     public function get_for_default_questionnaire(organization_semester $orgsem): array {
         if (!$orgsem->get('default_surveypartid')) {
@@ -169,11 +169,11 @@ class results_service {
     }
 
     /**
-     * Gets response set CSV rows for the given event type across the orgsem.
+     * Gets response set CSV header and rows for the given event type across the orgsem.
      *
      * @param organization_semester $orgsem
      * @param eventtype $eventtype
-     * @return array[]
+     * @return array{0: array, 1: array[]}
      */
     public function get_by_semester_and_eventtype(organization_semester $orgsem, eventtype $eventtype): array {
         $surveypart_fields = surveypart::get_sql_fields('sp', 'sp_');
@@ -195,13 +195,13 @@ class results_service {
     }
 
     /**
-     * Gets response set CSV rows by the given filter SQL.
+     * Gets response set CSV header and rows by the given filter SQL.
      *
      * @param organization_semester $orgsem
      * @param surveypart $questionnaire
      * @param string $eventtype_filter
      * @param array $params
-     * @return array[]
+     * @return array{0: array, 1: array[]}
      */
     private function get_response_sets_by_filter(
         organization_semester $orgsem,
@@ -271,7 +271,7 @@ class results_service {
             }
         }
 
-        $rows = [$header];
+        $rows = [];
 
         foreach ($response_sets as $response_set_id => $response_set) {
             $row = [
@@ -294,6 +294,6 @@ class results_service {
             $rows[] = $row;
         }
 
-        return $rows;
+        return [$header, $rows];
     }
 }
