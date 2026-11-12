@@ -45,7 +45,7 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
      * Add JavaScript code to initialize Alpine.js, if the `register_alpine_js_module` has been called.
      */
     private static function init_alpine_js(): void {
-        if ((defined('AJAX_SCRIPT') && AJAX_SCRIPT) || (defined('CLI_SCRIPT') && CLI_SCRIPT) || !self::$alpinejsdependencies) {
+        if ((defined('AJAX_SCRIPT') && AJAX_SCRIPT) || (defined('CLI_SCRIPT') && CLI_SCRIPT)) {
             return;
         }
 
@@ -64,14 +64,16 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Register a JavaScript module to be loaded before Alpine.js is initialized.
+     * Register that Alpine.js needs to be loaded on this page and, optionally, that a JavaScript module must be loaded beforehand.
      *
-     * @param string $module
+     * @param string|null $module
      * @return void
      */
-    private function register_alpine_js_module(string $module): void {
-        $this->page->requires->js_call_amd($module);
-        self::$alpinejsdependencies[] = $module;
+    private function register_alpine_js_module(?string $module): void {
+        if ($module) {
+            $this->page->requires->js_call_amd($module);
+            self::$alpinejsdependencies[] = $module;
+        }
 
         if ((!defined('AJAX_SCRIPT') || !AJAX_SCRIPT) && (!defined('CLI_SCRIPT') || !CLI_SCRIPT) && !self::$shutdownhookadded) {
             core_shutdown_manager::register_function(self::init_alpine_js(...));
@@ -82,7 +84,10 @@ class block_coursefeedback_renderer extends plugin_renderer_base {
     #[\Override]
     protected function get_mustache() {
         $mustache = parent::get_mustache();
-        $mustache->addHelper('register_alpine_js_module', fn($content) => $this->register_alpine_js_module(trim($content)) || "");
+        $mustache->addHelper(
+            'register_alpine_js_module',
+            fn($content) => $this->register_alpine_js_module(trim($content) ?: null) || ""
+        );
         return $mustache;
     }
 

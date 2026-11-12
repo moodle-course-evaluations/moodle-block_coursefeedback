@@ -17,6 +17,7 @@
 namespace block_coursefeedback\external;
 
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\persistent\response_slot;
 use block_coursefeedback\local\persistent\response_slot_user;
 use block_coursefeedback\local\persistent\survey_execution;
@@ -79,6 +80,9 @@ class delete_slot extends external_api {
 
         self::validate_context(\context_system::instance());
         $course = get_course($courseid);
+
+        [$organization, , ] = di::get(semester_manager::class)->get_triplet_by_course($course);
+
         permission_manager::require_edit_course_surveysettings($course, null);
 
         $freezer = di::get(survey_freezer::class);
@@ -129,7 +133,12 @@ class delete_slot extends external_api {
 
         di::get(survey_cache::class)->evict_by_courseid($course->id);
         $data = survey_execution_data::load_from_course_required($course);
-        $table = new course_event_slot_table($data, $course, is_frozen: $freezer->is_se_frozen($data->survey_execution));
+        $table = new course_event_slot_table(
+            $data,
+            $course,
+            is_frozen: $freezer->is_se_frozen($data->survey_execution),
+            include_inactive_event_types: permission_manager::can_manage_organization($organization)
+        );
 
         return [
             'new_table_html' => $OUTPUT->render($table),

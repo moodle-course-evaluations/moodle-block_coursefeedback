@@ -24,7 +24,6 @@
  */
 
 use block_coursefeedback\event\survey_responses_deleted;
-use block_coursefeedback\local\course_organization_mapping\course_organization_mapping;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
 use block_coursefeedback\local\survey_execution_data;
@@ -108,7 +107,12 @@ if ($action === 'delete_responses') {
 
 $is_frozen = di::get(survey_freezer::class)->is_se_frozen($model->survey_execution);
 
-$table = new course_event_slot_table($model, $course, is_frozen: $is_frozen);
+$table = new course_event_slot_table(
+    $model,
+    $course,
+    is_frozen: $is_frozen,
+    include_inactive_event_types: permission_manager::can_manage_organization($organization)
+);
 
 $survey_execution_period = new survey_execution_period(
     $model->survey_execution,

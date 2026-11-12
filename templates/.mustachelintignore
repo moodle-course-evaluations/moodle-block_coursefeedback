@@ -2,3 +2,5 @@ course_settings.mustache
 course_event_slot_table.mustache
 organization_default_surveypart_row.mustache
 survey_execution_period.mustache
+organization_default_surveypart.mustache
+organization_default_surveypart_row.mustache

@@ -147,7 +147,6 @@ class permission_manager {
      * Requires that the user can edit the courses surveysettings.
      * @param stdClass $course
      * @param int|organization|null $organization_or_id
-     * @return bool
      */
     public static function require_edit_course_surveysettings(stdClass $course, int|organization|null $organization_or_id) {
         if (!self::can_edit_course_surveysettings($course, $organization_or_id)) {

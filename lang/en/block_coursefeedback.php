@@ -91,7 +91,10 @@ $string['datetime_from_to'] = '{$a->from} to {$a->to}';
 $string['default_event_type'] = 'Default for organization';
 $string['default_questionnaire_frozen'] = 'The default questionnaire cannot be changed because it is used in ongoing and/or past surveys in the following courses: {$a}';
 $string['default_questionnaire_parens'] = '(Default questionnaire)';
+$string['default_sp_placeholder_always'] = 'The default questionnaire of {$a} is going to be used here. <em>In addition to it</em>, you may configure teaching events below.';
+$string['default_sp_placeholder_not_always'] = 'The default questionnaire of {$a} is going to be used here. <em>Instead of it</em>, you may configure teaching events below.';
 $string['default_survey_period'] = 'Default survey period';
+$string['default_surveypart_always_shown'] = 'Default questionnaire shown before configured teaching event questionnaires';
 $string['default_surveypart_for_courses_without_eventtype'] = 'Default questionnaire for courses with no event type';
 $string['define_evaluation_period_before'] = 'Please define the evaluation period before defining any surveys';
 $string['define_rub_eventtype_mapping'] = 'Map Campus course types to event types';
@@ -137,6 +140,7 @@ $string['end'] = 'End';
 $string['end_must_be_after_start'] = 'The end time must be after the start time.';
 $string['end_must_be_within_10_years'] = 'The start and the end must be no longer than 10 years from now.';
 $string['end_must_be_within_1_year'] = 'The survey duration cannot be longer than 1 year.';
+$string['error_eventtype_inactive'] = 'The event type \'{$a}\' is not available to teachers.';
 $string['evaluation_period'] = 'Evaluation period';
 $string['evaluation_settings'] = 'Evaluation settings';
 $string['evaluation_will_run_in_period'] = 'The survey will run in the period of {$a}.';
@@ -148,7 +152,9 @@ $string['event_name_placeholder'] = 'My teaching event';
 $string['event_type'] = 'Event type';
 $string['event_types'] = 'Event types and default questionnaire';
 $string['eventtype'] = 'Event type';
+$string['eventtype_active'] = 'Available to teachers';
 $string['eventtype_frozen'] = 'This event type\'s questionnaire cannot be changed because it is used in ongoing and/or past surveys in the following courses: {$a}';
+$string['eventtype_inactive'] = 'Hidden from teachers';
 $string['fill_in_from'] = 'Fill in settings from another semester';
 $string['filled_in_from'] = 'Filled in settings from <q>{$a}</q>.';
 $string['finish'] = 'Finish';
@@ -168,11 +174,12 @@ $string['list_of_evaluations'] = 'List of evaluations';
 $string['local_moses_no_current_semester'] = 'The Moses API did not return a currently active semester.';
 $string['local_moses_not_installed'] = 'The local_moses plugin is not installed.';
 $string['local_moses_unsupported'] = 'Version {$a->installed} of the local_moses plugin is not supported. Please upgrade at least to version {$a->min}.';
+$string['make_eventtype_active'] = 'Click to make this event type available to teachers';
+$string['make_eventtype_inactive'] = 'Click to make this event type unavailable to teachers';
 $string['max_option_text'] = 'Text for max. pole';
 $string['mean'] = 'Mean';
 $string['median'] = 'Median';
 $string['message_content'] = 'Content';
-$string['message_for_teachers_when_survey_created'] = 'Message for teachers when surveys are created';
 $string['message_subject'] = 'Subject';
 $string['messageprovider:teacher_survey_created'] = 'Teacher notifications when surveys are created';
 $string['min_option_text'] = 'Text for min. pole';
@@ -260,6 +267,8 @@ $string['slots'] = 'Response slots';
 $string['slots_help'] = 'Slots can be used to group user responses, such as for different tutorials. If there is more than one slot, users must select one before the questionnaire is shown.';
 $string['standard_deviation'] = 'Standard deviation';
 $string['start'] = 'Start';
+$string['survey_created_message_enable'] = 'Send an email to teachers when their courses are added to the evaluation';
+$string['survey_created_message_header'] = 'Email notification for teachers';
 $string['survey_created_message_help'] = '<p>In the following texts, these <i>placeholders</i> can be used:</p>
 <p>
     ##NAME## for the full name of the teacher<br>
@@ -272,6 +281,7 @@ If teachers are allowed to edit the survey period or settings, please include th
 You can do that by using the link/anchor button in the editor, freely choosing a "Text to display" and entering ##SETTINGS_URL## in the "Enter a URL" field.
 </p>
 ';
+$string['survey_created_message_warning'] = 'When you add courses to the evaluation in this table, the email notification configured in the semester settings will be sent to the course teachers.';
 $string['survey_execution_endtime'] = 'End time of survey in this course';
 $string['survey_execution_frozen_long'] = 'The survey in this course has already started or is about to start. ' .
     'You can no longer add and remove events or slots, or change event types. You may still rename events and slots and evaluation coordinators may still change the survey period.';

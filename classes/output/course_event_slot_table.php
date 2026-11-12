@@ -18,6 +18,7 @@ namespace block_coursefeedback\output;
 
 use block_coursefeedback\local\persistent\eventtype;
 use block_coursefeedback\local\persistent\response_slot;
+use block_coursefeedback\local\persistent\survey_execution;
 use block_coursefeedback\local\persistent\survey_part_execution;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\persistent\teaching_event;
@@ -40,7 +41,7 @@ use core\output\renderer_base;
 class course_event_slot_table implements named_templatable, renderable {
 
     /** @var eventtype[]|null */
-    private ?array $availableeventtypes = null;
+    private ?array $eventtypes = null;
 
     /** @var surveypart[]|null */
     private ?array $availablesurveyparts = null;
@@ -54,6 +55,7 @@ class course_event_slot_table implements named_templatable, renderable {
      * @param survey_execution_data $survey_data
      * @param object $course
      * @param bool $is_frozen
+     * @param bool $include_inactive_event_types
      */
     public function __construct(
         /** @var survey_execution_data $survey_data */
@@ -62,6 +64,8 @@ class course_event_slot_table implements named_templatable, renderable {
         private readonly object $course,
         /** @var bool $is_frozen */
         private readonly bool $is_frozen = true,
+        /** @var bool $include_inactive_event_types */
+        private readonly bool $include_inactive_event_types = false,
     ) {
     }
 
@@ -136,18 +140,25 @@ class course_event_slot_table implements named_templatable, renderable {
      * @return array
      */
     private function export_available_event_types(?int $selectedid = null): array {
-        if ($this->availableeventtypes === null) {
-            $this->availableeventtypes = eventtype::get_records([
-                'active' => true,
+        if ($this->eventtypes === null) {
+            $this->eventtypes = eventtype::get_records([
                 'orgsemid' => $this->survey_data->orgsem->get('id'),
             ]);
         }
 
-        return array_map(fn($type) => [
-            'id' => $type->get('id'),
-            'name' => $type->get('name'),
-            'selected' => $selectedid === $type->get('id'),
-        ], array_values($this->availableeventtypes));
+        $results = [];
+        foreach ($this->eventtypes as $eventtype) {
+            $selected = $selectedid === $eventtype->get('id');
+            if ($eventtype->get('active') || $this->include_inactive_event_types || $selected) {
+                $results[] = [
+                    'id' => $eventtype->get('id'),
+                    'name' => $eventtype->get('name'),
+                    'active' => $eventtype->get('active'),
+                    'selected' => $selected,
+                ];
+            }
+        }
+        return $results;
     }
 
     /**
@@ -202,6 +213,20 @@ class course_event_slot_table implements named_templatable, renderable {
 
     #[\Override]
     public function export_for_template(renderer_base|bootstrap_renderer $output): array {
+        $default_sp_placeholder_text = null;
+        if (
+            $this->survey_data->survey_execution->get('status') == survey_execution::STATUS_PLANNED
+            && $this->survey_data->orgsem->get('default_surveypartid')
+        ) {
+            $org_name = $this->survey_data->organization->get('name');
+            if ($this->survey_data->orgsem->get('always_show_default_sp')) {
+                $default_sp_placeholder_text = get_string('default_sp_placeholder_always', 'block_coursefeedback', s($org_name));
+            } else if (!$this->survey_data->events_by_id) {
+                $default_sp_placeholder_text =
+                    get_string('default_sp_placeholder_not_always', 'block_coursefeedback', s($org_name));
+            }
+        }
+
         return [
             'course' => [
                 'id' => $this->course->id,
@@ -210,6 +235,7 @@ class course_event_slot_table implements named_templatable, renderable {
             'survey_execution' => [
                 'id' => $this->survey_data->survey_execution->get('id'),
             ],
+            'default_sp_placeholder_text' => $default_sp_placeholder_text,
             'slot_name_help_icon_context' => (new help_icon('slots', 'block_coursefeedback'))->export_for_template($output),
             'slot_users_help_icon_context' => (new help_icon('slot_users', 'block_coursefeedback'))->export_for_template($output),
             'show_add_event' => !$this->is_frozen,
