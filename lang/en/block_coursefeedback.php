@@ -173,7 +173,6 @@ $string['max_option_text'] = 'Text for max. pole';
 $string['mean'] = 'Mean';
 $string['median'] = 'Median';
 $string['message_content'] = 'Content';
-$string['message_for_teachers_when_survey_created'] = 'Message for teachers when surveys are created';
 $string['message_subject'] = 'Subject';
 $string['messageprovider:teacher_survey_created'] = 'Teacher notifications when surveys are created';
 $string['min_option_text'] = 'Text for min. pole';
@@ -261,6 +260,8 @@ $string['slots'] = 'Response slots';
 $string['slots_help'] = 'Slots can be used to group user responses, such as for different tutorials. If there is more than one slot, users must select one before the questionnaire is shown.';
 $string['standard_deviation'] = 'Standard deviation';
 $string['start'] = 'Start';
+$string['survey_created_message_enable'] = 'Send an email to teachers when their courses are added to the evaluation';
+$string['survey_created_message_header'] = 'Email notification for teachers';
 $string['survey_created_message_help'] = '<p>In the following texts, these <i>placeholders</i> can be used:</p>
 <p>
     ##NAME## for the full name of the teacher<br>
@@ -273,6 +274,7 @@ If teachers are allowed to edit the survey period or settings, please include th
 You can do that by using the link/anchor button in the editor, freely choosing a "Text to display" and entering ##SETTINGS_URL## in the "Enter a URL" field.
 </p>
 ';
+$string['survey_created_message_warning'] = 'When you add courses to the evaluation in this table, the email notification configured in the semester settings will be sent to the course teachers.';
 $string['survey_execution_endtime'] = 'End time of survey in this course';
 $string['survey_execution_frozen_long'] = 'The survey in this course has already started or is about to start. ' .
     'You can no longer add and remove events or slots, or change event types. You may still rename events and slots and evaluation coordinators may still change the survey period.';

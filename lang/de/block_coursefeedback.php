@@ -172,7 +172,6 @@ $string['max_option_text'] = 'Beschriftung das max. Pols';
 $string['mean'] = 'Durchschnitt';
 $string['median'] = 'Median';
 $string['message_content'] = 'Inhalt';
-$string['message_for_teachers_when_survey_created'] = 'Nachricht an Lehrende, wenn Umfragen erstellt werden';
 $string['message_subject'] = 'Betreff';
 $string['messageprovider:teacher_survey_created'] = 'Nachricht an Lehrende, wenn Umfragen erstellt werden';
 $string['min_option_text'] = 'Beschriftung das min. Pols';
@@ -260,6 +259,8 @@ $string['slots'] = 'Untergruppen';
 $string['slots_help'] = 'Untergruppen können verwendet werden, um beispielsweise Tutorien verschiedener Gruppenleitenden getrennt zu evaluieren. Wenn es mehrere gibt, muss beim Beantworten des Fragebogens eine ausgewählt werden.';
 $string['standard_deviation'] = 'Standardabweichung';
 $string['start'] = 'Start';
+$string['survey_created_message_enable'] = 'Eine E-Mail an Trainer/innen senden, wenn ihr Kurs zur Evaluation hinzugefügt wird';
+$string['survey_created_message_header'] = 'E-Mail-Benachrichtigung an Lehrende';
 $string['survey_created_message_help'] = '<p>In den folgenden Texten können diese <i>Platzhalter</i> benutzt werden:</p>
 <p>
     ##NAME## für den ganzen Namen des/der Lehrenden<br>
@@ -273,6 +274,7 @@ Falls Lehrende den Evaluationszeitraum oder die Evaluationseinstellungen bearbei
 Dies können Sie tun, indem Sie im Editor auf den Link-Button klicken, frei einen "Text zum Anzeigen" wählen, und in "URL eingeben" ##SETTINGS_URL## angeben.
 </p>
 ';
+$string['survey_created_message_warning'] = 'Sobald Sie in dieser Tabelle einen Kurs zur Evaluation hinzufügen, wird die in den Semester-Einstellungen konfigurierte E-Mail an die Trainer/innen des Kurses verschickt.';
 $string['survey_execution_endtime'] = 'Endzeitpunkt der Evaluation in diesem Kurs';
 $string['survey_execution_frozen_long'] = 'Die Evaluation hat in diesem Kurs bereits begonnen oder steht kurz bevor. ' .
     'Es können keine Veranstaltungen oder Untergruppen mehr angelegt oder entfernt, oder Veranstaltungsarten angepasst werden. ' .
