@@ -28,6 +28,7 @@ use core\output\help_icon;
 use core\output\named_templatable;
 use core\output\renderable;
 use core\output\renderer_base;
+use tool_admin_presets\form\continue_form;
 
 /**
  * Renderable of a course's event, slot, and slot user table that is shown in the feedback settings for a course.
@@ -40,7 +41,7 @@ use core\output\renderer_base;
 class course_event_slot_table implements named_templatable, renderable {
 
     /** @var eventtype[]|null */
-    private ?array $availableeventtypes = null;
+    private ?array $eventtypes = null;
 
     /** @var surveypart[]|null */
     private ?array $availablesurveyparts = null;
@@ -54,6 +55,7 @@ class course_event_slot_table implements named_templatable, renderable {
      * @param survey_execution_data $survey_data
      * @param object $course
      * @param bool $is_frozen
+     * @param bool $include_inactive_event_types
      */
     public function __construct(
         /** @var survey_execution_data $survey_data */
@@ -62,6 +64,8 @@ class course_event_slot_table implements named_templatable, renderable {
         private readonly object $course,
         /** @var bool $is_frozen */
         private readonly bool $is_frozen = true,
+        /** @var bool $include_inactive_event_types */
+        private readonly bool $include_inactive_event_types = false,
     ) {
     }
 
@@ -136,18 +140,25 @@ class course_event_slot_table implements named_templatable, renderable {
      * @return array
      */
     private function export_available_event_types(?int $selectedid = null): array {
-        if ($this->availableeventtypes === null) {
-            $this->availableeventtypes = eventtype::get_records([
-                'active' => true,
+        if ($this->eventtypes === null) {
+            $this->eventtypes = eventtype::get_records([
                 'orgsemid' => $this->survey_data->orgsem->get('id'),
             ]);
         }
 
-        return array_map(fn($type) => [
-            'id' => $type->get('id'),
-            'name' => $type->get('name'),
-            'selected' => $selectedid === $type->get('id'),
-        ], array_values($this->availableeventtypes));
+        $results = [];
+        foreach ($this->eventtypes as $eventtype) {
+            $selected = $selectedid === $eventtype->get('id');
+            if ($eventtype->get('active') || $this->include_inactive_event_types || $selected) {
+                $results[] = [
+                    'id' => $eventtype->get('id'),
+                    'name' => $eventtype->get('name'),
+                    'active' => $eventtype->get('active'),
+                    'selected' => $selected,
+                ];
+            }
+        }
+        return $results;
     }
 
     /**

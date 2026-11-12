@@ -24,6 +24,7 @@
       "formurl": "http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization_default_surveypart.php?id=1",
       "sesskey": "Sn5pUMAzy8",
       "returnurl": "http:\/\/localhost\/moodle405\/blocks\/coursefeedback\/organization_settings.php?id=1",
+      "always_show_default_sp": true,
       "default_surveypart_chooser_context": {
         "org_name": "Fakultät I",
         "has_global_surveyparts": true,
@@ -98,7 +99,12 @@
     <div class="form-row">
         <div class="form-group px-2">
             <label for="block_coursefeedback-surveypart-default-{{uniqid}}" class="py-1">
+                {{#always_show_default_sp}}
+                {{#str}}default_surveypart_always_shown, block_coursefeedback{{/str}}
+                {{/always_show_default_sp}}
+                {{^always_show_default_sp}}
                 {{#str}}default_surveypart_for_courses_without_eventtype, block_coursefeedback{{/str}}
+                {{/always_show_default_sp}}
             </label>
             {{#default_surveypart_chooser_context}}
                 {{< block_coursefeedback/surveypart_chooser }}
@@ -115,7 +121,7 @@
             <tr>
                 <th>{{#str}}eventtype, block_coursefeedback{{/str}}</th>
                 <th>{{#str}}questionnaire, block_coursefeedback{{/str}}</th>
-                <th></th>
+                <th>{{#str}}active{{/str}}</th>
             </tr>
             </thead>
             <tbody>

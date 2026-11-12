@@ -94,6 +94,7 @@ $string['default_event_type'] = 'Organisations-Standard';
 $string['default_questionnaire_frozen'] = 'Der Standard-Fragebogen wird in laufenden oder vergangenen Evaluationen in den folgenden Kursen verwendet und kann daher nicht verändert werden: {$a}';
 $string['default_questionnaire_parens'] = '(Standard-Fragebogen)';
 $string['default_survey_period'] = 'Standard-Evaluationszeitraum';
+$string['default_surveypart_always_shown'] = 'Standard-Fragebogen, der veranstaltungsspezifischen Fragebögen vorangestellt wird';
 $string['default_surveypart_for_courses_without_eventtype'] = 'Standard-Fragebogen für Kurse ohne konfigurierte Veranstaltungen';
 $string['define_evaluation_period_before'] = 'Bitte setzen Sie zuerst den Evaluationszeitraum, bevor Sie Kurse hinzufügen';
 $string['define_rub_eventtype_mapping'] = 'Verknüpfung von RUB-Campus-Veranstaltungsarten und Veranstaltungsarten für die Evaluation';
@@ -140,6 +141,7 @@ $string['end_must_be_after_start'] = 'Das Ende muss nach dem Start liegen.';
 $string['end_must_be_within_10_years'] = 'Start und Ende dürfen nicht mehr als 10 Jahre von heute entfernt sein.';
 $string['end_must_be_within_1_year'] = 'Der Evaluationszeitraum darf nicht länger als 1 Jahr sein.';
 $string['enrolled'] = 'Eingeschrieben';
+$string['error_eventtype_inactive'] = 'Die Veranstaltungsart \'{$a}\' ist nicht für Trainer/innen freigegeben.';
 $string['evaluation_info'] = 'Informationen zur Evaluation';
 $string['evaluation_period'] = 'Evaluationszeitraum';
 $string['evaluation_settings'] = 'Evaluationseinstellungen';
@@ -152,7 +154,9 @@ $string['event_name_placeholder'] = 'Meine Lehrveranstaltung';
 $string['event_type'] = 'Veranstaltungsart';
 $string['event_types'] = 'Standard-Fragebogen und Veranstaltungsarten';
 $string['eventtype'] = 'Veranstaltungsart';
+$string['eventtype_active'] = 'Für Trainer/innen freigegeben';
 $string['eventtype_frozen'] = 'Diese Veranstaltungsart wird in laufenden oder vergangenen Evaluationen in den folgenden Kursen verwendet, daher kann der zugeordnete Fragebogen nicht verändert werden: {$a}';
+$string['eventtype_inactive'] = 'Vor Trainer/innen versteckt';
 $string['fill_in_from'] = 'Einstellungen eines anderen Semesters übernehmen';
 $string['filled_in_from'] = 'Einstellungen aus <q>{$a}</q> übernommen.';
 $string['finish'] = 'Abschließen';
@@ -172,11 +176,12 @@ $string['list_of_evaluations'] = 'Liste von Kursen mit Evaluation';
 $string['local_moses_no_current_semester'] = 'Die Moses-API liefert kein aktuell laufendes Semester zurück.';
 $string['local_moses_not_installed'] = 'Das Plugin local_moses ist nicht installiert.';
 $string['local_moses_unsupported'] = 'Die installierte Version {$a->installed} des local_moses-Plugins wird nicht unterstützt. Installieren Sie mindestens die Version {$a->min}.';
+$string['make_eventtype_active'] = 'Diese Veranstaltungsart für Trainer/innen auswählbar machen';
+$string['make_eventtype_inactive'] = 'Diese Veranstaltungsart vor Trainer/innen verstecken';
 $string['max_option_text'] = 'Beschriftung das max. Pols';
 $string['mean'] = 'Durchschnitt';
 $string['median'] = 'Median';
 $string['message_content'] = 'Inhalt';
-$string['message_for_teachers_when_survey_created'] = 'Nachricht an Lehrende, wenn Umfragen erstellt werden';
 $string['message_subject'] = 'Betreff';
 $string['messageprovider:teacher_survey_created'] = 'Nachricht an Lehrende, wenn Umfragen erstellt werden';
 $string['min_option_text'] = 'Beschriftung das min. Pols';
@@ -280,6 +285,8 @@ $string['slots'] = 'Untergruppen';
 $string['slots_help'] = 'Untergruppen können verwendet werden, um beispielsweise Tutorien verschiedener Gruppenleitenden getrennt zu evaluieren. Wenn es mehrere gibt, muss beim Beantworten des Fragebogens eine ausgewählt werden.';
 $string['standard_deviation'] = 'Standardabweichung';
 $string['start'] = 'Start';
+$string['survey_created_message_enable'] = 'Eine E-Mail an Trainer/innen senden, wenn ihr Kurs zur Evaluation hinzugefügt wird';
+$string['survey_created_message_header'] = 'E-Mail-Benachrichtigung an Lehrende';
 $string['survey_created_message_help'] = '<p>In den folgenden Texten können diese <i>Platzhalter</i> benutzt werden:</p>
 <p>
     ##NAME## für den ganzen Namen des/der Lehrenden<br>
@@ -293,6 +300,7 @@ Falls Lehrende den Evaluationszeitraum oder die Evaluationseinstellungen bearbei
 Dies können Sie tun, indem Sie im Editor auf den Link-Button klicken, frei einen "Text zum Anzeigen" wählen, und in "URL eingeben" ##SETTINGS_URL## angeben.
 </p>
 ';
+$string['survey_created_message_warning'] = 'Sobald Sie in dieser Tabelle einen Kurs zur Evaluation hinzufügen, wird die in den Semester-Einstellungen konfigurierte E-Mail an die Trainer/innen des Kurses verschickt.';
 $string['survey_execution_endtime'] = 'Endzeitpunkt der Evaluation in diesem Kurs';
 $string['survey_execution_frozen_long'] = 'Die Evaluation hat in diesem Kurs bereits begonnen oder steht kurz bevor. ' .
     'Es können keine Veranstaltungen oder Untergruppen mehr angelegt oder entfernt, oder Veranstaltungsarten angepasst werden. ' .

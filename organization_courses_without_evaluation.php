@@ -23,18 +23,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_coursefeedback\local\course_semester_mapping\course_semester_mapping;
 use block_coursefeedback\local\default_survey_creation_method\default_survey_creation_method;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\manager\semester_manager;
-use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\organization_category;
+use block_coursefeedback\local\persistent\organization_texts;
 use block_coursefeedback\local\persistent\survey_execution;
-use block_coursefeedback\local\semester\semester_state;
 use block_coursefeedback\local\table\courses_without_evaluation_table;
 use block_coursefeedback\task\send_survey_created_message_task;
 use core\di;
+use core\output\notification;
 use core\task\manager;
 
 require_once(__DIR__ . '/../../config.php');
@@ -58,9 +57,10 @@ $semester_manager = di::get(semester_manager::class);
     ? $semester_manager->get_triplet_by_orgsemid($organizationid, $orgsemid)
     : $semester_manager->get_triplet_by_current_semester($organizationid);
 
+$org_texts = organization_texts::get_record(['orgsemid' => $orgsem->get('id')]);
+
 permission_manager::require_manage_organization($organization);
 breadcrumbs_manager::setup_organization_courses_without_evaluation($organization);
-
 
 $action = optional_param('action', null, PARAM_ALPHANUMEXT);
 if ($action) {
@@ -86,7 +86,7 @@ if ($action) {
                 $organization,
                 $orgsem
             );
-            $surveyexecutionids = array_map(fn (survey_execution $se) => $se->get('id'), $surveyexecutions);
+            $surveyexecutionids = array_map(fn(survey_execution $se) => $se->get('id'), $surveyexecutions);
             manager::queue_adhoc_task(
                 send_survey_created_message_task::create_instance($surveyexecutionids)
             );
@@ -107,6 +107,15 @@ echo $OUTPUT->header();
 
 /** @var block_coursefeedback_renderer $renderer */
 $renderer = $PAGE->get_renderer('block_coursefeedback');
-$renderer->render_organization_page($organization, $semester, $orgsem, 'courses', fn() => $table->out(0, false));
+$renderer->render_organization_page($organization, $semester, $orgsem, 'courses', function () use ($renderer, $table, $org_texts) {
+    if ($org_texts && $org_texts->get('survey_created_message_body') && $org_texts->get('survey_created_message_subject')) {
+        echo $renderer->render_from_template(
+            'block_coursefeedback/info_box',
+            ['message' => get_string('survey_created_message_warning', 'block_coursefeedback')]
+        );
+    }
+
+    $table->out(0, false);
+});
 
 echo $OUTPUT->footer();

@@ -70,8 +70,15 @@ class organization_semester_form extends moodleform {
         $mform->addElement(
             'header',
             'survey_created_message_header',
-            get_string('message_for_teachers_when_survey_created', 'block_coursefeedback')
+            get_string('survey_created_message_header', 'block_coursefeedback')
         );
+
+        $mform->addElement(
+            'advcheckbox',
+            'survey_created_message_enable',
+            get_string('survey_created_message_enable', 'block_coursefeedback')
+        );
+        $mform->setType('survey_created_message_enable', PARAM_BOOL);
 
         $mform->addElement(
             'static',
@@ -79,6 +86,7 @@ class organization_semester_form extends moodleform {
             '',
             get_string('survey_created_message_help', 'block_coursefeedback')
         );
+        $mform->hideIf('survey_created_message_help', 'survey_created_message_enable');
 
         $mform->addElement(
             'text',
@@ -87,6 +95,7 @@ class organization_semester_form extends moodleform {
             ['size' => 100]
         );
         $mform->setType('survey_created_message_subject', PARAM_TEXT);
+        $mform->hideIf('survey_created_message_subject', 'survey_created_message_enable');
 
         $mform->addElement(
             'editor',
@@ -96,6 +105,7 @@ class organization_semester_form extends moodleform {
             ['changeformat' => 0],
         );
         $mform->setType('survey_created_message_body', PARAM_RAW);
+        $mform->hideIf('survey_created_message_body', 'survey_created_message_enable');
 
         $this->add_action_buttons();
     }
@@ -106,19 +116,35 @@ class organization_semester_form extends moodleform {
         if ($data['evaluation_starttime'] > $data['evaluation_endtime']) {
             $errors['evaluation_endtime'] = get_string('end_must_be_after_start', 'block_coursefeedback');
         }
+
+        if ($data['survey_created_message_enable'] ?? false) {
+            if (empty($data['survey_created_message_subject'])) {
+                $errors['survey_created_message_subject'] = get_string('required');
+            }
+            if (empty($data['survey_created_message_body']) || empty($data['survey_created_message_body']['text'])) {
+                $errors['survey_created_message_body'] = get_string('required');
+            }
+        }
+
         return $errors;
     }
 
     #[\Override]
     public function set_data($default_values): void {
-        // TODO: WTF?
         $default_values = (array) $default_values;
-        if ($default_values && ($default_values['survey_created_message_body'] ?? null)) {
-            $default_values['survey_created_message_body'] = [
-                'text' => $default_values['survey_created_message_body'],
-                'format' => FORMAT_HTML,
-            ];
+        if ($default_values) {
+            if (!empty($default_values['survey_created_message_body'])) {
+                // TODO: WTF?
+                $default_values['survey_created_message_body'] = [
+                    'text' => $default_values['survey_created_message_body'],
+                    'format' => FORMAT_HTML,
+                ];
+            }
+
+            $default_values['survey_created_message_enable'] =
+                !empty($default_values['survey_created_message_subject']) || !empty($default_values['survey_created_message_body']);
         }
+
         parent::set_data($default_values);
     }
 
@@ -128,7 +154,13 @@ class organization_semester_form extends moodleform {
         if ($data) {
             $data->can_teacher_edit_speriod ??= false;
             $data->can_teacher_edit_ssettings ??= false;
-            $data->survey_created_message_body = $data->survey_created_message_body['text'];
+            $data->survey_created_message_body = $data->survey_created_message_body['text'] ?? '';
+
+            if (!$data->survey_created_message_enable) {
+                // TODO: Make the columns nullable and use null if disabled.
+                $data->survey_created_message_subject = '';
+                $data->survey_created_message_body = '';
+            }
         }
 
         return $data;

@@ -67,6 +67,16 @@
             {{/surveypart_chooser_context}}
         </div>
     </td>
-    <td>
+    <td x-data="{ active: 'active' in $el.dataset }" x-cloak {{#active}} data-active {{/active}}>
+        <input type="hidden" name="active-{{id}}" :value="active ? 1 : 0">
+        <button type="button" class="btn btn-link" x-show="active" @click="active = false"
+                title="{{#str}} make_eventtype_inactive, block_coursefeedback {{/str}}">
+            {{#pix}} i/hide, core {{/pix}} {{#str}} eventtype_active, block_coursefeedback {{/str}}
+        </button>
+        <button type="button" class="btn btn-link" x-show="!active" @click="active = true"
+                title="{{#str}} make_eventtype_active, block_coursefeedback {{/str}}">
+            {{#pix}} i/show, core {{/pix}} {{#str}} eventtype_inactive, block_coursefeedback {{/str}}
+        </button>
     </td>
 </tr>
+{{#register_alpine_js_module}}{{/register_alpine_js_module}}
