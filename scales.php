@@ -25,6 +25,7 @@
 
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
+use block_coursefeedback\local\persistent\scale;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\local\table\scales_table;
@@ -58,11 +59,14 @@ if ($action) {
         $scaleid = required_param('id', PARAM_INT);
         $freezer->check_survey_part_action($surveypart, "delete scale '$scaleid'");
 
+        $scale = scale::get_record(['id' => $scaleid, 'surveypartid' => $surveypartid], MUST_EXIST);
+
         $uses = $DB->count_records('block_coursefeedback_surveyitemscalequestion', ['scaleid' => $scaleid]);
         if ($uses > 0) {
             throw new moodle_exception('scale_delete_in_use', 'block_coursefeedback');
         }
-        $DB->delete_records('block_coursefeedback_scale', ['id' => $scaleid]);
+
+        $scale->delete();
     }
     redirect($PAGE->url);
 }

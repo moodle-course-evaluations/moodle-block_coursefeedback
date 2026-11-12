@@ -64,7 +64,7 @@ if ($action = optional_param('action', null, PARAM_ALPHANUMEXT)) {
         $deleteid = required_param('deleteid', PARAM_INT);
         $freezer->check_survey_part_action($surveypart, "delete survey item '$deleteid'");
 
-        $surveyitem = surveyitem::get_record(['id' => $deleteid], MUST_EXIST);
+        $surveyitem = surveyitem::get_record(['id' => $deleteid, 'surveypartid' => $id], MUST_EXIST);
         $surveyitem->delete_and_fix_sortorder();
         redirect($PAGE->url);
     }
