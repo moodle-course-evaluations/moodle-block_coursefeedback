@@ -39,7 +39,7 @@ class converter_config {
     /** @var string[] mapping from discriminator values to concrete classes */
     public array $variants = [];
     /** @var string|null if an unknown discriminator is given, warn and use this class */
-    public ?string $fallbackvariant;
+    public ?string $fallbackvariant = null;
 
     /** @var string[] mapping from property names to the classes of their array elements */
     public array $elementclasses = [];

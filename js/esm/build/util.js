@@ -1,0 +1,2 @@
+import{createContext as t,useContext as s,useState as c}from"react";var a=new Promise((r,e)=>{requirejs(["core/str"],r,()=>e("Could not load core/str"))}),g=t(["en"]);function d({text:r}){if(typeof r=="string")return r;if(typeof r=="object"&&"identifier"in r&&"component"in r){let[n,i]=c(`${r.identifier}, ${r.component}`);return a.then(({getString:o})=>o(r.identifier,r.component,r.a)).then(o=>i(o)),n}let e=s(g);for(let n of e)if(n in r)return r[n];return Object.values(r)[0]}export{g as LanguageContext,d as Translated};
+//# sourceMappingURL=util.js.map

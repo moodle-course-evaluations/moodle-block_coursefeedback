@@ -1,0 +1,2 @@
+import{SurveyPage as a}from"@moodle/lms/block_coursefeedback/survey/page";import{useRootSurveyState as p}from"@moodle/lms/block_coursefeedback/survey/state";import{LanguageContext as s}from"@moodle/lms/block_coursefeedback/translated";import{jsx as e}from"react/jsx-runtime";function m({survey:r,preferredLanguages:t}){let o=p();return e(s,{value:t,children:r.pages.map(u=>e(a,{items:u.items,state:o}))})}export{m as default};
+//# sourceMappingURL=survey.js.map

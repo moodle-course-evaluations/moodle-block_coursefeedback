@@ -23,12 +23,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_coursefeedback\local\array_converter\array_converter;
 use block_coursefeedback\local\manager\breadcrumbs_manager;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\organization;
 use block_coursefeedback\local\persistent\surveyitem;
 use block_coursefeedback\local\persistent\surveypart;
 use block_coursefeedback\local\survey;
+use block_coursefeedback\local\survey\choice_option_vm;
+use block_coursefeedback\local\survey\choice_question_vm;
+use block_coursefeedback\local\survey\survey_page_vm;
+use block_coursefeedback\local\survey\survey_vm;
 use block_coursefeedback\local\survey_freezer;
 use block_coursefeedback\local\surveyitem\surveyitem_manager;
 use block_coursefeedback\local\surveyitem\surveyitemtype;
@@ -199,7 +204,21 @@ echo html_writer::tag(
     "section",
     html_writer::empty_tag("hr")
     . html_writer::tag("h3", get_string('surveypart_preview', 'block_coursefeedback'), ['class' => 'mb-3'])
-    . $preview_content
+    . $renderer->render_from_template('block_coursefeedback/survey', [
+        'survey_json' => json_encode(array_converter::to_array(new survey_vm([
+            new survey_page_vm([
+                new choice_question_vm(
+                    type: 'multiplechoice',
+                    name: 'test',
+                    text: 'Hallo?',
+                    options: [
+                        new choice_option_vm(value: 1, text: "Ja"),
+                    ],
+                    required: true
+                ),
+            ]),
+        ]))),
+    ])
 );
 
 echo $OUTPUT->footer();

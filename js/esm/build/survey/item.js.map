@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/survey/item.tsx"],
+  "sourcesContent": ["import {FunctionComponent} from \"react\";\nimport {SurveyState} from \"@moodle/lms/block_coursefeedback/survey/state\";\nimport {SurveyItemVM} from \"@moodle/lms/block_coursefeedback/model\";\nimport MultipleChoiceQuestion from \"@moodle/lms/block_coursefeedback/survey/items/multiple_choice\";\n\nfunction NotImplemented() {\n    return <div>Not implemented!</div>;\n}\n\nexport type ItemProps<T extends SurveyItemVM> = {\n    item: T,\n    state: SurveyState,\n};\nexport type ItemComponent<T extends SurveyItemVM> = FunctionComponent<ItemProps<T>>\n\nconst componentImpls: {\n    [K in SurveyItemVM[\"type\"]]: ItemComponent<Extract<SurveyItemVM, { type: K }>>\n} = {\n    \"multiplechoice\": MultipleChoiceQuestion,\n    \"singlechoice\": NotImplemented,\n    \"nested\": NotImplemented,\n};\n\nexport function SurveyItem<T extends SurveyItemVM>(props: ItemProps<T>) {\n    const ItemComponent = componentImpls[props.item.type] as ItemComponent<T>;\n    return <ItemComponent {...props}/>;\n}"],
+  "mappings": "AAGA,OAAOA,MAA4B,gEAGxB,cAAAC,MAAA,oBADX,SAASC,GAAiB,CACtB,OAAOD,EAAC,OAAI,4BAAgB,CAChC,CAQA,IAAME,EAEF,CACA,eAAkBH,EAClB,aAAgBE,EAChB,OAAUA,CACd,EAEO,SAASE,EAAmCC,EAAqB,CACpE,IAAMC,EAAgBH,EAAeE,EAAM,KAAK,IAAI,EACpD,OAAOJ,EAACK,EAAA,CAAe,GAAGD,EAAM,CACpC",
+  "names": ["MultipleChoiceQuestion", "jsx", "NotImplemented", "componentImpls", "SurveyItem", "props", "ItemComponent"]
+}

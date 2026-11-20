@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/amd.ts"],
+  "sourcesContent": ["declare var requirejs: (deps: string[], callback: (module: any) => void, errback: (error: unknown) => void) => void;\n\ntype KnownModules = {\n    \"core/str\": {\n        getString: (identifier: string, component: string, a?: string | Record<string, unknown>) => Promise<string>\n    },\n    \"core/templates\": {\n        renderPix: (key: string, component: string, title?: string) => Promise<string>,\n    }\n};\n\nexport function loadAmdModule<K extends keyof KnownModules>(module: K): Promise<KnownModules[K]> {\n    return new Promise((resolve, reject) => {\n        requirejs([module], resolve, () => reject(`Could not load ${module}`));\n    });\n}\n"],
+  "mappings": "AAWO,SAASA,EAA4CC,EAAqC,CAC7F,OAAO,IAAI,QAAQ,CAACC,EAASC,IAAW,CACpC,UAAU,CAACF,CAAM,EAAGC,EAAS,IAAMC,EAAO,kBAAkBF,CAAM,EAAE,CAAC,CACzE,CAAC,CACL",
+  "names": ["loadAmdModule", "module", "resolve", "reject"]
+}

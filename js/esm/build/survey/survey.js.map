@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/survey/survey.tsx"],
+  "sourcesContent": ["import {SurveyPage} from \"@moodle/lms/block_coursefeedback/survey/page\";\nimport {useRootSurveyState} from \"@moodle/lms/block_coursefeedback/survey/state\";\nimport {LanguageContext} from \"@moodle/lms/block_coursefeedback/translated\";\nimport {SurveyVM} from \"@moodle/lms/block_coursefeedback/model\";\n\ntype Props = {\n    survey: SurveyVM,\n    preferredLanguages: string[]\n}\n\nexport default function Survey({survey, preferredLanguages}: Props) {\n    const surveyState = useRootSurveyState();\n\n    return <LanguageContext value={preferredLanguages}>\n        {survey.pages.map(page =>\n            <SurveyPage items={page.items} state={surveyState}/>\n        )}\n    </LanguageContext>;\n}\n"],
+  "mappings": "AAAA,OAAQ,cAAAA,MAAiB,+CACzB,OAAQ,sBAAAC,MAAyB,gDACjC,OAAQ,mBAAAC,MAAsB,8CAalB,cAAAC,MAAA,oBALG,SAARC,EAAwB,CAAC,OAAAC,EAAQ,mBAAAC,CAAkB,EAAU,CAChE,IAAMC,EAAcN,EAAmB,EAEvC,OAAOE,EAACD,EAAA,CAAgB,MAAOI,EAC1B,SAAAD,EAAO,MAAM,IAAIG,GACdL,EAACH,EAAA,CAAW,MAAOQ,EAAK,MAAO,MAAOD,EAAY,CACtD,EACJ,CACJ",
+  "names": ["SurveyPage", "useRootSurveyState", "LanguageContext", "jsx", "Survey", "survey", "preferredLanguages", "surveyState", "page"]
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/survey/page.tsx"],
+  "sourcesContent": ["import {SurveyItemVM} from \"@moodle/lms/block_coursefeedback/model\";\nimport {SurveyState} from \"@moodle/lms/block_coursefeedback/survey/state\";\nimport {SurveyItem} from \"@moodle/lms/block_coursefeedback/survey/item\";\n\nexport function SurveyPage({items, state}: {\n    items: SurveyItemVM[],\n    state: SurveyState,\n}) {\n    return <div className=\"block_coursefeedback-survey-page\">\n        {items.map(item => <SurveyItem item={item} state={state}/>)}\n    </div>;\n}"],
+  "mappings": "AAEA,OAAQ,cAAAA,MAAiB,+CAOE,cAAAC,MAAA,oBALpB,SAASC,EAAW,CAAC,MAAAC,EAAO,MAAAC,CAAK,EAGrC,CACC,OAAOH,EAAC,OAAI,UAAU,mCACjB,SAAAE,EAAM,IAAIE,GAAQJ,EAACD,EAAA,CAAW,KAAMK,EAAM,MAAOD,EAAM,CAAE,EAC9D,CACJ",
+  "names": ["SurveyItem", "jsx", "SurveyPage", "items", "state", "item"]
+}

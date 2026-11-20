@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/BaseSurveyItem.tsx"],
+  "sourcesContent": ["import {PropsWithChildren} from \"react\";\nimport {AnyText, SurveyItemVM} from \"./model\";\nimport {Translated} from \"./translated\";\n\ntype Props = PropsWithChildren<{\n    item: SurveyItemVM,\n    questionText: AnyText,\n    layout: \"2-rows\" | \"2-columns\"\n}>\n\nfunction BaseSurveyItem({item, questionText, layout, children}: Props) {\n    const classes = `block_coursefeedback-surveyitem block_coursefeedback-${item.type}`;\n\n    return <div className={classes}>\n        <div className=\"question-area coursefeedback-questiontext\">\n            <Translated text={questionText}/>\n        </div>\n\n        <div className=\"answer-area\">\n\n        </div>\n    </div>\n}"],
+  "mappings": "AAEA,OAAQ,cAAAA,MAAiB,eAWd,OAEC,OAAAC,EAFD,QAAAC,MAAA",
+  "names": ["Translated", "jsx", "jsxs"]
+}

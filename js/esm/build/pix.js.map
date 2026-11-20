@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/pix.tsx"],
+  "sourcesContent": ["import {useAsync} from \"./translated\";\nimport {loadAmdModule} from \"./amd\";\n\ntype Props = {\n    name: string,\n    component?: string,\n    title?: string,\n    className?: string\n}\n\nexport default function Pix({name, component, title, className}: Props) {\n    const html = useAsync(null, () => loadAmdModule('core/templates')\n        .then(({renderPix}) => renderPix(name, component ?? \"core\", title)));\n\n    return html ? <span className={className} dangerouslySetInnerHTML={{__html: html}}/> : null;\n}"],
+  "mappings": "AAAA,OAAQ,YAAAA,MAAe,eACvB,OAAQ,iBAAAC,MAAoB,QAaV,cAAAC,MAAA,oBAJH,SAARC,EAAqB,CAAC,KAAAC,EAAM,UAAAC,EAAW,MAAAC,EAAO,UAAAC,CAAS,EAAU,CACpE,IAAMC,EAAOR,EAAS,KAAM,IAAMC,EAAc,gBAAgB,EAC3D,KAAK,CAAC,CAAC,UAAAQ,CAAS,IAAMA,EAAUL,EAAMC,GAAa,OAAQC,CAAK,CAAC,CAAC,EAEvE,OAAOE,EAAON,EAAC,QAAK,UAAWK,EAAW,wBAAyB,CAAC,OAAQC,CAAI,EAAE,EAAK,IAC3F",
+  "names": ["useAsync", "loadAmdModule", "jsx", "Pix", "name", "component", "title", "className", "html", "renderPix"]
+}

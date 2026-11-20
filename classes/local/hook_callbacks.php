@@ -17,8 +17,13 @@
 namespace block_coursefeedback\local;
 
 use block_coursefeedback;
+use block_coursefeedback\local\array_converter\array_converter;
 use block_coursefeedback\local\manager\permission_manager;
 use block_coursefeedback\local\persistent\survey_execution;
+use block_coursefeedback\local\survey\choice_option_vm;
+use block_coursefeedback\local\survey\choice_question_vm;
+use block_coursefeedback\local\survey\survey_page_vm;
+use block_coursefeedback\local\survey\survey_vm;
 use block_coursefeedback_renderer;
 use core\di;
 use core\hook\navigation\primary_extend;
@@ -70,7 +75,20 @@ class hook_callbacks {
         $renderer = $PAGE->get_renderer('block_coursefeedback');
 
         // We add the survey HTML to the end of the page, it'll move itself to the notification area.
-        $hook->add_html($renderer->render_survey($ongoing_survey, append_to_selector: '#user-notifications'));
+        $hook->add_html($renderer->render_from_template('block_coursefeedback/survey', [
+            'survey_json' => json_encode(array_converter::to_array(new survey_vm([
+                new survey_page_vm([
+                    new choice_question_vm(
+                        type: 'multiplechoice',
+                        name: 'test',
+                        text: 'Hallo?',
+                        options: [
+                            new choice_option_vm(value: 1, text: "Ja"),
+                        ]
+                    ),
+                ]),
+            ]))),
+        ]));
     }
 
     /**
